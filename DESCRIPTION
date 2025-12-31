@@ -1,0 +1,27 @@
+Package: xiacf
+Type: Package
+Title: Quantifying Nonlinear Dependence via Xi-ACF and IAAFT Surrogates
+Version: 0.1.0
+Author: Yasunori
+Maintainer: Yasunori <watanabe.yasunori@outlook.com>
+Description: Implements the Xi-ACF framework for detecting deterministic chaos 
+    in financial time series. Includes high-performance C++ implementations of 
+    Chatterjee's Xi correlation coefficient and the IAAFT (Iterated Amplitude 
+    Adjusted Fourier Transform) surrogate algorithm.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    Rcpp (>= 1.0.0),
+    dplyr,
+    foreach,
+    doFuture,
+    progressr,
+    future,
+    stats,
+    utils,
+    here
+LinkingTo: 
+    Rcpp,
+    RcppArmadillo
+RoxygenNote: 7.2.3
