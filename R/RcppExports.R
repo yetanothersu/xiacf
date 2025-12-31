@@ -2,18 +2,26 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 rcpp_hello_world <- function() {
-    .Call(`_XiLagCore_rcpp_hello_world`)
+    .Call(`_xiacf_rcpp_hello_world`)
+}
+
+calc_xi_cpp <- function(x, y) {
+    .Call(`_xiacf_calc_xi_cpp`, x, y)
+}
+
+xi_correlogram_cpp <- function(ts, max_lag) {
+    .Call(`_xiacf_xi_correlogram_cpp`, ts, max_lag)
 }
 
 xi_coefficient <- function(x, y) {
-    .Call(`_XiLagCore_xi_coefficient`, x, y)
+    .Call(`_xiacf_xi_coefficient`, x, y)
 }
 
 generate_iaaft_surrogates <- function(x, n_surr, max_iter = 100L) {
-    .Call(`_XiLagCore_generate_iaaft_surrogates`, x, n_surr, max_iter)
+    .Call(`_xiacf_generate_iaaft_surrogates`, x, n_surr, max_iter)
 }
 
 run_xi_test_cpp <- function(y_in, max_lag, n_surr) {
-    .Call(`_XiLagCore_run_xi_test_cpp`, y_in, max_lag, n_surr)
+    .Call(`_xiacf_run_xi_test_cpp`, y_in, max_lag, n_surr)
 }
 

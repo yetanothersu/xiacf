@@ -3,6 +3,9 @@
 #' Performs a rolling window analysis using Chatterjee's Xi coefficient
 #' and IAAFT surrogates to detect non-linear dependencies.
 #'
+#' @useDynLib xiacf, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
+#'
 #' @param ts_vec A numeric vector of the time series (e.g., log-returns).
 #' @param window_size Integer. The size of the rolling window.
 #' @param step_size Integer. The step size for moving the window.
