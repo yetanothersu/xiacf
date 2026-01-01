@@ -36,8 +36,15 @@ run_rolling_xi_analysis <- function(
     n_cores = NULL
 ) {
     # --- 1. Parallel Setup ---
-    ov <- future::plan()
-    on.exit(future::plan(ov), add = TRUE)
+    ov_plan <- future::plan()
+
+    on.exit(
+        {
+            future::plan(ov_plan) # futureプランを元に戻す
+            foreach::registerDoSEQ() # foreachをデフォルト（直列）に戻す
+        },
+        add = TRUE
+    )
 
     if (is.null(n_cores)) {
         use_cores <- max(1, parallel::detectCores(logical = FALSE) - 2)
@@ -47,7 +54,8 @@ run_rolling_xi_analysis <- function(
 
     if (use_cores > 1) {
         message(sprintf("Running on %d cores...", use_cores))
-        future::plan(future::multisession, workers = use_cores)
+        future::plan(future::multicore, workers = use_cores)
+        doFuture::registerDoFuture()
     } else {
         future::plan(future::sequential)
     }
