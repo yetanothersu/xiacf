@@ -112,6 +112,7 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
 // ============================================================
 // Pipeline Wrapper
 // ============================================================
+//' @export
 // [[Rcpp::export]]
 List run_xi_test_cpp(NumericVector y_in, int max_lag, int n_surr) {
     vec y = as<vec>(y_in);
