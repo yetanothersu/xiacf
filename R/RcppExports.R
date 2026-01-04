@@ -21,6 +21,7 @@ generate_iaaft_surrogates <- function(x, n_surr, max_iter = 100L) {
     .Call(`_xiacf_generate_iaaft_surrogates`, x, n_surr, max_iter)
 }
 
+#' @export
 run_xi_test_cpp <- function(y_in, max_lag, n_surr) {
     .Call(`_xiacf_run_xi_test_cpp`, y_in, max_lag, n_surr)
 }
