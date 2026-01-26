@@ -15,7 +15,7 @@ xi_test <- function(x, max_lag = 20, n_surr = 100) {
 
     # 2. Calculate Standard ACF (Linear)
     acf_res <- stats::acf(x, lag.max = max_lag, plot = FALSE)
-    acf_vals <- as.numeric(acf_res$acf)[-1] # lag 0を除外
+    acf_vals <- as.numeric(acf_res$acf)[-1]
 
     # Calculate ACF Confidence Interval (95% i.i.d.)
     n <- length(x)
@@ -34,7 +34,6 @@ xi_test <- function(x, max_lag = 20, n_surr = 100) {
     }
 
     # 4. Construct S3 Object
-    # 注: カラム名は 'Xi' です (Xi_Original ではありません)
     df_summary <- data.frame(
         Lag = 1:max_lag,
         ACF = acf_vals,
@@ -53,4 +52,67 @@ xi_test <- function(x, max_lag = 20, n_surr = 100) {
     )
 }
 
-# printメソッドなども必要ならここに定義
+#' @export
+print.xi_test <- function(x, ...) {
+    cat("Xi-ACF Test Results\n")
+    cat("-------------------\n")
+    cat(
+        "Parameters: max_lag =",
+        x$params$max_lag,
+        ", n_surr =",
+        x$params$n_surr,
+        "\n\n"
+    )
+    print(head(x$summary, 10))
+    if (nrow(x$summary) > 10) {
+        cat("... (", nrow(x$summary) - 10, " more lags)\n")
+    }
+}
+
+#' @import ggplot2
+#' @export
+autoplot.xi_test <- function(object, ...) {
+    df <- object$summary
+
+    ggplot(df, aes(x = Lag)) +
+        # Linear ACF (Blue Bars)
+        geom_bar(
+            aes(y = ACF, fill = "Linear ACF"),
+            stat = "identity",
+            alpha = 0.4,
+            width = 0.6
+        ) +
+        geom_hline(
+            aes(yintercept = ACF_CI, color = "ACF 95% CI"),
+            linetype = "dotted"
+        ) +
+        geom_hline(
+            aes(yintercept = -ACF_CI, color = "ACF 95% CI"),
+            linetype = "dotted"
+        ) +
+        # Xi (Red Line)
+        geom_line(aes(y = Xi, color = "Xi Coefficient"), size = 1) +
+        geom_point(aes(y = Xi, color = "Xi Coefficient"), size = 2) +
+        # Xi Threshold (Red Dashed) - n_surr > 0 の時のみ
+        {
+            if (!all(is.na(df$Xi_Threshold_95))) {
+                geom_line(
+                    aes(y = Xi_Threshold_95, color = "Xi 95% Threshold"),
+                    linetype = "dashed"
+                )
+            }
+        } +
+
+        scale_fill_manual(name = "", values = c("Linear ACF" = "steelblue")) +
+        scale_color_manual(
+            name = "",
+            values = c(
+                "Xi Coefficient" = "firebrick",
+                "Xi 95% Threshold" = "firebrick",
+                "ACF 95% CI" = "steelblue"
+            )
+        ) +
+        labs(title = "Xi-ACF Correlogram", x = "Lag", y = "Value") +
+        theme_minimal() +
+        theme(legend.position = "bottom")
+}
