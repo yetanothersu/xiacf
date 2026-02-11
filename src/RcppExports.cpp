@@ -11,40 +11,6 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP _xiacf_rcpp_hello_world() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_xi_cpp
-double calc_xi_cpp(NumericVector x, NumericVector y);
-RcppExport SEXP _xiacf_calc_xi_cpp(SEXP xSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_xi_cpp(x, y));
-    return rcpp_result_gen;
-END_RCPP
-}
-// xi_correlogram_cpp
-NumericVector xi_correlogram_cpp(NumericVector ts, int max_lag);
-RcppExport SEXP _xiacf_xi_correlogram_cpp(SEXP tsSEXP, SEXP max_lagSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type ts(tsSEXP);
-    Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
-    rcpp_result_gen = Rcpp::wrap(xi_correlogram_cpp(ts, max_lag));
-    return rcpp_result_gen;
-END_RCPP
-}
 // xi_coefficient
 double xi_coefficient(arma::vec x, arma::vec y);
 RcppExport SEXP _xiacf_xi_coefficient(SEXP xSEXP, SEXP ySEXP) {
@@ -85,9 +51,6 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_xiacf_rcpp_hello_world", (DL_FUNC) &_xiacf_rcpp_hello_world, 0},
-    {"_xiacf_calc_xi_cpp", (DL_FUNC) &_xiacf_calc_xi_cpp, 2},
-    {"_xiacf_xi_correlogram_cpp", (DL_FUNC) &_xiacf_xi_correlogram_cpp, 2},
     {"_xiacf_xi_coefficient", (DL_FUNC) &_xiacf_xi_coefficient, 2},
     {"_xiacf_generate_iaaft_surrogates", (DL_FUNC) &_xiacf_generate_iaaft_surrogates, 3},
     {"_xiacf_run_xi_test_cpp", (DL_FUNC) &_xiacf_run_xi_test_cpp, 3},

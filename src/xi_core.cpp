@@ -50,6 +50,12 @@ uvec rank_random_ties_r_sync(vec x) {
 // ============================================================
 // Main Logic: Chatterjee's Xi Coefficient
 // ============================================================
+//' Calculate Chatterjee's Xi Coefficient
+//' 
+//' @param x Numeric vector
+//' @param y Numeric vector
+//' @return Double value of Xi
+//' @export
 // [[Rcpp::export]]
 double xi_coefficient(arma::vec x, arma::vec y) {
     uword n = x.n_elem;
@@ -89,10 +95,10 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
         for(int iter = 0; iter < max_iter; iter++) {
             cx_vec S_fft = fft(std::complex<double>(0,0) * zeros(n) + surr);
             
-            // 【修正箇所】ここです！ absの結果は実数ベクトル(vec)で受けます
+            // absの結果は実数ベクトル(vec)
             vec S_abs = abs(S_fft); 
             
-            // vec + double は vec になり、cx_vec / vec は要素ごとの除算として機能します
+            // 要素ごとの除算
             cx_vec phases = S_fft / (S_abs + 1e-10); 
             
             cx_vec S_new_fft = phases % amplitudes; 
@@ -110,8 +116,17 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
 }
 
 // ============================================================
-// Pipeline Wrapper
+// Pipeline Wrapper (Backwards Compatible)
 // ============================================================
+//' Run Xi Test (C++ Implementation)
+//' 
+//' Internal function to calculate Xi statistics with IAAFT surrogates.
+//' Kept for backward compatibility with xilag scripts.
+//' 
+//' @param y_in Time series vector
+//' @param max_lag Maximum lag
+//' @param n_surr Number of surrogates
+//' @return List with xi_original and xi_surrogates
 //' @export
 // [[Rcpp::export]]
 List run_xi_test_cpp(NumericVector y_in, int max_lag, int n_surr) {
