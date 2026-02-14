@@ -75,11 +75,11 @@ autoplot.xi_test <- function(object, ...) {
     df <- object$summary
 
     ggplot(df, aes(x = Lag)) +
-        # Linear ACF (Blue Bars)
+        # 1. Linear ACF (Gray Bars: 白黒印刷でも白飛びしないグレー)
         geom_bar(
             aes(y = ACF, fill = "Linear ACF"),
             stat = "identity",
-            alpha = 0.4,
+            alpha = 0.5,
             width = 0.6
         ) +
         geom_hline(
@@ -90,10 +90,7 @@ autoplot.xi_test <- function(object, ...) {
             aes(yintercept = -ACF_CI, color = "ACF 95% CI"),
             linetype = "dotted"
         ) +
-        # Xi (Red Line)
-        geom_line(aes(y = Xi, color = "Xi Coefficient"), size = 1) +
-        geom_point(aes(y = Xi, color = "Xi Coefficient"), size = 2) +
-        # Xi Threshold (Red Dashed) - n_surr > 0 の時のみ
+        # 2. Xi Threshold (Red Dashed) - 線の下に描画した方が綺麗
         {
             if (!all(is.na(df$Xi_Threshold_95))) {
                 geom_line(
@@ -102,17 +99,31 @@ autoplot.xi_test <- function(object, ...) {
                 )
             }
         } +
+        # 3. Xi Coefficient (Dark Red Line & Points: 白黒印刷でも黒く出る)
+        geom_line(aes(y = Xi, color = "Xi Coefficient"), linewidth = 1) +
+        geom_point(aes(y = Xi, color = "Xi Coefficient"), size = 2) +
 
-        scale_fill_manual(name = "", values = c("Linear ACF" = "steelblue")) +
+        # 配色の設定
+        scale_fill_manual(
+            name = "",
+            values = c("Linear ACF" = "gray60") # 青からグレーに変更
+        ) +
         scale_color_manual(
             name = "",
             values = c(
                 "Xi Coefficient" = "firebrick",
                 "Xi 95% Threshold" = "firebrick",
-                "ACF 95% CI" = "steelblue"
+                "ACF 95% CI" = "gray50"
             )
         ) +
-        labs(title = "Xi-ACF Correlogram", x = "Lag", y = "Value") +
+        # 前回決めた最強の軸ラベルをデフォルトに設定
+        labs(
+            x = "Lag",
+            y = expression(paste("Structural Dependence (", hat(xi)[X](k), ")"))
+        ) +
         theme_minimal() +
-        theme(legend.position = "bottom")
+        theme(
+            legend.position = "bottom",
+            plot.title = element_text(face = "bold")
+        )
 }
