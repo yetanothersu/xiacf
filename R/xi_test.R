@@ -119,7 +119,7 @@ autoplot.xi_test <- function(object, ...) {
         # 前回決めた最強の軸ラベルをデフォルトに設定
         labs(
             x = "Lag",
-            y = expression(paste("Structural Dependence (", hat(xi)[X](k), ")"))
+            y = expression(hat(xi)[X](k))
         ) +
         theme_minimal() +
         theme(
