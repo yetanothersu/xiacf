@@ -70,7 +70,8 @@ double xi_coefficient(arma::vec x, arma::vec y) {
         term1 += std::abs((double)r[i + 1] - (double)r[i]);
     }
     
-    double xi = 1.0 - (3.0 * term1) / (std::pow((double)n, 2.0) - 1.0);
+    double n_double = (double)n;
+    double xi = 1.0 - (3.0 * term1) / (n_double * n_double - 1.0);
     return xi;
 }
 
