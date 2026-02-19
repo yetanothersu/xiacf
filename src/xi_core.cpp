@@ -116,22 +116,18 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
     return surrogates;
 }
 
-// ============================================================
-// Pipeline Wrapper (Backwards Compatible)
-// ============================================================
-//' Run Xi Test (C++ Implementation)
+//' Compute Xi Statistics for Lags (Core Engine)
 //' 
-//' Internal function to calculate Xi statistics with IAAFT surrogates.
-//' Kept for backward compatibility with xilag scripts.
+//' Calculates Chatterjee's Xi for multiple lags and generates IAAFT surrogates.
 //' 
-//' @param y_in Time series vector
-//' @param max_lag Maximum lag
-//' @param n_surr Number of surrogates
-//' @return List with xi_original and xi_surrogates
+//' @param x Numeric vector (time series).
+//' @param max_lag Maximum lag to compute.
+//' @param n_surr Number of surrogate datasets to generate.
+//' @return A list containing `xi_original` and `xi_surrogates`.
 //' @export
 // [[Rcpp::export]]
-List run_xi_test_cpp(NumericVector y_in, int max_lag, int n_surr) {
-    vec y = as<vec>(y_in);
+List compute_xi_lags(NumericVector x, int max_lag, int n_surr) {
+    vec y = as<vec>(x); // RのxをArmadilloのyに変換（内部変数はyのままでOK）
     int n = y.n_elem;
     
     // 【修正1】宣言と同時に NA で埋める (初期化)
