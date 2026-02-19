@@ -1,107 +1,116 @@
 #' Rolling Xi-ACF Analysis
 #'
-#' Performs a rolling window analysis using Chatterjee's Xi coefficient
-#' and IAAFT surrogates to detect non-linear dependencies.
+#' Performs a rolling window analysis using Chatterjee's Xi coefficient.
 #'
-#' @useDynLib xiacf, .registration = TRUE
-#' @importFrom Rcpp sourceCpp
-#'
-#' @param ts_vec A numeric vector of the time series (e.g., log-returns).
+#' @param ts_vec A numeric vector of the time series.
 #' @param window_size Integer. The size of the rolling window.
 #' @param step_size Integer. The step size for moving the window.
 #' @param max_lag Integer. Maximum lag to calculate Xi for.
 #' @param n_surr Integer. Number of surrogates for the null hypothesis test.
-#' @param n_cores Integer (optional). Number of cores for parallel processing.
-#'   If NULL, detects automatically.
-#'
-#' @return A data.frame containing:
-#'   \item{Window_Start_Idx}{Start index of the window}
-#'   \item{Lag}{Lag (tau)}
-#'   \item{Xi_Original}{Observed Xi value}
-#'   \item{Xi_Threshold_95}{95th percentile of surrogate Xi values}
-#'   \item{Xi_Excess}{Excess amount (Xi_Original - Xi_Threshold_95)}
+#' @param n_cores Integer (optional). Number of cores. If NULL, uses existing plan or sequential.
 #'
 #' @importFrom foreach foreach %dopar%
-#' @importFrom doFuture registerDoFuture
-#' @importFrom future plan multisession sequential
-#' @importFrom progressr progressor with_progress
-#' @importFrom dplyr bind_rows mutate
+#' @importFrom future plan multisession sequential value
+#' @importFrom progressr progressor
+#' @importFrom dplyr bind_rows
 #' @export
 run_rolling_xi_analysis <- function(
     ts_vec,
     window_size,
-    step_size,
-    max_lag,
+    step_size = 1,
+    max_lag = 20,
     n_surr = 100,
     n_cores = NULL
 ) {
-    # --- 1. Parallel Setup ---
-    ov_plan <- future::plan()
-
-    on.exit(
-        {
-            future::plan(ov_plan) # futureプランを元に戻す
-            foreach::registerDoSEQ() # foreachをデフォルト（直列）に戻す
-        },
-        add = TRUE
-    )
-
-    if (is.null(n_cores)) {
-        use_cores <- max(1, parallel::detectCores(logical = FALSE) - 2)
-    } else {
-        use_cores <- n_cores
-    }
-
-    if (use_cores > 1) {
-        message(sprintf("Running on %d cores...", use_cores))
-        future::plan(future::multicore, workers = use_cores)
-        doFuture::registerDoFuture()
-    } else {
-        future::plan(future::sequential)
-    }
-
-    # --- 2. Prepare Windows ---
+    # --- 1. Input Validation ---
     n_total <- length(ts_vec)
+    if (window_size > n_total) {
+        stop("window_size cannot be larger than the time series length.")
+    }
+
+    # --- 2. Safe Parallel Setup (Polite Programming) ---
+    # ユーザーが明示的にコア数を指定した場合のみプランを変更し、終わったら戻す
+    if (!is.null(n_cores)) {
+        # CRANチェック対策: コア数制限がある環境では最大2コアに抑える
+        chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+        if (nzchar(chk) && chk == "TRUE") {
+            n_cores <- min(n_cores, 2)
+        }
+
+        # 現在のプランを保存
+        old_plan <- future::plan()
+
+        # 新しいプランを設定
+        future::plan(future::multisession, workers = n_cores)
+
+        # 関数終了時(エラー時含む)に必ず元のプランに戻す
+        on.exit(future::plan(old_plan), add = TRUE)
+    }
+
+    # --- 3. Prepare Windows ---
     starts <- seq(1, n_total - window_size + 1, by = step_size)
     n_windows <- length(starts)
 
-    # Progress bar
+    # Progress bar setup
     p <- progressr::progressor(steps = n_windows)
 
-    # --- 3. Execution ---
-    # Note: Requires internal C++ function `run_xi_test_cpp` to be exported
+    # --- 4. Execution ---
     results_df <- foreach::foreach(
         i = seq_along(starts),
         .combine = dplyr::bind_rows,
-        .packages = c("dplyr", "xiacf"), # 自分自身をロード
-        .options.future = list(seed = TRUE) # Robust RNG
+        .packages = c("xiacf", "stats"), # 自パッケージとstatsが必要
+        .options.future = list(seed = TRUE), # 再現性のための乱数シード固定
+        .errorhandling = "remove" # エラーが出たタスクは除去して続行
     ) %dopar%
         {
+            # 進捗更新
             p()
 
-            idx_start <- starts[i]
-            idx_end <- idx_start + window_size - 1
-            y_sub <- ts_vec[idx_start:idx_end]
+            # エラー耐性: 個別のウィンドウで落ちても全体を止めない
+            tryCatch(
+                {
+                    idx_start <- starts[i]
+                    idx_end <- idx_start + window_size - 1
+                    y_sub <- ts_vec[idx_start:idx_end]
 
-            # Call C++ Engine
-            res <- run_xi_test_cpp(y_sub, max_lag, n_surr)
+                    # 定数チェック (計算不能回避)
+                    if (sd(y_sub, na.rm = TRUE) == 0) {
+                        return(NULL)
+                    }
 
-            # Calculate Threshold
-            null_95 <- apply(res$xi_surrogates, 1, function(x) {
-                quantile(x, 0.95)
-            })
+                    # C++エンジンの呼び出し
+                    res <- run_xi_test_cpp(y_sub, max_lag, n_surr)
 
-            data.frame(
-                Window_Start_Idx = idx_start,
-                Window_End_Idx = idx_end,
-                Lag = 1:max_lag,
-                Xi_Original = res$xi_original,
-                Xi_Threshold_95 = null_95
-            ) %>%
-                dplyr::mutate(
-                    Is_Significant = Xi_Original > Xi_Threshold_95,
-                    Xi_Excess = pmax(0, Xi_Original - Xi_Threshold_95)
-                )
+                    # 閾値計算 (NA除去必須)
+                    xi_threshold <- rep(NA, max_lag)
+                    if (n_surr > 0) {
+                        xi_threshold <- apply(
+                            res$xi_surrogates,
+                            1,
+                            function(r) {
+                                stats::quantile(r, 0.95, na.rm = TRUE)
+                            }
+                        )
+                    }
+
+                    # データフレーム構築
+                    data.frame(
+                        Window_ID = i, # 何番目のウィンドウか
+                        Window_Start_Idx = idx_start,
+                        Window_End_Idx = idx_end,
+                        Lag = 1:max_lag,
+                        Xi_Original = as.numeric(res$xi_original),
+                        Xi_Threshold_95 = xi_threshold,
+                        # 余剰量 (有意でなければ0にする処理を入れても良いが、生の値を入れておく)
+                        Xi_Excess = as.numeric(res$xi_original) - xi_threshold
+                    )
+                },
+                error = function(e) {
+                    # エラー時は警告を出して NULL を返す (bind_rowsで無視される)
+                    warning(paste("Error in window", i, ":", e$message))
+                    return(NULL)
+                }
+            )
         }
 
     return(results_df)
