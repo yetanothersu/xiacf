@@ -2,6 +2,9 @@
 #'
 #' Calculates Chatterjee's Xi and Standard ACF with significance thresholds.
 #'
+#' @useDynLib xiacf, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
+#'
 #' @param x Numeric vector (time series).
 #' @param max_lag Integer. Maximum lag to compute.
 #' @param n_surr Integer. Number of surrogates for IAAFT test.
