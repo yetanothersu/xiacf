@@ -134,9 +134,14 @@ List run_xi_test_cpp(NumericVector y_in, int max_lag, int n_surr) {
     vec y = as<vec>(y_in);
     int n = y.n_elem;
     
+    // 【修正1】宣言と同時に NA で埋める (初期化)
     vec xi_original(max_lag);
-    mat xi_surrogates(max_lag, n_surr);
+    xi_original.fill(datum::nan); 
     
+    // 【修正2】ここも NA で埋める (初期化)
+    mat xi_surrogates(max_lag, n_surr);
+    xi_surrogates.fill(datum::nan);
+
     for(int k = 1; k <= max_lag; k++) {
         if(n > k) {
             vec y_lagged = y.subvec(0, n - k - 1);
