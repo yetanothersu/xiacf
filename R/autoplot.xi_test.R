@@ -1,117 +1,118 @@
 #' Plot Xi-ACF Comparison
 #'
+#' Visualizes the comparison between standard linear ACF and non-linear Chatterjee's Xi
+#' coefficient, including significance thresholds.
+#'
 #' @param object An object of class "xi_test".
 #' @param ... Additional arguments (ignored).
 #' @import ggplot2
 #' @export
 autoplot.xi_test <- function(object, ...) {
+    # データを取り出し
     df <- object$data
-    acf_ci <- object$data$ACF_CI[1] # 定数として取得
 
-    ggplot(df, aes(x = Lag)) +
-        # ゼロライン
+    # ACFの信頼区間（定数）
+    acf_ci <- object$data$ACF_CI[1]
+
+    # ベースのプロット作成
+    p <- ggplot(df, aes(x = Lag)) +
+        # 0ライン
         geom_hline(yintercept = 0, color = "gray50", linewidth = 0.3) +
 
-        # 1. ACF信頼区間 (青点線)
+        # 1. ACF 95% 信頼区間 (青の点線)
         geom_hline(
-            yintercept = c(-acf_ci, acf_ci),
+            aes(yintercept = acf_ci, linetype = "ACF 95% CI"),
             color = "blue",
-            linetype = "dotted",
-            linewidth = 0.5,
+            linewidth = 0.4,
             alpha = 0.6
         ) +
+        geom_hline(
+            yintercept = -acf_ci,
+            color = "blue",
+            linetype = "dotted",
+            linewidth = 0.4,
+            alpha = 0.6
+        )
 
-        # 2. Xiサロゲート閾値 (グレー帯)
-        geom_ribbon(
-            aes(
-                ymin = 0,
-                ymax = Xi_Threshold_95,
-                fill = "95% Null Threshold (IAAFT)"
-            ),
-            alpha = 0.3
+    # 2. Xi サロゲート閾値 (グレーの帯)
+    # n_surr > 0 の場合のみ描画 (NAチェック)
+    if (!all(is.na(df$Xi_Threshold_95))) {
+        p <- p +
+            geom_ribbon(
+                aes(
+                    ymin = 0,
+                    ymax = Xi_Threshold_95,
+                    fill = "Xi 95% Threshold"
+                ),
+                alpha = 0.2
+            )
+    }
+
+    # 3. メインのライン描画
+    p <- p +
+        # ACF (Linear)
+        geom_line(
+            aes(y = ACF, color = "Standard ACF (Linear)"),
+            linewidth = 0.6,
+            linetype = "dashed"
+        ) +
+        geom_point(
+            aes(y = ACF, color = "Standard ACF (Linear)"),
+            shape = 16,
+            size = 1.5
         ) +
 
-        # 3. ACF Line & Point
+        # Xi (Non-linear)
         geom_line(
-            aes(
-                y = ACF,
-                color = "Standard ACF (Linear)",
-                linetype = "Standard ACF (Linear)"
-            ),
+            aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
             linewidth = 0.8
         ) +
         geom_point(
-            aes(
-                y = ACF,
-                color = "Standard ACF (Linear)",
-                shape = "Standard ACF (Linear)"
-            ),
-            size = 2.5
+            aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
+            shape = 17,
+            size = 2
         ) +
 
-        # 4. Xi Line & Point
-        geom_line(
-            aes(
-                y = Xi,
-                color = "Chatterjee's Xi (Non-linear)",
-                linetype = "Chatterjee's Xi (Non-linear)"
-            ),
-            linewidth = 0.8
-        ) +
-        geom_point(
-            aes(
-                y = Xi,
-                color = "Chatterjee's Xi (Non-linear)",
-                shape = "Chatterjee's Xi (Non-linear)"
-            ),
-            size = 3.0
-        ) +
-
-        # --- Scales ---
+        # --- Scales (色とラベルの定義) ---
         scale_color_manual(
-            name = NULL,
+            name = "Correlation Measure",
             values = c(
-                "Standard ACF (Linear)" = "blue",
-                "Chatterjee's Xi (Non-linear)" = "red"
-            )
-        ) +
-        scale_linetype_manual(
-            name = NULL,
-            values = c(
-                "Standard ACF (Linear)" = "dashed",
-                "Chatterjee's Xi (Non-linear)" = "solid"
-            )
-        ) +
-        scale_shape_manual(
-            name = NULL,
-            values = c(
-                "Standard ACF (Linear)" = 16,
-                "Chatterjee's Xi (Non-linear)" = 17
+                "Standard ACF (Linear)" = "steelblue",
+                "Chatterjee's Xi (Non-linear)" = "firebrick"
             )
         ) +
         scale_fill_manual(
-            name = NULL,
-            values = c("95% Null Threshold (IAAFT)" = "gray80")
+            name = "Significance",
+            values = c("Xi 95% Threshold" = "gray50")
+        ) +
+        scale_linetype_manual(
+            name = "Significance",
+            values = c("ACF 95% CI" = "dotted")
         ) +
 
-        # --- Design ---
+        # --- Theme & Labs ---
         labs(
             title = "Xi-ACF Correlogram",
             subtitle = paste0(
-                "Comparison of Linear (ACF) vs Non-linear (Xi) Dependence (N=",
+                "Linear vs Non-linear Dependence (n = ",
                 object$n,
                 ")"
             ),
             y = "Correlation Coefficient",
             x = "Lag"
         ) +
-        scale_y_continuous(limits = c(-0.2, 1.05)) +
         theme_minimal() +
         theme(
-            legend.position = c(0.8, 0.8),
-            legend.background = element_rect(fill = "white", color = "gray90"),
+            legend.position = "bottom",
             legend.box = "vertical",
-            plot.title = element_text(face = "bold"),
-            axis.title = element_text(face = "bold")
+            legend.title = element_text(size = 9, face = "bold"),
+            plot.title = element_text(face = "bold")
         )
+
+    # Y軸の範囲設定 (ハードコーディングを避ける)
+    # デフォルトは -0.2 ~ 1.0 だが、データがはみ出る場合は自動拡張
+    min_y <- min(c(-0.2, min(df$ACF, na.rm = TRUE)))
+    p <- p + coord_cartesian(ylim = c(min_y, 1.05))
+
+    return(p)
 }
