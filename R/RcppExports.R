@@ -8,24 +8,23 @@
 #' @return Double value of Xi
 #' @export
 xi_coefficient <- function(x, y) {
-    .Call(`_xiacf_xi_coefficient`, x, y)
+    .Call('_xiacf_xi_coefficient', PACKAGE = 'xiacf', x, y)
 }
 
 generate_iaaft_surrogates <- function(x, n_surr, max_iter = 100L) {
-    .Call(`_xiacf_generate_iaaft_surrogates`, x, n_surr, max_iter)
+    .Call('_xiacf_generate_iaaft_surrogates', PACKAGE = 'xiacf', x, n_surr, max_iter)
 }
 
-#' Run Xi Test (C++ Implementation)
+#' Compute Xi Statistics for Lags (Core Engine)
 #' 
-#' Internal function to calculate Xi statistics with IAAFT surrogates.
-#' Kept for backward compatibility with xilag scripts.
+#' Calculates Chatterjee's Xi for multiple lags and generates IAAFT surrogates.
 #' 
-#' @param y_in Time series vector
-#' @param max_lag Maximum lag
-#' @param n_surr Number of surrogates
-#' @return List with xi_original and xi_surrogates
+#' @param x Numeric vector (time series).
+#' @param max_lag Maximum lag to compute.
+#' @param n_surr Number of surrogate datasets to generate.
+#' @return A list containing `xi_original` and `xi_surrogates`.
 #' @export
-run_xi_test_cpp <- function(y_in, max_lag, n_surr) {
-    .Call(`_xiacf_run_xi_test_cpp`, y_in, max_lag, n_surr)
+compute_xi_lags <- function(x, max_lag, n_surr) {
+    .Call('_xiacf_compute_xi_lags', PACKAGE = 'xiacf', x, max_lag, n_surr)
 }
 
