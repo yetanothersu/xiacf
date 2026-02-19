@@ -8,11 +8,11 @@
 #' @return Double value of Xi
 #' @export
 xi_coefficient <- function(x, y) {
-    .Call('_xiacf_xi_coefficient', PACKAGE = 'xiacf', x, y)
+    .Call(`_xiacf_xi_coefficient`, x, y)
 }
 
 generate_iaaft_surrogates <- function(x, n_surr, max_iter = 100L) {
-    .Call('_xiacf_generate_iaaft_surrogates', PACKAGE = 'xiacf', x, n_surr, max_iter)
+    .Call(`_xiacf_generate_iaaft_surrogates`, x, n_surr, max_iter)
 }
 
 #' Compute Xi Statistics for Lags (Core Engine)
@@ -25,6 +25,6 @@ generate_iaaft_surrogates <- function(x, n_surr, max_iter = 100L) {
 #' @return A list containing `xi_original` and `xi_surrogates`.
 #' @export
 compute_xi_lags <- function(x, max_lag, n_surr) {
-    .Call('_xiacf_compute_xi_lags', PACKAGE = 'xiacf', x, max_lag, n_surr)
+    .Call(`_xiacf_compute_xi_lags`, x, max_lag, n_surr)
 }
 
