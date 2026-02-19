@@ -91,3 +91,32 @@ xi_test <- function(x, max_lag = 20, n_surr = 100) {
         class = "xi_test"
     )
 }
+
+#' Print method for xi_test objects
+#'
+#' @param x An object of class "xi_test".
+#' @param ... Additional arguments (ignored).
+#' @export
+print.xi_test <- function(x, ...) {
+    cat("\n\tChatterjee's Xi-ACF Test\n\n")
+    cat("Data length:  ", x$n, "\n")
+    cat("Max lag:      ", x$max_lag, "\n")
+    cat("Surrogates:   ", x$n_surr, " (IAAFT)\n\n")
+
+    # 表示したい列だけをピックアップ
+    # ACF_CI (定数) は表示せず、メインの指標に絞る
+    show_cols <- c("Lag", "ACF", "Xi", "Xi_Threshold_95")
+
+    # 念のため、データフレームに存在する列だけを選ぶ (安全策)
+    cols_exist <- intersect(show_cols, names(x$data))
+
+    # 最初の5行だけ表示
+    print(head(x$data[, cols_exist], 5), row.names = FALSE)
+
+    # 残りがある場合はメッセージを表示
+    if (nrow(x$data) > 5) {
+        cat("... with", nrow(x$data) - 5, "more lags\n")
+    }
+
+    invisible(x)
+}
