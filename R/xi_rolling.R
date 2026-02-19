@@ -23,12 +23,29 @@ run_rolling_xi_analysis <- function(
     n_cores = NULL
 ) {
     # --- 1. Input Validation ---
-    n_total <- length(x) # ts_vec -> x
+    n_total <- length(x)
     if (window_size > n_total) {
         stop("window_size cannot be larger than the time series length.")
     }
 
-    # ... (中略: 並列処理のセットアップ) ...
+    # --- 2. Safe Parallel Setup (Polite Programming) ---
+    # ユーザーが明示的にコア数を指定した場合のみプランを変更し、終わったら戻す
+    if (!is.null(n_cores)) {
+        # CRANチェック対策: コア数制限がある環境では最大2コアに抑える
+        chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+        if (nzchar(chk) && chk == "TRUE") {
+            n_cores <- min(n_cores, 2)
+        }
+
+        # 現在のプランを保存
+        old_plan <- future::plan()
+
+        # 新しいプランを設定
+        future::plan(future::multisession, workers = n_cores)
+
+        # 関数終了時(エラー時含む)に必ず元のプランに戻す
+        on.exit(future::plan(old_plan), add = TRUE)
+    }
 
     # --- 3. Prepare Windows ---
     starts <- seq(1, n_total - window_size + 1, by = step_size)
@@ -62,8 +79,6 @@ run_rolling_xi_analysis <- function(
 
                     # C++エンジンの呼び出し (後でリネームするならここも変更)
                     res <- compute_xi_lags(y_sub, max_lag, n_surr)
-
-                    # ... (以下変更なし) ...
 
                     # 閾値計算 (NA除去必須)
                     xi_threshold <- rep(NA, max_lag)
