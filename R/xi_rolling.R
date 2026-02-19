@@ -47,6 +47,8 @@ run_rolling_xi_analysis <- function(
         on.exit(future::plan(old_plan), add = TRUE)
     }
 
+    doFuture::registerDoFuture()
+
     # --- 3. Prepare Windows ---
     starts <- seq(1, n_total - window_size + 1, by = step_size)
     n_windows <- length(starts)
