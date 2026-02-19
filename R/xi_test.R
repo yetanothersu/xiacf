@@ -56,7 +56,7 @@ xi_test <- function(x, max_lag = 20, n_surr = 100) {
 
     # --- 3. Calculate Xi (Non-linear) using C++ backend ---
     # C++側で初期化修正済みなので安全
-    xi_res <- run_xi_test_cpp(x, max_lag, n_surr)
+    xi_res <- compute_xi_lags(x, max_lag, n_surr)
 
     # --- 4. Calculate Threshold from Surrogates ---
     # n_surr = 0 の場合のハンドリング
