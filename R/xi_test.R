@@ -8,122 +8,86 @@
 #' @return An object of class "xi_test".
 #' @export
 xi_test <- function(x, max_lag = 20, n_surr = 100) {
-    # 1. Validate input
-    if (!is.numeric(x) || length(x) < 5) {
-        stop("x must be a numeric vector with length >= 5")
+    # --- 1. Robust Input Validation (監査修正ポイント) ---
+
+    # 数値ベクトルか確認
+    if (!is.numeric(x)) {
+        stop("Input 'x' must be a numeric vector.")
     }
 
-    # 2. Calculate Standard ACF (Linear)
+    # NAチェック: 削除して警告を出す、またはエラーにする
+    if (any(is.na(x))) {
+        warning("'x' contains NA values. Removing them before analysis.")
+        x <- stats::na.omit(x)
+        # na.omit後の属性(attributes)を消して純粋なベクトルにする
+        x <- as.numeric(x)
+    }
+
+    n <- length(x)
+
+    # データ長チェック
+    if (n < 5) {
+        stop("Time series length is too short (n < 5).")
+    }
+
+    # 定数ベクトルチェック (分散ゼロ回避)
+    if (stats::sd(x) == 0) {
+        stop(
+            "Input 'x' is constant (zero variance). Correlation cannot be computed."
+        )
+    }
+
+    # ラグの長さチェック
+    if (max_lag >= n) {
+        warning("max_lag is >= series length. Reducing max_lag to n - 1.")
+        max_lag <- n - 1
+    }
+
+    # --- 2. Calculate Standard ACF (Linear) ---
+    # stats::acf は plot=FALSE でも計算してくれる
+    # na.action = na.pass は不要(上で除去済み)
     acf_res <- stats::acf(x, lag.max = max_lag, plot = FALSE)
+
+    # lag=0 (必ず1.0) を除外
     acf_vals <- as.numeric(acf_res$acf)[-1]
 
-    # Calculate ACF Confidence Interval (95% i.i.d.)
-    n <- length(x)
-    acf_ci <- qnorm(0.975) / sqrt(n)
+    # Calculate ACF Confidence Interval (95% i.i.d. assumption: +/- 1.96/sqrt(n))
+    acf_ci <- stats::qnorm(0.975) / sqrt(n)
 
-    # 3. Calculate Xi (Non-linear) using C++ backend
+    # --- 3. Calculate Xi (Non-linear) using C++ backend ---
+    # C++側で初期化修正済みなので安全
     xi_res <- run_xi_test_cpp(x, max_lag, n_surr)
 
-    # Calculate Xi Threshold from Surrogates (Safe for n_surr = 0)
+    # --- 4. Calculate Threshold from Surrogates ---
+    # n_surr = 0 の場合のハンドリング
+    xi_threshold <- rep(NA, max_lag)
+
     if (n_surr > 0) {
+        # 行ごと(各ラグごと)に95%点検定値を計算
+        # C++側で計算不能なラグは NaN で埋められているため、na.rm = TRUE が必須
         xi_threshold <- apply(xi_res$xi_surrogates, 1, function(row) {
             stats::quantile(row, 0.95, na.rm = TRUE)
         })
-    } else {
-        xi_threshold <- rep(NA_real_, max_lag)
     }
 
-    # 4. Construct S3 Object
-    df_summary <- data.frame(
+    # --- 5. Construct Result Object ---
+    # データフレームにまとめることで、ggplot2での描画が楽になる
+    df_res <- data.frame(
         Lag = 1:max_lag,
-        ACF = acf_vals,
+        ACF = acf_vals[1:max_lag], # acfの結果がmax_lagより短い場合に備えて安全策
         Xi = as.numeric(xi_res$xi_original),
         Xi_Threshold_95 = xi_threshold,
-        ACF_CI = rep(acf_ci, max_lag)
+        ACF_CI = acf_ci # 定数だがプロット用に列として持たせても良いし、属性でも良い
     )
 
+    # クラス定義
     structure(
         list(
-            summary = df_summary,
-            params = list(max_lag = max_lag, n_surr = n_surr),
-            data = x
+            data = df_res,
+            n = n,
+            max_lag = max_lag,
+            n_surr = n_surr
         ),
         class = "xi_test"
     )
-}
-
-#' @export
-print.xi_test <- function(x, ...) {
-    cat("Xi-ACF Test Results\n")
-    cat("-------------------\n")
-    cat(
-        "Parameters: max_lag =",
-        x$params$max_lag,
-        ", n_surr =",
-        x$params$n_surr,
-        "\n\n"
-    )
-    print(head(x$summary, 10))
-    if (nrow(x$summary) > 10) {
-        cat("... (", nrow(x$summary) - 10, " more lags)\n")
-    }
-}
-
-#' @import ggplot2
-#' @export
-autoplot.xi_test <- function(object, ...) {
-    df <- object$summary
-
-    ggplot(df, aes(x = Lag)) +
-        # 1. Linear ACF (Gray Bars: 白黒印刷でも白飛びしないグレー)
-        geom_bar(
-            aes(y = ACF, fill = "Linear ACF"),
-            stat = "identity",
-            alpha = 0.5,
-            width = 0.6
-        ) +
-        geom_hline(
-            aes(yintercept = ACF_CI, color = "ACF 95% CI"),
-            linetype = "dotted"
-        ) +
-        geom_hline(
-            aes(yintercept = -ACF_CI, color = "ACF 95% CI"),
-            linetype = "dotted"
-        ) +
-        # 2. Xi Threshold (Red Dashed) - 線の下に描画した方が綺麗
-        {
-            if (!all(is.na(df$Xi_Threshold_95))) {
-                geom_line(
-                    aes(y = Xi_Threshold_95, color = "Xi 95% Threshold"),
-                    linetype = "dashed"
-                )
-            }
-        } +
-        # 3. Xi Coefficient (Dark Red Line & Points: 白黒印刷でも黒く出る)
-        geom_line(aes(y = Xi, color = "Xi Coefficient"), linewidth = 1) +
-        geom_point(aes(y = Xi, color = "Xi Coefficient"), size = 2) +
-
-        # 配色の設定
-        scale_fill_manual(
-            name = "",
-            values = c("Linear ACF" = "gray60") # 青からグレーに変更
-        ) +
-        scale_color_manual(
-            name = "",
-            values = c(
-                "Xi Coefficient" = "firebrick",
-                "Xi 95% Threshold" = "firebrick",
-                "ACF 95% CI" = "gray50"
-            )
-        ) +
-        # 前回決めた最強の軸ラベルをデフォルトに設定
-        labs(
-            x = "Lag",
-            y = expression(hat(xi)[X](k))
-        ) +
-        theme_minimal() +
-        theme(
-            legend.position = "bottom",
-            plot.title = element_text(face = "bold")
-        )
 }
