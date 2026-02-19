@@ -12,5 +12,6 @@
 \item{...}{Additional arguments (ignored).}
 }
 \description{
-Plot Xi-ACF Comparison
+Visualizes the comparison between standard linear ACF and non-linear Chatterjee's Xi
+coefficient, including significance thresholds.
 }

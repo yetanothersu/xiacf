@@ -5,16 +5,16 @@
 \title{Rolling Xi-ACF Analysis}
 \usage{
 run_rolling_xi_analysis(
-  ts_vec,
+  x,
   window_size,
-  step_size,
-  max_lag,
+  step_size = 1,
+  max_lag = 20,
   n_surr = 100,
   n_cores = NULL
 )
 }
 \arguments{
-\item{ts_vec}{A numeric vector of the time series (e.g., log-returns).}
+\item{x}{A numeric vector of the time series (e.g., log-returns).}
 
 \item{window_size}{Integer. The size of the rolling window.}
 
@@ -24,18 +24,8 @@ run_rolling_xi_analysis(
 
 \item{n_surr}{Integer. Number of surrogates for the null hypothesis test.}
 
-\item{n_cores}{Integer (optional). Number of cores for parallel processing.
-If NULL, detects automatically.}
-}
-\value{
-A data.frame containing:
-  \item{Window_Start_Idx}{Start index of the window}
-  \item{Lag}{Lag (tau)}
-  \item{Xi_Original}{Observed Xi value}
-  \item{Xi_Threshold_95}{95th percentile of surrogate Xi values}
-  \item{Xi_Excess}{Excess amount (Xi_Original - Xi_Threshold_95)}
+\item{n_cores}{Integer (optional). Number of cores.}
 }
 \description{
-Performs a rolling window analysis using Chatterjee's Xi coefficient
-and IAAFT surrogates to detect non-linear dependencies.
+Performs a rolling window analysis using Chatterjee's Xi coefficient.
 }

@@ -36,16 +36,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// run_xi_test_cpp
-List run_xi_test_cpp(NumericVector y_in, int max_lag, int n_surr);
-RcppExport SEXP _xiacf_run_xi_test_cpp(SEXP y_inSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP) {
+// compute_xi_lags
+List compute_xi_lags(NumericVector x, int max_lag, int n_surr);
+RcppExport SEXP _xiacf_compute_xi_lags(SEXP xSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type y_in(y_inSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
     Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
-    rcpp_result_gen = Rcpp::wrap(run_xi_test_cpp(y_in, max_lag, n_surr));
+    rcpp_result_gen = Rcpp::wrap(compute_xi_lags(x, max_lag, n_surr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -53,7 +53,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_xiacf_xi_coefficient", (DL_FUNC) &_xiacf_xi_coefficient, 2},
     {"_xiacf_generate_iaaft_surrogates", (DL_FUNC) &_xiacf_generate_iaaft_surrogates, 3},
-    {"_xiacf_run_xi_test_cpp", (DL_FUNC) &_xiacf_run_xi_test_cpp, 3},
+    {"_xiacf_compute_xi_lags", (DL_FUNC) &_xiacf_compute_xi_lags, 3},
     {NULL, NULL, 0}
 };
 
