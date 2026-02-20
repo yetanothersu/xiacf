@@ -41,10 +41,10 @@ run_rolling_xi_analysis <- function(
     # ユーザーが明示的にコア数を指定した場合のみプランを変更し、終わったら戻す
     if (!is.null(n_cores)) {
         # CRANチェック対策: コア数制限がある環境では最大2コアに抑える
-        chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-        if (nzchar(chk) && chk == "TRUE") {
-            n_cores <- min(n_cores, 2)
-        }
+        #chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+        #if (nzchar(chk) && chk == "TRUE") {
+        #    n_cores <- min(n_cores, 2)
+        #}
 
         # 現在のプランを保存
         old_plan <- future::plan()
