@@ -30,6 +30,13 @@ run_rolling_xi_analysis <- function(
         stop("window_size cannot be larger than the time series length.")
     }
 
+    # ★追加：コア数の安全チェック
+    if (!is.null(n_cores)) {
+        if (!is.numeric(n_cores) || n_cores <= 0 || n_cores %% 1 != 0) {
+            stop("n_cores must be a positive integer or NULL.")
+        }
+    }
+
     # --- 2. Safe Parallel Setup (Polite Programming) ---
     # ユーザーが明示的にコア数を指定した場合のみプランを変更し、終わったら戻す
     if (!is.null(n_cores)) {
