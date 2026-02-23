@@ -109,10 +109,21 @@ autoplot.xi_test <- function(object, ...) {
             plot.title = element_text(face = "bold")
         )
 
-    # Y軸の範囲設定 (ハードコーディングを避ける)
-    # デフォルトは -0.2 ~ 1.0 だが、データがはみ出る場合は自動拡張
-    min_y <- min(c(-0.2, min(df$ACF, na.rm = TRUE)))
-    p <- p + coord_cartesian(ylim = c(min_y, 1.05))
+    # Y軸の範囲設定 (データに合わせて動的にズームイン)
+    # グラフ内に描画される全要素の最大値と最小値を取得
+    max_val <- max(c(df$ACF, df$Xi, df$Xi_Threshold_95, acf_ci), na.rm = TRUE)
+    min_val <- min(c(df$ACF, df$Xi, -acf_ci, 0), na.rm = TRUE)
+
+    # 上下に10%の余白 (マージン) を持たせる
+    y_margin <- (max_val - min_val) * 0.1
+    min_y <- min_val - y_margin
+    max_y <- max_val + y_margin
+
+    # 相関係数の理論上の上下限 (-1.0 ~ 1.0) を超えないようにキャップする
+    max_y <- min(max_y, 1.05)
+    min_y <- max(min_y, -1.05)
+
+    p <- p + coord_cartesian(ylim = c(min_y, max_y))
 
     return(p)
 }
