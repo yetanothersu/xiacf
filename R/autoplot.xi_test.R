@@ -59,7 +59,7 @@ autoplot.xi_test <- function(object, ...) {
         geom_point(
             aes(y = ACF, color = "Standard ACF (Linear)"),
             shape = 16,
-            size = 1.5
+            size = 3
         ) +
 
         # Xi (Non-linear)
@@ -70,7 +70,7 @@ autoplot.xi_test <- function(object, ...) {
         geom_point(
             aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
             shape = 17,
-            size = 2
+            size = 3
         ) +
 
         # --- Scales (色とラベルの定義) ---
