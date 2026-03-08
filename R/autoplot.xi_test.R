@@ -6,6 +6,7 @@
 #' @param object An object of class "xi_test".
 #' @param ... Additional arguments (ignored).
 #' @import ggplot2
+#' @import latex2exp
 #' @export
 autoplot.xi_test <- function(object, ...) {
     # データを取り出し
@@ -76,14 +77,26 @@ autoplot.xi_test <- function(object, ...) {
         # --- Scales (色とラベルの定義) ---
         scale_color_manual(
             name = "Correlation Measure",
+            # ★追加：アルファベット順の自動ソートを防ぎ、順番を固定する
+            breaks = c(
+                "Standard ACF (Linear)",
+                "Chatterjee's Xi (Non-linear)"
+            ),
             values = c(
                 "Standard ACF (Linear)" = "steelblue",
                 "Chatterjee's Xi (Non-linear)" = "firebrick"
+            ),
+            # ★追加：表示名だけTeXに変換
+            labels = c(
+                "Standard ACF (Linear)",
+                TeX(r"(Chatterjee's $\xi$ (Non-linear))")
             )
         ) +
         scale_fill_manual(
             name = "Significance",
-            values = c("Xi 95% Threshold" = "gray50")
+            values = c("Xi 95% Threshold" = "gray50"),
+            # ★追加：表示名だけTeXに変換
+            labels = TeX(c(r"($\xi$-ACF 95% Threshold)"))
         ) +
         scale_linetype_manual(
             name = "Significance",
@@ -92,7 +105,7 @@ autoplot.xi_test <- function(object, ...) {
 
         # --- Theme & Labs ---
         labs(
-            title = "Xi-ACF Correlogram",
+            title = TeX(r"($\xi$-ACF Correlogram)"), # ★タイトルもXiを数式化
             subtitle = paste0(
                 "Linear vs Non-linear Dependence (n = ",
                 object$n,
