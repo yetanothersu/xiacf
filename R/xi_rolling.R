@@ -9,8 +9,7 @@
 #' @param n_surr Integer. Number of surrogates for the null hypothesis test.
 #' @param n_cores Integer (optional). Number of cores.
 #'
-#' @importFrom foreach foreach
-#' @importFrom doRNG %dorng%
+#' @importFrom foreach foreach %dopar%
 #' @importFrom doFuture registerDoFuture
 #' @importFrom future plan multisession sequential
 #' @importFrom progressr progressor
@@ -69,9 +68,9 @@ run_rolling_xi_analysis <- function(
         i = seq_along(starts),
         .combine = dplyr::bind_rows,
         .packages = c("xiacf", "stats"),
-        # .options.future = list(seed = TRUE),
+        .options.future = list(seed = TRUE),
         .errorhandling = "remove"
-    ) %dorng%
+    ) %dopar%
         {
             p()
 
