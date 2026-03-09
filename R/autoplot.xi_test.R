@@ -89,7 +89,7 @@ autoplot.xi_test <- function(object, ...) {
             # ★追加：表示名だけTeXに変換
             labels = c(
                 "Standard ACF (Linear)",
-                TeX(r"(Chatterjee's $\xi$ (Non-linear))")
+                TeX(r"($\xi$-ACF (Non-linear))")
             )
         ) +
         scale_fill_manual(
