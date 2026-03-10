@@ -5,8 +5,10 @@
 #'
 #' @param object An object of class "xi_test".
 #' @param ... Additional arguments (ignored).
-#' @import ggplot2
-#' @import latex2exp
+#' @importFrom ggplot2 ggplot aes geom_hline geom_ribbon geom_line geom_point
+#' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual
+#' @importFrom ggplot2 labs theme_minimal theme element_text coord_cartesian
+#' @importFrom latex2exp TeX
 #' @export
 autoplot.xi_test <- function(object, ...) {
     # データを取り出し

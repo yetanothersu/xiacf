@@ -4,6 +4,7 @@
 #'
 #' @useDynLib xiacf, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom stats na.omit sd acf quantile
 #'
 #' @param x Numeric vector (time series).
 #' @param max_lag Integer. Maximum lag to compute.
