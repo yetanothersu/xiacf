@@ -14,6 +14,7 @@
 #' @importFrom future plan multisession sequential
 #' @importFrom progressr progressor
 #' @importFrom dplyr bind_rows
+#' @importFrom stats quantile
 #' @export
 run_rolling_xi_analysis <- function(
     x, # ts_vec -> x に変更
