@@ -12,19 +12,21 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: 
-    Rcpp (>= 1.0.0),
-    dplyr,
-    foreach,
+    dplyr (>= 1.1.4),
     doFuture,
-    progressr,
+    doParallel,
+    foreach,
     future,
-    stats,
-    utils,
-    here
+    ggplot2 (>= 4.0.1),
+    latex2exp,
+    progressr,
+    Rcpp (>= 1.1.0),
+    RcppArmadillo (>= 15.2.1),
+    stats
 LinkingTo: 
     Rcpp,
     RcppArmadillo
 RoxygenNote: 7.3.3
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.3.2)
 Config/testthat/edition: 3
