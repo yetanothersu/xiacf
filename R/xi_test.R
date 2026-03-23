@@ -115,7 +115,7 @@ print.xi_test <- function(x, ...) {
     cols_exist <- intersect(show_cols, names(x$data))
 
     # 最初の5行だけ表示
-    print(head(x$data[, cols_exist], 5), row.names = FALSE)
+    print(utils::head(x$data[, cols_exist], 5), row.names = FALSE)
 
     # 残りがある場合はメッセージを表示
     if (nrow(x$data) > 5) {
