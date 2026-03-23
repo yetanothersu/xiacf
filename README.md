@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# \# xiacf: Chatterjee’s Rank Correlation for Time Series Analysis
+# xiacf: Chatterjee’s Rank Correlation for Time Series Analysis
 
 <!-- badges: start -->
 
@@ -140,32 +140,32 @@ rolling_res <- run_rolling_xi_analysis(
 #> might be invalid. To fix this, use '%dorng%' from the 'doRNG' package instead
 #> of '%dopar%'. This ensures that proper, parallel-safe random numbers are
 #> produced. To disable this check, set option 'doFuture.rng.onMisuse' to
-#> "ignore". [future 'doFuture-1' (32016cc3598015abf06cb32c4ebbd8bb-1); on
-#> 32016cc3598015abf06cb32c4ebbd8bb@Tama-Office<1609091>]
+#> "ignore". [future 'doFuture-1' (e0f51437ceb5273cc9b597ea49054c4f-1); on
+#> e0f51437ceb5273cc9b597ea49054c4f@Tama-Office<1621675>]
 #> Warning: UNRELIABLE VALUE: One of the foreach() iterations ('doFuture-2')
 #> unexpectedly generated random numbers without declaring so. There is a risk
 #> that those random numbers are not statistically sound and the overall results
 #> might be invalid. To fix this, use '%dorng%' from the 'doRNG' package instead
 #> of '%dopar%'. This ensures that proper, parallel-safe random numbers are
 #> produced. To disable this check, set option 'doFuture.rng.onMisuse' to
-#> "ignore". [future 'doFuture-2' (32016cc3598015abf06cb32c4ebbd8bb-2); on
-#> 32016cc3598015abf06cb32c4ebbd8bb@Tama-Office<1609091>]
+#> "ignore". [future 'doFuture-2' (e0f51437ceb5273cc9b597ea49054c4f-2); on
+#> e0f51437ceb5273cc9b597ea49054c4f@Tama-Office<1621675>]
 
 head(rolling_res)
 #>   Window_ID Window_Start_Idx Window_End_Idx Lag Xi_Original Xi_Threshold_95
-#> 1         1                1            100   1   0.9403061      0.09726020
-#> 2         1                1            100   2   0.8819119      0.09573571
-#> 3         1                1            100   3   0.7720026      0.06844707
-#> 4         1                1            100   4   0.5930548      0.08688009
-#> 5         1                1            100   5   0.3085106      0.08863032
-#> 6         2               11            110   1   0.9403061      0.09834694
+#> 1         1                1            100   1   0.9403061      0.07909184
+#> 2         1                1            100   2   0.8819119      0.08603561
+#> 3         1                1            100   3   0.7720026      0.10749362
+#> 4         1                1            100   4   0.5930548      0.08624525
+#> 5         1                1            100   5   0.3085106      0.08497340
+#> 6         2               11            110   1   0.9403061      0.11440306
 #>   Xi_Excess
-#> 1 0.8430459
-#> 2 0.7861762
-#> 3 0.7035555
-#> 4 0.5061747
-#> 5 0.2198803
-#> 6 0.8419592
+#> 1 0.8612143
+#> 2 0.7958763
+#> 3 0.6645089
+#> 4 0.5068095
+#> 5 0.2235372
+#> 6 0.8259031
 ```
 
 ## References
