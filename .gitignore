@@ -60,3 +60,7 @@ src/*.dll
 .Rproj.user
 .Rhistory
 .RData
+
+# CRAN submission files
+cran-comments.md
+CRAN-SUBMISSION
