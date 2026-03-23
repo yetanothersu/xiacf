@@ -1,23 +1,26 @@
 #' Rolling Xi-ACF Analysis
 #'
-#' Performs a rolling window analysis using Chatterjee's Xi coefficient.
+#' Performs a rolling window analysis using Chatterjee's Xi coefficient to assess
+#' the time-varying non-linear dependence structure of a time series.
 #'
-#' @param x A numeric vector of the time series (e.g., log-returns).
-#' @param window_size Integer. The size of the rolling window.
-#' @param step_size Integer. The step size for moving the window.
-#' @param max_lag Integer. Maximum lag to calculate Xi for.
-#' @param n_surr Integer. Number of surrogates for the null hypothesis test.
-#' @param n_cores Integer (optional). Number of cores.
+#' @param x A numeric vector representing the time series (e.g., log-returns).
+#' @param window_size An integer specifying the size of the rolling window.
+#' @param step_size An integer specifying the step size by which the window is shifted. Default is 1.
+#' @param max_lag An integer specifying the maximum lag to compute Chatterjee's Xi for.
+#' @param n_surr An integer specifying the number of surrogate datasets for the null hypothesis test.
+#' @param n_cores An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.
+#'
+#' @return A \code{data.frame} containing the rolling window results, including window indices, lags, computed Xi values, surrogate thresholds, and the excess Xi.
 #'
 #' @importFrom foreach foreach %dopar%
 #' @importFrom doFuture registerDoFuture
 #' @importFrom future plan multisession sequential
 #' @importFrom progressr progressor
 #' @importFrom dplyr bind_rows
-#' @importFrom stats quantile
+#' @importFrom stats quantile sd
 #' @export
 run_rolling_xi_analysis <- function(
-    x, # ts_vec -> x に変更
+    x,
     window_size,
     step_size = 1,
     max_lag = 20,
@@ -30,7 +33,7 @@ run_rolling_xi_analysis <- function(
         stop("window_size cannot be larger than the time series length.")
     }
 
-    # ★追加：コア数の安全チェック
+    # Validate core count specification
     if (!is.null(n_cores)) {
         if (!is.numeric(n_cores) || n_cores <= 0 || n_cores %% 1 != 0) {
             stop("n_cores must be a positive integer or NULL.")
@@ -38,21 +41,16 @@ run_rolling_xi_analysis <- function(
     }
 
     # --- 2. Safe Parallel Setup (Polite Programming) ---
-    # ユーザーが明示的にコア数を指定した場合のみプランを変更し、終わったら戻す
+    # Modify the future plan only if the user explicitly specified n_cores,
+    # and ensure it is restored upon exit to comply with CRAN policies.
     if (!is.null(n_cores)) {
-        # CRANチェック対策: コア数制限がある環境では最大2コアに抑える
-        #chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-        #if (nzchar(chk) && chk == "TRUE") {
-        #    n_cores <- min(n_cores, 2)
-        #}
-
-        # 現在のプランを保存
+        # Save the current future plan
         old_plan <- future::plan()
 
-        # 新しいプランを設定
+        # Set the new multisession plan
         future::plan(future::multisession, workers = n_cores)
 
-        # 関数終了時(エラー時含む)に必ず元のプランに戻す
+        # Restore the original plan on exit (even in case of errors)
         on.exit(future::plan(old_plan), add = TRUE)
     }
 
@@ -80,18 +78,18 @@ run_rolling_xi_analysis <- function(
                     idx_start <- starts[i]
                     idx_end <- idx_start + window_size - 1
 
-                    # ts_vec -> x
+                    # Extract the sub-series for the current window
                     y_sub <- x[idx_start:idx_end]
 
-                    # 定数チェック
-                    if (sd(y_sub, na.rm = TRUE) == 0) {
+                    # Check for constant series (zero variance)
+                    if (stats::sd(y_sub, na.rm = TRUE) == 0) {
                         return(NULL)
                     }
 
-                    # C++エンジンの呼び出し (後でリネームするならここも変更)
+                    # Call the C++ engine
                     res <- compute_xi_lags(y_sub, max_lag, n_surr)
 
-                    # 閾値計算 (NA除去必須)
+                    # Calculate thresholds (NA removal is required since uncomputable lags return NaN in C++)
                     xi_threshold <- rep(NA, max_lag)
                     if (n_surr > 0) {
                         xi_threshold <- apply(
@@ -103,20 +101,20 @@ run_rolling_xi_analysis <- function(
                         )
                     }
 
-                    # データフレーム構築
+                    # Construct the result data frame for the current window
                     data.frame(
-                        Window_ID = i, # 何番目のウィンドウか
+                        Window_ID = i,
                         Window_Start_Idx = idx_start,
                         Window_End_Idx = idx_end,
                         Lag = 1:max_lag,
                         Xi_Original = as.numeric(res$xi_original),
                         Xi_Threshold_95 = xi_threshold,
-                        # 余剰量 (有意でなければ0にする処理を入れても良いが、生の値を入れておく)
+                        # Excess Xi (storing the raw difference without flooring to zero)
                         Xi_Excess = as.numeric(res$xi_original) - xi_threshold
                     )
                 },
                 error = function(e) {
-                    # エラー時は警告を出して NULL を返す (bind_rowsで無視される)
+                    # On error, issue a warning and return NULL (which is safely ignored by bind_rows)
                     warning(paste("Error in window", i, ":", e$message))
                     return(NULL)
                 }

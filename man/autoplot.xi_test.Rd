@@ -7,11 +7,14 @@
 \method{autoplot}{xi_test}(object, ...)
 }
 \arguments{
-\item{object}{An object of class "xi_test".}
+\item{object}{An object of class \code{"xi_test"}.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{Additional arguments passed to other methods (currently ignored).}
+}
+\value{
+A \code{ggplot} object representing the correlogram.
 }
 \description{
-Visualizes the comparison between standard linear ACF and non-linear Chatterjee's Xi
-coefficient, including significance thresholds.
+Visualizes the comparison between the standard linear Autocorrelation Function (ACF)
+and the non-linear Chatterjee's Xi coefficient, including their respective significance thresholds.
 }

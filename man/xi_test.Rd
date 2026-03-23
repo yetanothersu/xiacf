@@ -7,15 +7,16 @@
 xi_test(x, max_lag = 20, n_surr = 100)
 }
 \arguments{
-\item{x}{Numeric vector (time series).}
+\item{x}{A numeric vector representing the time series data.}
 
-\item{max_lag}{Integer. Maximum lag to compute.}
+\item{max_lag}{An integer specifying the maximum number of lags to compute.}
 
-\item{n_surr}{Integer. Number of surrogates for IAAFT test.}
+\item{n_surr}{An integer specifying the number of surrogate datasets to generate for the IAAFT test.}
 }
 \value{
-An object of class "xi_test".
+An object of class \code{"xi_test"} containing the computed statistics and metadata.
 }
 \description{
-Calculates Chatterjee's Xi and Standard ACF with significance thresholds.
+Calculates Chatterjee's Xi and the standard Autocorrelation Function (ACF)
+along with their respective significance thresholds.
 }

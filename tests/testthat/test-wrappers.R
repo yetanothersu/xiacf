@@ -1,15 +1,15 @@
 test_that("xi_test function works and returns correct class", {
-    # データ生成
+    # Generate synthetic data
     set.seed(42)
     x <- rnorm(100)
 
-    # 実行
+    # Execute the main function
     res <- xiacf::xi_test(x, max_lag = 10, n_surr = 10)
 
-    # クラスの確認
+    # Verify the returned S3 class
     expect_s3_class(res, "xi_test")
 
-    # データフレームの構造確認
+    # Verify the structure and contents of the data frame
     expect_true("data.frame" %in% class(res$data))
     expect_equal(
         names(res$data),
@@ -19,13 +19,13 @@ test_that("xi_test function works and returns correct class", {
 })
 
 test_that("xi_test handles input errors gracefully", {
-    # 短すぎるデータ
+    # Edge case 1: Time series is too short
     expect_error(xiacf::xi_test(c(1, 2, 3)), "too short")
 
-    # 定数（分散ゼロ）
+    # Edge case 2: Constant series (zero variance)
     expect_error(xiacf::xi_test(rep(1, 100)), "zero variance")
 
-    # NA混入（警告が出て計算されるか）
+    # Edge case 3: Handling of NA values (should warn, remove NA, and compute)
     x_na <- c(rnorm(10), NA)
     expect_warning(res <- xiacf::xi_test(x_na, max_lag = 5), "contains NA")
     expect_s3_class(res, "xi_test")
@@ -35,36 +35,36 @@ test_that("print method produces output", {
     x <- rnorm(50)
     res <- xiacf::xi_test(x, max_lag = 5, n_surr = 5)
 
-    # print実行時の出力をキャプチャして確認
+    # Capture the output of the print method
     out <- capture.output(print(res))
 
-    # 出力に特定の単語が含まれているか
+    # Verify that specific keywords are present in the console output
     expect_true(any(grepl("Chatterjee's Xi-ACF Test", out)))
     expect_true(any(grepl("Data length:", out)))
 })
 
 test_that("run_rolling_xi_analysis works with new 'x' argument", {
-    # 小さなデータでテスト
+    # Test with a small synthetic dataset
     x <- rnorm(50)
 
-    # 逐次処理で実行 (n_cores = 1 or NULL)
+    # Execute sequentially to keep the automated test lightweight
     res_df <- xiacf::run_rolling_xi_analysis(
-        x = x, # 引数名 x が効いているかチェック
+        x = x, # Ensure the argument 'x' is correctly mapped
         window_size = 20,
         step_size = 10,
         max_lag = 5,
         n_surr = 10,
-        n_cores = 1 # テストなので並列化せず軽く済ませる
+        n_cores = 1 # Avoid parallel overhead in CRAN checks
     )
 
-    # 結果の型確認
+    # Verify the type of the result
     expect_true(is.data.frame(res_df))
 
-    # ウィンドウ数の確認 (50 - 20)/10 + 1 = 4 ウィンドウ
-    # 各ウィンドウで 5ラグ分あるので、合計 20行のはず
+    # Check the total number of windows: (50 - 20) / 10 + 1 = 4 windows
+    # Each window computes 5 lags, resulting in exactly 4 * 5 = 20 rows
     expected_rows <- 4 * 5
     expect_equal(nrow(res_df), expected_rows)
 
-    # 列名の確認
+    # Verify the presence of specific computed columns
     expect_true("Xi_Excess" %in% names(res_df))
 })

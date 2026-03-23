@@ -2,20 +2,23 @@
 % Please edit documentation in R/RcppExports.R
 \name{compute_xi_lags}
 \alias{compute_xi_lags}
-\title{Compute Xi Statistics for Lags (Core Engine)}
+\title{Compute Xi-ACF for Multiple Lags (Core Engine)}
 \usage{
 compute_xi_lags(x, max_lag, n_surr)
 }
 \arguments{
-\item{x}{Numeric vector (time series).}
+\item{x}{A numeric vector (time series).}
 
-\item{max_lag}{Maximum lag to compute.}
+\item{max_lag}{An integer specifying the maximum number of lags to compute.}
 
-\item{n_surr}{Number of surrogate datasets to generate.}
+\item{n_surr}{An integer specifying the number of surrogate datasets to generate.}
 }
 \value{
-A list containing `xi_original` and `xi_surrogates`.
+A list containing \code{xi_original} (the Xi coefficients for the original series) 
+and \code{xi_surrogates} (a matrix of Xi coefficients for the surrogate datasets).
 }
 \description{
-Calculates Chatterjee's Xi for multiple lags and generates IAAFT surrogates.
+Calculates Chatterjee's Xi coefficient for multiple lags and generates
+IAAFT (Iterative Amplitude Adjusted Fourier Transform) surrogates to establish 
+confidence intervals for non-linear dependence.
 }

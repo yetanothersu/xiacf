@@ -1,28 +1,29 @@
 #' Plot Xi-ACF Comparison
 #'
-#' Visualizes the comparison between standard linear ACF and non-linear Chatterjee's Xi
-#' coefficient, including significance thresholds.
+#' Visualizes the comparison between the standard linear Autocorrelation Function (ACF)
+#' and the non-linear Chatterjee's Xi coefficient, including their respective significance thresholds.
 #'
-#' @param object An object of class "xi_test".
-#' @param ... Additional arguments (ignored).
+#' @param object An object of class \code{"xi_test"}.
+#' @param ... Additional arguments passed to other methods (currently ignored).
+#' @return A \code{ggplot} object representing the correlogram.
 #' @importFrom ggplot2 autoplot ggplot aes geom_hline geom_ribbon geom_line geom_point
 #' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual
 #' @importFrom ggplot2 labs theme_minimal theme element_text coord_cartesian
 #' @importFrom latex2exp TeX
 #' @export
 autoplot.xi_test <- function(object, ...) {
-    # データを取り出し
+    # Extract data from the object
     df <- object$data
 
-    # ACFの信頼区間（定数）
+    # ACF confidence interval (constant across lags)
     acf_ci <- object$data$ACF_CI[1]
 
-    # ベースのプロット作成
+    # Initialize the base plot
     p <- ggplot(df, aes(x = Lag)) +
-        # 0ライン
+        # Zero line
         geom_hline(yintercept = 0, color = "gray50", linewidth = 0.3) +
 
-        # 1. ACF 95% 信頼区間 (青の点線)
+        # 1. Standard ACF 95% Confidence Interval (blue dotted line)
         geom_hline(
             aes(yintercept = acf_ci, linetype = "ACF 95% CI"),
             color = "blue",
@@ -37,8 +38,8 @@ autoplot.xi_test <- function(object, ...) {
             alpha = 0.6
         )
 
-    # 2. Xi サロゲート閾値 (グレーの帯)
-    # n_surr > 0 の場合のみ描画 (NAチェック)
+    # 2. Xi Surrogate Threshold (gray ribbon)
+    # Draw only if surrogate data exists (i.e., n_surr > 0, no NA in threshold)
     if (!all(is.na(df$Xi_Threshold_95))) {
         p <- p +
             geom_ribbon(
@@ -51,7 +52,7 @@ autoplot.xi_test <- function(object, ...) {
             )
     }
 
-    # 3. メインのライン描画
+    # 3. Main lines and points
     p <- p +
         # ACF (Linear)
         geom_line(
@@ -76,10 +77,10 @@ autoplot.xi_test <- function(object, ...) {
             size = 3
         ) +
 
-        # --- Scales (色とラベルの定義) ---
+        # --- Scales (Color and Label definitions) ---
         scale_color_manual(
             name = "Correlation Measure",
-            # ★追加：アルファベット順の自動ソートを防ぎ、順番を固定する
+            # Prevent automatic alphabetical sorting to ensure consistent ordering
             breaks = c(
                 "Standard ACF (Linear)",
                 "Chatterjee's Xi (Non-linear)"
@@ -88,7 +89,7 @@ autoplot.xi_test <- function(object, ...) {
                 "Standard ACF (Linear)" = "steelblue",
                 "Chatterjee's Xi (Non-linear)" = "firebrick"
             ),
-            # ★追加：表示名だけTeXに変換
+            # Convert display names to TeX format for mathematical symbols
             labels = c(
                 "Standard ACF (Linear)",
                 TeX(r"($\xi$-ACF (Non-linear))")
@@ -97,7 +98,6 @@ autoplot.xi_test <- function(object, ...) {
         scale_fill_manual(
             name = "Significance",
             values = c("Xi 95% Threshold" = "gray50"),
-            # ★追加：表示名だけTeXに変換
             labels = TeX(c(r"($\xi$-ACF 95% Threshold)"))
         ) +
         scale_linetype_manual(
@@ -105,9 +105,9 @@ autoplot.xi_test <- function(object, ...) {
             values = c("ACF 95% CI" = "dotted")
         ) +
 
-        # --- Theme & Labs ---
+        # --- Theme & Labels ---
         labs(
-            title = TeX(r"($\xi$-ACF Correlogram)"), # ★タイトルもXiを数式化
+            title = TeX(r"($\xi$-ACF Correlogram)"),
             subtitle = paste0(
                 "Linear vs Non-linear Dependence (n = ",
                 object$n,
@@ -124,17 +124,18 @@ autoplot.xi_test <- function(object, ...) {
             plot.title = element_text(face = "bold")
         )
 
-    # Y軸の範囲設定 (データに合わせて動的にズームイン)
-    # グラフ内に描画される全要素の最大値と最小値を取得
+    # --- Dynamic Y-axis Zoom ---
+    # Retrieve the maximum and minimum values among all plotted elements
     max_val <- max(c(df$ACF, df$Xi, df$Xi_Threshold_95, acf_ci), na.rm = TRUE)
     min_val <- min(c(df$ACF, df$Xi, -acf_ci, 0), na.rm = TRUE)
 
-    # 上下に10%の余白 (マージン) を持たせる
+    # Add a 10% margin to the top and bottom
     y_margin <- (max_val - min_val) * 0.1
     min_y <- min_val - y_margin
     max_y <- max_val + y_margin
 
-    # 相関係数の理論上の上下限 (-1.0 ~ 1.0) を超えないようにキャップする
+    # Cap the limits so they do not exceed the theoretical bounds of correlation (-1.0 to 1.0)
+    # Using 1.05 to give a slight visual buffer even at maximum correlation
     max_y <- min(max_y, 1.05)
     min_y <- max(min_y, -1.05)
 

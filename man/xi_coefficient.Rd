@@ -2,18 +2,19 @@
 % Please edit documentation in R/RcppExports.R
 \name{xi_coefficient}
 \alias{xi_coefficient}
-\title{Calculate Chatterjee's Xi Coefficient}
+\title{Calculate Chatterjee's Rank Correlation Coefficient (Xi)}
 \usage{
 xi_coefficient(x, y)
 }
 \arguments{
-\item{x}{Numeric vector}
+\item{x}{A numeric vector.}
 
-\item{y}{Numeric vector}
+\item{y}{A numeric vector of the same length as \code{x}.}
 }
 \value{
-Double value of Xi
+A numeric scalar representing the Chatterjee's Xi coefficient.
 }
 \description{
-Calculate Chatterjee's Xi Coefficient
+Computes Chatterjee's rank correlation coefficient (Xi) between two numeric vectors.
+Ties are broken uniformly at random to ensure strict inequalities.
 }

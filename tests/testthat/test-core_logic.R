@@ -1,29 +1,30 @@
-test_that("Xi coefficient captures functional dependencies correctly", {
-    # Case 1: 完全な線形関係 (y = x)
-    # 理論上、nが増えれば 1.0 に収束するはず (厳密には 1 - 3/(n+1) 付近)
+test_that("xi_coefficient detects linear and non-linear relationships", {
+    # Case 1: Perfect linear relationship (y = x)
+    # Theoretically, it converges to 1.0 as n increases (strictly around 1 - 3/(n+1)).
     n <- 100
     x <- 1:n
     y <- x
 
-    # xi_coefficient は RcppExports で export されているはず
+    # xi_coefficient is exported via RcppExports
     xi_val <- xiacf::xi_coefficient(x, y)
 
-    # 完全に1にはならない仕様なので、0.96以上なら合格とする
+    # Since it does not become exactly 1.0 by design, we accept values > 0.96.
     expect_gt(xi_val, 0.96)
 
-    # Case 2: 完全なU字型 (y = x^2)
-    # ピアソン相関なら0になるが、Xiなら高い値が出るはず
+    # Case 2: Perfect U-shaped relationship (y = x^2)
+    # Pearson correlation would be 0, but Xi should yield a high value.
     x_para <- seq(-10, 10, length.out = 100)
     y_para <- x_para^2
 
     xi_val_para <- xiacf::xi_coefficient(x_para, y_para)
 
-    # これが「非線形検知」の証拠。0.5以上なら合格（実際はかなり高くなる）
+    # This is evidence of "non-linear detection".
+    # We accept values > 0.5 (it will actually be much higher).
     expect_gt(xi_val_para, 0.5)
 })
 
 test_that("Xi coefficient is close to 0 for independent noise", {
-    # Case 3: ランダムノイズ (独立)
+    # Case 3: Random noise (independent variables)
     set.seed(123)
     n <- 500
     x <- rnorm(n)
@@ -31,25 +32,25 @@ test_that("Xi coefficient is close to 0 for independent noise", {
 
     xi_val_noise <- xiacf::xi_coefficient(x, y)
 
-    # 0付近であること（絶対値が0.1以下なら合格）
+    # Should be close to 0 (absolute value < 0.1 is acceptable)
     expect_lt(abs(xi_val_noise), 0.1)
 })
 
 test_that("compute_xi_lags handles initialization correctly (NA check)", {
-    # Case 4: 初期化漏れバグの回帰テスト
-    # データ長(n=10) より ラグ(max_lag=20) が大きい意地悪なケース
+    # Case 4: Regression test for initialization bug
+    # Edge case where max_lag (20) is greater than the data length (10).
     x_short <- rnorm(10)
     max_lag <- 20
     n_surr <- 5
 
-    # エラー落ちせずに結果が返ってくるか？
+    # Ensure it returns a result without throwing an error
     res <- xiacf::compute_xi_lags(x_short, max_lag, n_surr)
 
-    # 計算できないラグ（11以降）は NaN (または NA) になっているか確認
-    # Rcppの datum::nan は R では NaN として扱われる
+    # Check if uncomputable lags (>= 11) are filled with NaN.
+    # Note: Rcpp's datum::nan is treated as NaN in R.
     expect_true(is.nan(res$xi_original[15]))
     expect_true(all(is.nan(res$xi_surrogates[15, ])))
 
-    # 計算できるラグ（1〜9）は数値が入っているか
+    # Check if computable lags (1 to 9) contain valid numeric values.
     expect_false(is.nan(res$xi_original[5]))
 })

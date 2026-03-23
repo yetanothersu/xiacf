@@ -14,18 +14,22 @@ run_rolling_xi_analysis(
 )
 }
 \arguments{
-\item{x}{A numeric vector of the time series (e.g., log-returns).}
+\item{x}{A numeric vector representing the time series (e.g., log-returns).}
 
-\item{window_size}{Integer. The size of the rolling window.}
+\item{window_size}{An integer specifying the size of the rolling window.}
 
-\item{step_size}{Integer. The step size for moving the window.}
+\item{step_size}{An integer specifying the step size by which the window is shifted. Default is 1.}
 
-\item{max_lag}{Integer. Maximum lag to calculate Xi for.}
+\item{max_lag}{An integer specifying the maximum lag to compute Chatterjee's Xi for.}
 
-\item{n_surr}{Integer. Number of surrogates for the null hypothesis test.}
+\item{n_surr}{An integer specifying the number of surrogate datasets for the null hypothesis test.}
 
-\item{n_cores}{Integer (optional). Number of cores.}
+\item{n_cores}{An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.}
+}
+\value{
+A \code{data.frame} containing the rolling window results, including window indices, lags, computed Xi values, surrogate thresholds, and the excess Xi.
 }
 \description{
-Performs a rolling window analysis using Chatterjee's Xi coefficient.
+Performs a rolling window analysis using Chatterjee's Xi coefficient to assess
+the time-varying non-linear dependence structure of a time series.
 }

@@ -7,10 +7,14 @@
 \method{print}{xi_test}(x, ...)
 }
 \arguments{
-\item{x}{An object of class "xi_test".}
+\item{x}{An object of class \code{"xi_test"}.}
 
-\item{...}{Additional arguments (ignored).}
+\item{...}{Additional arguments passed to other methods (currently ignored).}
+}
+\value{
+Invisibly returns the original object.
 }
 \description{
-Print method for xi_test objects
+Prints a concise summary of the \code{xi_test} object, including metadata
+and the first few rows of the computed statistics.
 }
