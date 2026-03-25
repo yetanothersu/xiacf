@@ -11,13 +11,14 @@ knitr::opts_chunk$set(
   fig.path = "man/figures/README-",
   out.width = "100%"
 )
+options(doFuture.rng.onMisuse = "ignore")
 ```
 
 # xiacf: Chatterjee's Rank Correlation for Time Series Analysis
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/package=xiacf)
-[![R-CMD-check](https://github.com/[Your-GitHub-Username]/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/[Your-GitHub-Username]/xiacf/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 The xiacf package provides a robust framework for detecting complex non-linear and functional dependence in time series data. Traditional linear metrics, such as the standard Autocorrelation Function (ACF), often conflate stochastic noise with structural decay. This package overcomes these limitations by integrating Chatterjee's rank correlation coefficient ($\xi$) with high-performance C++ backend computations. Traditional linear metrics, such as the standard Autocorrelation Function (ACF), often conflate stochastic noise with structural decay. This package overcomes these limitations by integrating **Chatterjee's rank correlation coefficient ($\xi$)** with high-performance C++ backend computations.

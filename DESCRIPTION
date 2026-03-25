@@ -3,6 +3,9 @@ Type: Package
 Title: Quantifying Nonlinear Dependence via Xi-ACF and IAAFT Surrogates
 Version: 0.1.0
 Author: Yasunori Watanabe
+Authors@R: person(given = "Yasunori", family = "Watanabe",
+                  role = c("aut", "cre"),
+                  email = "watanabe.yasunori@outlook.com")
 Maintainer: Yasunori Watanabe <watanabe.yasunori@outlook.com>
 Description: Implements the Xi-ACF framework for detecting deterministic chaos 
     in financial time series. Includes high-performance C++ implementations of 

@@ -4,7 +4,7 @@
 \alias{autoplot.xi_test}
 \title{Plot Xi-ACF Comparison}
 \usage{
-\method{autoplot}{xi_test}(object, ...)
+autoplot.xi_test(object, ...)
 }
 \arguments{
 \item{object}{An object of class \code{"xi_test"}.}
