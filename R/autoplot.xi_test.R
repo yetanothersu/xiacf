@@ -10,6 +10,7 @@
 #' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual
 #' @importFrom ggplot2 labs theme_minimal theme element_text coord_cartesian
 #' @importFrom latex2exp TeX
+#' @method autoplot xi_test
 #' @export
 autoplot.xi_test <- function(object, ...) {
     # Extract data from the object
