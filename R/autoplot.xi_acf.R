@@ -3,20 +3,20 @@
 #' Visualizes the comparison between the standard linear Autocorrelation Function (ACF)
 #' and the non-linear Chatterjee's Xi coefficient, including their respective significance thresholds.
 #'
-#' @param object An object of class \code{"xi_test"}.
-#' @param ... Additional arguments passed to other methods (currently ignored).
+#' @param object An object of class \code{"xi_acf"}.
+#' @param ... Additional arguments passed to other methods.
 #' @return A \code{ggplot} object representing the correlogram.
 #' @importFrom ggplot2 autoplot ggplot aes geom_hline geom_ribbon geom_line geom_point
 #' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual
 #' @importFrom ggplot2 labs theme_minimal theme element_text coord_cartesian
 #' @importFrom latex2exp TeX
-#' @method autoplot xi_test
+#' @method autoplot xi_acf
 #' @export
-autoplot.xi_test <- function(object, ...) {
+autoplot.xi_acf <- function(object, ...) {
     # Extract data from the object
     df <- object$data
 
-    # ACF confidence interval (constant across lags)
+    # ACF confidence interval
     acf_ci <- object$data$ACF_CI[1]
 
     # Initialize the base plot
