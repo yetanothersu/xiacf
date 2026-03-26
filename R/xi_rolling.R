@@ -12,8 +12,8 @@
 #'
 #' @return A \code{data.frame} containing the rolling window results, including window indices, lags, computed Xi values, surrogate thresholds, and the excess Xi.
 #'
-#' @importFrom foreach foreach %dopar%
-#' @importFrom doFuture registerDoFuture
+#' @importFrom foreach foreach
+#' @importFrom doFuture registerDoFuture %dofuture%
 #' @importFrom future plan multisession sequential
 #' @importFrom progressr progressor
 #' @importFrom dplyr bind_rows
@@ -66,10 +66,9 @@ run_rolling_xi_analysis <- function(
     results_df <- foreach::foreach(
         i = seq_along(starts),
         .combine = dplyr::bind_rows,
-        .packages = c("xiacf", "stats"),
-        .options.future = list(seed = TRUE),
+        .options.future = list(seed = TRUE, packages = c("xiacf", "stats")),
         .errorhandling = "remove"
-    ) %dopar%
+    ) %dofuture%
         {
             p()
 
