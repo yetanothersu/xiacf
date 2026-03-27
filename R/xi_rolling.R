@@ -9,6 +9,7 @@
 #' @param max_lag An integer specifying the maximum lag to compute Chatterjee's Xi for.
 #' @param n_surr An integer specifying the number of surrogate datasets for the null hypothesis test.
 #' @param n_cores An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.
+#' @param save_dir A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.
 #'
 #' @return A \code{data.frame} containing the rolling window results, including window indices, lags, computed Xi values, surrogate thresholds, and the excess Xi.
 #'
@@ -25,7 +26,8 @@ run_rolling_xi_analysis <- function(
     step_size = 1,
     max_lag = 20,
     n_surr = 100,
-    n_cores = NULL
+    n_cores = NULL,
+    save_dir = NULL
 ) {
     # --- 1. Input Validation ---
     n_total <- length(x)
@@ -60,9 +62,16 @@ run_rolling_xi_analysis <- function(
     starts <- seq(1, n_total - window_size + 1, by = step_size)
     n_windows <- length(starts)
 
+    # --- 4. Optional Directory Creation for Saving Results ---
+    if (!is.null(save_dir)) {
+        if (!dir.exists(save_dir)) {
+            dir.create(save_dir, recursive = TRUE)
+        }
+    }
+
     p <- progressr::progressor(steps = n_windows)
 
-    # --- 4. Execution ---
+    # --- 5. Execution ---
     results_df <- foreach::foreach(
         i = seq_along(starts),
         .combine = dplyr::bind_rows,
@@ -72,6 +81,13 @@ run_rolling_xi_analysis <- function(
         {
             p()
 
+            out_file <- NULL
+            if (!is.null(save_dir)) {
+                out_file <- file.path(save_dir, sprintf("window_%06d.rds", i))
+                if (file.exists(out_file)) {
+                    return(readRDS(out_file))
+                }
+            }
             tryCatch(
                 {
                     idx_start <- starts[i]
@@ -101,7 +117,7 @@ run_rolling_xi_analysis <- function(
                     }
 
                     # Construct the result data frame for the current window
-                    data.frame(
+                    df_window <- data.frame(
                         Window_ID = i,
                         Window_Start_Idx = idx_start,
                         Window_End_Idx = idx_end,
@@ -114,6 +130,13 @@ run_rolling_xi_analysis <- function(
                             as.numeric(res$xi_original) - xi_threshold
                         )
                     )
+
+                    if (!is.null(out_file)) {
+                        saveRDS(df_window, file = out_file)
+                    }
+
+                    # return
+                    return(df_window)
                 },
                 error = function(e) {
                     # On error, issue a warning and return NULL (which is safely ignored by bind_rows)
