@@ -109,7 +109,10 @@ run_rolling_xi_analysis <- function(
                         Xi_Original = as.numeric(res$xi_original),
                         Xi_Threshold_95 = xi_threshold,
                         # Excess Xi (storing the raw difference without flooring to zero)
-                        Xi_Excess = as.numeric(res$xi_original) - xi_threshold
+                        Xi_Excess = pmax(
+                            0,
+                            as.numeric(res$xi_original) - xi_threshold
+                        )
                     )
                 },
                 error = function(e) {
