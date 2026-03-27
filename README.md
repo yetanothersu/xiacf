@@ -10,39 +10,33 @@ status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/
 [![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247736.svg)](https://doi.org/10.5281/zenodo.19247736)
 <!-- badges: end --> The xiacf package provides a robust framework for
 detecting complex non-linear and functional dependence in time series
 data. Traditional linear metrics, such as the standard Autocorrelation
 Function (ACF), often conflate stochastic noise with structural decay.
 This package overcomes these limitations by integrating Chatterjee’s
-rank correlation coefficient
-(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")) with high-performance C++ backend computations. Traditional
-linear metrics, such as the standard Autocorrelation Function (ACF),
-often conflate stochastic noise with structural decay. This package
-overcomes these limitations by integrating **Chatterjee’s rank
-correlation coefficient
-(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi"))** with high-performance C++ backend computations.
+rank correlation coefficient ($\xi$) with high-performance C++ backend
+computations. Traditional linear metrics, such as the standard
+Autocorrelation Function (ACF), often conflate stochastic noise with
+structural decay. This package overcomes these limitations by
+integrating **Chatterjee’s rank correlation coefficient ($\xi$)** with
+high-performance C++ backend computations.
 
 ## Key Features
 
-  - **Fast Computation**: Core engine is written in C++ (`Rcpp` and
-    `RcppArmadillo`) for lightning-fast calculations, even on
-    high-frequency financial data.
-  - **![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-    "\\xi")-ACF Test**: Computes Chatterjee’s
-    ![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-    "\\xi") alongside the standard linear ACF for multiple lags
-    (`xi_test()`).
-  - **Robust Significance Testing**: Automatically generates Iterative
-    Amplitude Adjusted Fourier Transform (IAAFT) surrogate datasets to
-    establish 95% confidence thresholds for non-linear dependence.
-  - **Rolling Analysis**: Fully parallelized rolling window analysis
-    (`run_rolling_xi_analysis()`) to monitor structural changes over
-    time.
-  - **Beautiful Visualizations**: Built-in `ggplot2` integration
-    (`autoplot()`) for publication-ready correlograms.
+- **Fast Computation**: Core engine is written in C++ (`Rcpp` and
+  `RcppArmadillo`) for lightning-fast calculations, even on
+  high-frequency financial data.
+- **$\xi$-ACF Test**: Computes Chatterjee’s $\xi$ alongside the standard
+  linear ACF for multiple lags (`xi_test()`).
+- **Robust Significance Testing**: Automatically generates Iterative
+  Amplitude Adjusted Fourier Transform (IAAFT) surrogate datasets to
+  establish 95% confidence thresholds for non-linear dependence.
+- **Rolling Analysis**: Fully parallelized rolling window analysis
+  (`run_rolling_xi_analysis()`) to monitor structural changes over time.
+- **Beautiful Visualizations**: Built-in `ggplot2` integration
+  (`autoplot()`) for publication-ready correlograms.
 
 ## Installation
 
@@ -60,8 +54,7 @@ install it via `install.packages("xiacf")`)*
 ## Quick Start
 
 Here is a basic example showing how to compute and visualize the
-![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-ACF against a standard linear ACF.
+$\xi$-ACF against a standard linear ACF.
 
 ``` r
 library(xiacf)
@@ -107,11 +100,8 @@ autoplot(results)
 <div class="figure">
 
 <img src="man/figures/README-xi-acf-test-1.png" alt="A correlogram comparing linear and non-linear dependence." width="100%" />
-
 <p class="caption">
-
 Comparison between standard linear ACF and Chatterjee’s Xi-ACF.
-
 </p>
 
 </div>
@@ -119,10 +109,8 @@ Comparison between standard linear ACF and Chatterjee’s Xi-ACF.
 ## Rolling Window Analysis
 
 For advanced market microstructure or structural break detection, you
-can run a rolling
-![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-ACF analysis. This function supports parallel processing using
-the `future` ecosystem.
+can run a rolling $\xi$-ACF analysis. This function supports parallel
+processing using the `future` ecosystem.
 
 ``` r
 # Run rolling analysis with a window size of 100 and step size of 10
@@ -137,25 +125,25 @@ rolling_res <- run_rolling_xi_analysis(
 
 head(rolling_res)
 #>   Window_ID Window_Start_Idx Window_End_Idx Lag Xi_Original Xi_Threshold_95
-#> 1         1                1            100   1   0.9403061      0.07725510
-#> 2         1                1            100   2   0.8819119      0.10907529
-#> 3         1                1            100   3   0.7720026      0.12075893
-#> 4         1                1            100   4   0.5930548      0.11375475
-#> 5         1                1            100   5   0.3085106      0.11791888
-#> 6         2               11            110   1   0.9403061      0.06684694
+#> 1         1                1            100   1   0.9403061      0.09213265
+#> 2         1                1            100   2   0.8819119      0.07011871
+#> 3         1                1            100   3   0.7720026      0.07315051
+#> 4         1                1            100   4   0.5930548      0.09138904
+#> 5         1                1            100   5   0.3085106      0.09986702
+#> 6         2               11            110   1   0.9403061      0.09644898
 #>   Xi_Excess
-#> 1 0.8630510
-#> 2 0.7728366
-#> 3 0.6512436
-#> 4 0.4793001
-#> 5 0.1905918
-#> 6 0.8734592
+#> 1 0.8481735
+#> 2 0.8117932
+#> 3 0.6988520
+#> 4 0.5016658
+#> 5 0.2086436
+#> 6 0.8438571
 ```
 
 ## References
 
-  - Chatterjee, S. (2021). A new coefficient of correlation. *Journal of
-    the American Statistical Association*, 116(536), 2009-2022.
+- Chatterjee, S. (2021). A new coefficient of correlation. *Journal of
+  the American Statistical Association*, 116(536), 2009-2022.
 
 ## License
 
