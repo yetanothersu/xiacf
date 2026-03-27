@@ -15,13 +15,9 @@ MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.or
 detecting complex non-linear and functional dependence in time series
 data. Traditional linear metrics, such as the standard Autocorrelation
 Function (ACF), often conflate stochastic noise with structural decay.
-This package overcomes these limitations by integrating Chatterjee’s
-rank correlation coefficient ($\xi$) with high-performance C++ backend
-computations. Traditional linear metrics, such as the standard
-Autocorrelation Function (ACF), often conflate stochastic noise with
-structural decay. This package overcomes these limitations by
-integrating **Chatterjee’s rank correlation coefficient ($\xi$)** with
-high-performance C++ backend computations.
+This package overcomes these limitations by integrating **Chatterjee’s
+rank correlation coefficient ($\xi$)** with high-performance C++ backend
+computations.
 
 ## Key Features
 
@@ -125,19 +121,19 @@ rolling_res <- run_rolling_xi_analysis(
 
 head(rolling_res)
 #>   Window_ID Window_Start_Idx Window_End_Idx Lag Xi_Original Xi_Threshold_95
-#> 1         1                1            100   1   0.9403061      0.09213265
-#> 2         1                1            100   2   0.8819119      0.07011871
-#> 3         1                1            100   3   0.7720026      0.07315051
-#> 4         1                1            100   4   0.5930548      0.09138904
-#> 5         1                1            100   5   0.3085106      0.09986702
-#> 6         2               11            110   1   0.9403061      0.09644898
+#> 1         1                1            100   1   0.9403061      0.08163265
+#> 2         1                1            100   2   0.8819119      0.14083099
+#> 3         1                1            100   3   0.7720026      0.09145408
+#> 4         1                1            100   4   0.5930548      0.07799240
+#> 5         1                1            100   5   0.3085106      0.09773936
+#> 6         2               11            110   1   0.9403061      0.10290816
 #>   Xi_Excess
-#> 1 0.8481735
-#> 2 0.8117932
-#> 3 0.6988520
-#> 4 0.5016658
-#> 5 0.2086436
-#> 6 0.8438571
+#> 1 0.8586735
+#> 2 0.7410809
+#> 3 0.6805485
+#> 4 0.5150624
+#> 5 0.2107713
+#> 6 0.8373980
 ```
 
 ## References

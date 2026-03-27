@@ -22,7 +22,7 @@ options(doFuture.rng.onMisuse = "ignore")
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247736.svg)](https://doi.org/10.5281/zenodo.19247736)
 <!-- badges: end -->
-The xiacf package provides a robust framework for detecting complex non-linear and functional dependence in time series data. Traditional linear metrics, such as the standard Autocorrelation Function (ACF), often conflate stochastic noise with structural decay. This package overcomes these limitations by integrating Chatterjee's rank correlation coefficient ($\xi$) with high-performance C++ backend computations. Traditional linear metrics, such as the standard Autocorrelation Function (ACF), often conflate stochastic noise with structural decay. This package overcomes these limitations by integrating **Chatterjee's rank correlation coefficient ($\xi$)** with high-performance C++ backend computations.
+The xiacf package provides a robust framework for detecting complex non-linear and functional dependence in time series data. Traditional linear metrics, such as the standard Autocorrelation Function (ACF), often conflate stochastic noise with structural decay. This package overcomes these limitations by integrating **Chatterjee's rank correlation coefficient ($\xi$)** with high-performance C++ backend computations.
 
 ## Key Features
 
