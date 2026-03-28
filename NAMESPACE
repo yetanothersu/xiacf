@@ -2,6 +2,7 @@
 
 S3method(autoplot,xi_acf)
 S3method(print,xi_acf)
+export(compute_xi_ccf_cpp)
 export(compute_xi_lags)
 export(generate_miaaft_surrogate_cpp)
 export(run_rolling_xi_analysis)

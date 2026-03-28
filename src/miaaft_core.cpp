@@ -4,6 +4,9 @@
 using namespace Rcpp;
 using namespace arma;
 
+// Forward declaration to use xi_coefficient from xi_core.cpp
+double xi_coefficient(arma::vec x, arma::vec y);
+
 // ============================================================
 // Helper: Generate Shared Random Phases for Multivariate FT Surrogate
 // ============================================================
@@ -102,4 +105,80 @@ NumericMatrix generate_miaaft_surrogate_cpp(NumericMatrix x, int max_iter = 100)
     }
 
     return wrap(S);
+}
+
+// ============================================================
+// Step 3: Multivariate Xi CCF (Cross-Correlation) Wrapper
+// ============================================================
+//' Compute Lagged Xi Cross-Correlation with MIAAFT Surrogates
+//'
+//' @param x A numeric vector (Variable 1)
+//' @param y A numeric vector (Variable 2)
+//' @param max_lag The maximum lag to compute (computes from -max_lag to +max_lag)
+//' @param n_surr Number of MIAAFT surrogates to generate
+//' @return A list containing lags, original xi values, and surrogate xi values.
+//' @export
+// [[Rcpp::export]]
+List compute_xi_ccf_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr) {
+    vec xv = as<vec>(x);
+    vec yv = as<vec>(y);
+    int n = xv.n_elem;
+    
+    // Calculate number of lags (-max_lag to +max_lag)
+    int n_lags = 2 * max_lag + 1;
+    vec lags = regspace<vec>(-max_lag, max_lag);
+    
+    vec xi_original(n_lags, fill::zeros);
+    mat xi_surrogates(n_lags, n_surr, fill::zeros);
+    
+    // --- 1. Compute Original CCF ---
+    for(int i = 0; i < n_lags; i++) {
+        int k = lags(i);
+        if (k >= 0) {
+            vec x_lagged = xv.subvec(0, n - k - 1);
+            vec y_target = yv.subvec(k, n - 1);
+            xi_original(i) = xi_coefficient(x_lagged, y_target);
+        } else {
+            int abs_k = -k; // Negative lag means Y leads X
+            vec x_lagged = xv.subvec(abs_k, n - 1);
+            vec y_target = yv.subvec(0, n - abs_k - 1);
+            xi_original(i) = xi_coefficient(x_lagged, y_target);
+        }
+    }
+    
+    // --- 2. Generate Surrogates and Compute CCF ---
+    // Combine x and y into a 2-column matrix
+    mat Z(n, 2);
+    Z.col(0) = xv;
+    Z.col(1) = yv;
+    NumericMatrix Z_rcpp = wrap(Z);
+    
+    for(int s = 0; s < n_surr; s++) {
+        // Generate 1 MIAAFT surrogate preserving cross-correlation
+        NumericMatrix Z_surr_rcpp = generate_miaaft_surrogate_cpp(Z_rcpp, 100);
+        mat Z_surr = as<mat>(Z_surr_rcpp);
+        
+        vec x_surr = Z_surr.col(0);
+        vec y_surr = Z_surr.col(1);
+        
+        for(int i = 0; i < n_lags; i++) {
+            int k = lags(i);
+            if (k >= 0) {
+                vec x_lagged = x_surr.subvec(0, n - k - 1);
+                vec y_target = y_surr.subvec(k, n - 1);
+                xi_surrogates(i, s) = xi_coefficient(x_lagged, y_target);
+            } else {
+                int abs_k = -k;
+                vec x_lagged = x_surr.subvec(abs_k, n - 1);
+                vec y_target = y_surr.subvec(0, n - abs_k - 1);
+                xi_surrogates(i, s) = xi_coefficient(x_lagged, y_target);
+            }
+        }
+    }
+    
+    return List::create(
+        Named("lags") = lags,
+        Named("xi_original") = xi_original,
+        Named("xi_surrogates") = xi_surrogates
+    );
 }

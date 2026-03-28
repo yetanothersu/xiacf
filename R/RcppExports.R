@@ -11,6 +11,18 @@ generate_miaaft_surrogate_cpp <- function(x, max_iter = 100L) {
     .Call(`_xiacf_generate_miaaft_surrogate_cpp`, x, max_iter)
 }
 
+#' Compute Lagged Xi Cross-Correlation with MIAAFT Surrogates
+#'
+#' @param x A numeric vector (Variable 1)
+#' @param y A numeric vector (Variable 2)
+#' @param max_lag The maximum lag to compute (computes from -max_lag to +max_lag)
+#' @param n_surr Number of MIAAFT surrogates to generate
+#' @return A list containing lags, original xi values, and surrogate xi values.
+#' @export
+compute_xi_ccf_cpp <- function(x, y, max_lag, n_surr) {
+    .Call(`_xiacf_compute_xi_ccf_cpp`, x, y, max_lag, n_surr)
+}
+
 #' Calculate Chatterjee's Rank Correlation Coefficient (Xi)
 #' 
 #' Computes Chatterjee's rank correlation coefficient (Xi) between two numeric vectors.
