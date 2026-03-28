@@ -11,14 +11,15 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// test_fft_cpp
-List test_fft_cpp(NumericVector x);
-RcppExport SEXP _xiacf_test_fft_cpp(SEXP xSEXP) {
+// generate_miaaft_surrogate_cpp
+NumericMatrix generate_miaaft_surrogate_cpp(NumericMatrix x, int max_iter);
+RcppExport SEXP _xiacf_generate_miaaft_surrogate_cpp(SEXP xSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(test_fft_cpp(x));
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(generate_miaaft_surrogate_cpp(x, max_iter));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -62,7 +63,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_xiacf_test_fft_cpp", (DL_FUNC) &_xiacf_test_fft_cpp, 1},
+    {"_xiacf_generate_miaaft_surrogate_cpp", (DL_FUNC) &_xiacf_generate_miaaft_surrogate_cpp, 2},
     {"_xiacf_xi_coefficient", (DL_FUNC) &_xiacf_xi_coefficient, 2},
     {"_xiacf_generate_iaaft_surrogates", (DL_FUNC) &_xiacf_generate_iaaft_surrogates, 3},
     {"_xiacf_compute_xi_lags", (DL_FUNC) &_xiacf_compute_xi_lags, 3},
