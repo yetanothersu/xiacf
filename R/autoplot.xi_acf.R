@@ -13,6 +13,15 @@
 #' @method autoplot xi_acf
 #' @export
 autoplot.xi_acf <- function(object, ...) {
+    # Check for required packages
+    if (!requireNamespace("ggplot2", quietly = TRUE)) {
+        stop("Package 'ggplot2' is required for plotting. Please install it.")
+    }
+    if (!requireNamespace("latex2exp", quietly = TRUE)) {
+        stop(
+            "Package 'latex2exp' is required for LaTeX rendering in plots. Please install it."
+        )
+    }
     # Extract data from the object
     df <- object$data
 
