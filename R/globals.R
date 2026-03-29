@@ -1,10 +1,11 @@
 # R/globals.R
 
-# 検査ツール（R CMD check）を黙らせるためのグローバル変数宣言
+# This file is for declaring global variables to avoid "no visible binding for global variable" notes during R CMD check.
 utils::globalVariables(c(
     "Lag",
     "Xi_Threshold_95",
     "ACF",
+    "CCF",
     "Xi",
     "i"
 ))
