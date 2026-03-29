@@ -1,42 +1,55 @@
-#' Plot Xi-ACF Comparison
+#' Plot Xi-CCF Comparison
 #'
-#' Visualizes the comparison between the standard linear Autocorrelation Function (ACF)
-#' and the non-linear Chatterjee's Xi coefficient, including their respective significance thresholds.
+#' Visualizes the comparison between the standard linear Cross-Correlation Function (CCF)
+#' and the non-linear Chatterjee's Xi cross-correlation, including their significance thresholds.
 #'
-#' @param object An object of class \code{"xi_test"}.
-#' @param ... Additional arguments passed to other methods (currently ignored).
-#' @return A \code{ggplot} object representing the correlogram.
-#' @importFrom ggplot2 autoplot ggplot aes geom_hline geom_ribbon geom_line geom_point
-#' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual
-#' @importFrom ggplot2 labs theme_minimal theme element_text coord_cartesian
+#' @param object An object of class \code{"xi_ccf"}.
+#' @param ... Additional arguments passed to other methods.
+#' @return A \code{ggplot} object representing the cross-correlogram.
+#' @importFrom ggplot2 autoplot ggplot aes geom_hline geom_vline geom_ribbon geom_line geom_point
+#' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual scale_x_continuous coord_cartesian
+#' @importFrom ggplot2 labs theme_minimal theme element_text
 #' @importFrom latex2exp TeX
-#' @method autoplot xi_test
+#' @method autoplot xi_ccf
 #' @export
-autoplot.xi_test <- function(object, ...) {
+autoplot.xi_ccf <- function(object, ...) {
+    # Check for required packages
+    if (!requireNamespace("ggplot2", quietly = TRUE)) {
+        stop("Package 'ggplot2' is required for plotting. Please install it.")
+    }
+    if (!requireNamespace("latex2exp", quietly = TRUE)) {
+        stop(
+            "Package 'latex2exp' is required for LaTeX rendering in plots. Please install it."
+        )
+    }
     # Extract data from the object
     df <- object$data
-
-    # ACF confidence interval (constant across lags)
-    acf_ci <- object$data$ACF_CI[1]
+    ccf_ci <- df$CCF_CI[1]
 
     # Initialize the base plot
     p <- ggplot(df, aes(x = Lag)) +
-        # Zero line
+        # Zero lines
         geom_hline(yintercept = 0, color = "gray50", linewidth = 0.3) +
+        geom_vline(
+            xintercept = 0,
+            color = "gray50",
+            linewidth = 0.3,
+            linetype = "dashed"
+        ) +
 
-        # 1. Standard ACF 95% Confidence Interval (blue dotted line)
+        # 1. Standard CCF 95% Confidence Interval (blue dotted line)
         geom_hline(
-            aes(yintercept = acf_ci, linetype = "ACF 95% CI"),
+            aes(yintercept = ccf_ci, linetype = "CCF 95% CI"),
             color = "blue",
             linewidth = 0.4,
             alpha = 0.6
         ) +
         geom_hline(
-            yintercept = -acf_ci,
+            yintercept = -ccf_ci,
             color = "blue",
-            linetype = "dotted",
             linewidth = 0.4,
-            alpha = 0.6
+            alpha = 0.6,
+            linetype = "dotted"
         )
 
     # 2. Xi Surrogate Threshold (gray ribbon)
@@ -55,16 +68,16 @@ autoplot.xi_test <- function(object, ...) {
 
     # 3. Main lines and points
     p <- p +
-        # ACF (Linear)
+        # CCF (Linear)
         geom_line(
-            aes(y = ACF, color = "Standard ACF (Linear)"),
+            aes(y = CCF, color = "Standard CCF (Linear)"),
             linewidth = 0.6,
             linetype = "dashed"
         ) +
         geom_point(
-            aes(y = ACF, color = "Standard ACF (Linear)"),
-            shape = 16,
-            size = 3
+            aes(y = CCF, color = "Standard CCF (Linear)"),
+            size = 3,
+            shape = 16
         ) +
 
         # Xi (Non-linear)
@@ -74,8 +87,8 @@ autoplot.xi_test <- function(object, ...) {
         ) +
         geom_point(
             aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
-            shape = 17,
-            size = 3
+            size = 3,
+            shape = 17
         ) +
 
         # --- Scales (Color and Label definitions) ---
@@ -83,39 +96,39 @@ autoplot.xi_test <- function(object, ...) {
             name = "Correlation Measure",
             # Prevent automatic alphabetical sorting to ensure consistent ordering
             breaks = c(
-                "Standard ACF (Linear)",
+                "Standard CCF (Linear)",
                 "Chatterjee's Xi (Non-linear)"
             ),
             values = c(
-                "Standard ACF (Linear)" = "steelblue",
+                "Standard CCF (Linear)" = "steelblue",
                 "Chatterjee's Xi (Non-linear)" = "firebrick"
             ),
             # Convert display names to TeX format for mathematical symbols
             labels = c(
-                "Standard ACF (Linear)",
-                TeX(r"($\xi$-ACF (Non-linear))")
+                "Standard CCF (Linear)",
+                TeX(r"($\xi$-CCF (Non-linear))")
             )
         ) +
         scale_fill_manual(
             name = "Significance",
             values = c("Xi 95% Threshold" = "gray50"),
-            labels = TeX(c(r"($\xi$-ACF 95% Threshold)"))
+            labels = TeX(c(r"($\xi$-CCF 95% Threshold)"))
         ) +
         scale_linetype_manual(
             name = "Significance",
-            values = c("ACF 95% CI" = "dotted")
+            values = c("CCF 95% CI" = "dotted")
         ) +
 
         # --- Theme & Labels ---
         labs(
-            title = TeX(r"($\xi$-ACF Correlogram)"),
+            title = TeX(r"(Multivariate $\xi$-CCF Correlogram)"),
             subtitle = paste0(
-                "Linear vs Non-linear Dependence (n = ",
+                "Linear vs Non-linear Cross-Dependence (n = ",
                 object$n,
                 ")"
             ),
             y = "Correlation Coefficient",
-            x = "Lag"
+            x = "Lag (Positive lag means X leads Y)"
         ) +
         theme_minimal() +
         theme(
@@ -127,8 +140,8 @@ autoplot.xi_test <- function(object, ...) {
 
     # --- Dynamic Y-axis Zoom ---
     # Retrieve the maximum and minimum values among all plotted elements
-    max_val <- max(c(df$ACF, df$Xi, df$Xi_Threshold_95, acf_ci), na.rm = TRUE)
-    min_val <- min(c(df$ACF, df$Xi, -acf_ci, 0), na.rm = TRUE)
+    max_val <- max(c(df$CCF, df$Xi, df$Xi_Threshold_95, ccf_ci), na.rm = TRUE)
+    min_val <- min(c(df$CCF, df$Xi, -ccf_ci, 0), na.rm = TRUE)
 
     # Add a 10% margin to the top and bottom
     y_margin <- (max_val - min_val) * 0.1
@@ -140,7 +153,15 @@ autoplot.xi_test <- function(object, ...) {
     max_y <- min(max_y, 1.05)
     min_y <- max(min_y, -1.05)
 
-    p <- p + coord_cartesian(ylim = c(min_y, max_y))
-
+    p <- p +
+        coord_cartesian(ylim = c(min_y, max_y)) +
+        # Force X-axis (Lag) breaks to be integers only
+        scale_x_continuous(breaks = function(x) {
+            seq(
+                ceiling(x[1]),
+                floor(x[2]),
+                by = max(1, floor((x[2] - x[1]) / 10))
+            )
+        })
     return(p)
 }

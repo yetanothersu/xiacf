@@ -22,15 +22,18 @@ options(doFuture.rng.onMisuse = "ignore")
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247735.svg)](https://doi.org/10.5281/zenodo.19247735)
 <!-- badges: end -->
-The xiacf package provides a robust framework for detecting complex non-linear and functional dependence in time series data. Traditional linear metrics, such as the standard Autocorrelation Function (ACF), often conflate stochastic noise with structural decay. This package overcomes these limitations by integrating **Chatterjee's rank correlation coefficient ($\xi$)** with high-performance C++ backend computations.
+
+The **xiacf** package provides a robust framework for detecting complex non-linear and functional dependence in time series data. Traditional linear metrics, such as the standard Autocorrelation Function (ACF) and Cross-Correlation Function (CCF), often fail to detect symmetrical or purely non-linear relationships. 
+
+This package overcomes these limitations by utilizing **Chatterjee's Rank Correlation ($\xi$)**, offering both univariate ($\xi$-ACF) and multivariate ($\xi$-CCF) analysis tools. It features rigorous statistical hypothesis testing powered by advanced surrogate data generation algorithms (IAAFT and MIAAFT), all implemented in high-performance C++ using `RcppArmadillo`.
 
 ## Key Features
 
-* **Fast Computation**: Core engine is written in C++ (`Rcpp` and `RcppArmadillo`) for lightning-fast calculations, even on high-frequency financial data.
-* **$\xi$-ACF Test**: Computes Chatterjee's $\xi$ alongside the standard linear ACF for multiple lags (`xi_test()`).
-* **Robust Significance Testing**: Automatically generates Iterative Amplitude Adjusted Fourier Transform (IAAFT) surrogate datasets to establish 95% confidence thresholds for non-linear dependence.
-* **Rolling Analysis**: Fully parallelized rolling window analysis (`run_rolling_xi_analysis()`) to monitor structural changes over time.
-* **Beautiful Visualizations**: Built-in `ggplot2` integration (`autoplot()`) for publication-ready correlograms.
+* **Non-linear Autocorrelation ($\xi$-ACF):** Detect time-dependent structures that standard linear ACF completely misses (e.g., chaotic systems, volatility clustering).
+* **Multivariate Cross-Correlation ($\xi$-CCF):** Uncover hidden non-linear lead-lag relationships between two different time series.
+* **MIAAFT Surrogate Testing:** Rigorous null hypothesis testing using Multivariate Iterative Amplitude Adjusted Fourier Transform (MIAAFT). It preserves the exact marginal distributions and the instantaneous (lag-0) cross-correlation while destroying lagged non-linear dependence.
+* **Rolling Window Analysis:** Track how non-linear dependencies evolve over time (detecting structural breaks or market regime shifts) with robust parallel processing support via the `future` ecosystem.
+* **High Performance:** Core algorithms are heavily optimized in C++ to handle the computationally intensive surrogate iterations.
 
 ## Installation
 
@@ -74,6 +77,36 @@ print(results)
 # 2. Visualize the results
 # The autoplot method automatically generates a ggplot2 object
 autoplot(results)
+```
+
+## Multivariate Cross-Correlation ($\xi$-CCF)
+
+The package supports multivariate analysis to detect non-linear lead-lag relationships between two time series. It uses MIAAFT surrogates to preserve both the individual distributions and the lag-0 cross-correlation, providing a rigorous threshold for significance.
+
+The following example demonstrates a scenario where the standard CCF completely fails to detect the relationship, but $\xi$-CCF correctly identifies the lead-lag structure.
+
+```{r xi-ccf-test}
+#| fig.cap: "Multivariate Xi-CCF detecting a purely non-linear lead-lag relationship."
+#| fig.alt: "A cross-correlogram showing a peak at lag 3 for Xi, while standard CCF remains within the noise bounds."
+
+# Generate a pure non-linear lead-lag relationship
+# Y is driven by the absolute value of X from 3 periods ago.
+set.seed(42)
+n <- 300
+# A uniform distribution centered at 0 ensures the linear cross-correlation is zero
+X <- runif(n, min = -2, max = 2)
+Y <- numeric(n)
+
+for (t in 4:n) {
+  Y[t] <- abs(X[t - 3]) + rnorm(1, sd = 0.2)
+}
+
+# Run the multivariate Xi-CCF test
+ccf_results <- xi_ccf(x = X, y = Y, max_lag = 10, n_surr = 100)
+
+# Visualize the results
+# Standard CCF misses the V-shaped relationship, but Xi-CCF correctly detects that X leads Y by 3 periods.
+autoplot(ccf_results)
 ```
 
 ## Rolling Window Analysis

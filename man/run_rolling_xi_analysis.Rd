@@ -10,7 +10,8 @@ run_rolling_xi_analysis(
   step_size = 1,
   max_lag = 20,
   n_surr = 100,
-  n_cores = NULL
+  n_cores = NULL,
+  save_dir = NULL
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ run_rolling_xi_analysis(
 \item{n_surr}{An integer specifying the number of surrogate datasets for the null hypothesis test.}
 
 \item{n_cores}{An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.}
+
+\item{save_dir}{A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.}
 }
 \value{
 A \code{data.frame} containing the rolling window results, including window indices, lags, computed Xi values, surrogate thresholds, and the excess Xi.
