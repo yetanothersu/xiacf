@@ -42,11 +42,12 @@ xi_ccf <- function(x, y, max_lag = 20, n_surr = 100) {
     xi_res <- compute_xi_ccf_cpp(x, y, max_lag, n_surr)
 
     # Calculate the 95% significance threshold for each lag from the surrogates
+    surr_mat <- as.matrix(xi_res$xi_surrogates)
     xi_threshold <- apply(
-        xi_res$xi_surrogates,
+        surr_mat,
         1,
-        function(r) {
-            if (n_surr > 0) stats::quantile(r, 0.95, na.rm = TRUE) else NA
+        function(row) {
+            if (n_surr > 0) stats::quantile(row, 0.95, na.rm = TRUE) else NA
         }
     )
 

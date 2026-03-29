@@ -37,7 +37,8 @@ xi_acf <- function(x, max_lag = 20, n_surr = 100) {
 
     xi_threshold <- rep(NA, max_lag)
     if (n_surr > 0) {
-        xi_threshold <- apply(xi_res$xi_surrogates, 1, function(row) {
+        surr_mat <- as.matrix(xi_res$xi_surrogates)
+        xi_threshold <- apply(surr_mat, 1, function(row) {
             stats::quantile(row, 0.95, na.rm = TRUE)
         })
     }
