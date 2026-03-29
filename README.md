@@ -10,7 +10,7 @@ status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/
 [![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247736.svg)](https://doi.org/10.5281/zenodo.19247736)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247735.svg)](https://doi.org/10.5281/zenodo.19247735)
 <!-- badges: end --> The xiacf package provides a robust framework for
 detecting complex non-linear and functional dependence in time series
 data. Traditional linear metrics, such as the standard Autocorrelation
@@ -121,19 +121,19 @@ rolling_res <- run_rolling_xi_analysis(
 
 head(rolling_res)
 #>   Window_ID Window_Start_Idx Window_End_Idx Lag Xi_Original Xi_Threshold_95
-#> 1         1                1            100   1   0.9403061      0.08163265
-#> 2         1                1            100   2   0.8819119      0.14083099
-#> 3         1                1            100   3   0.7720026      0.09145408
-#> 4         1                1            100   4   0.5930548      0.07799240
-#> 5         1                1            100   5   0.3085106      0.09773936
-#> 6         2               11            110   1   0.9403061      0.10290816
+#> 1         1                1            100   1   0.9403061      0.11503061
+#> 2         1                1            100   2   0.8819119      0.09023743
+#> 3         1                1            100   3   0.7720026      0.11028380
+#> 4         1                1            100   4   0.5930548      0.09819316
+#> 5         1                1            100   5   0.3085106      0.07835771
+#> 6         2               11            110   1   0.9403061      0.09061735
 #>   Xi_Excess
-#> 1 0.8586735
-#> 2 0.7410809
-#> 3 0.6805485
-#> 4 0.5150624
-#> 5 0.2107713
-#> 6 0.8373980
+#> 1 0.8252755
+#> 2 0.7916745
+#> 3 0.6617188
+#> 4 0.4948616
+#> 5 0.2301529
+#> 6 0.8496888
 ```
 
 ## References
