@@ -89,13 +89,20 @@ run_rolling_xi_ccf <- function(
 
     # --- 3. Parallel Backend Setup ---
     old_opts <- options(doFuture.rng.onMisuse = "ignore")
-    on.exit(options(old_opts), add = TRUE)
+    old_plan <- future::plan()
+
+    on.exit(
+        {
+            options(old_opts)
+            future::plan(old_plan)
+        },
+        add = TRUE
+    )
+
+    doFuture::registerDoFuture()
     if (!is.null(n_cores) && n_cores > 1) {
-        doFuture::registerDoFuture()
         future::plan(future::multisession, workers = n_cores)
-        on.exit(future::plan(future::sequential), add = TRUE)
     } else {
-        doFuture::registerDoFuture()
         future::plan(future::sequential)
     }
 

@@ -45,18 +45,23 @@ run_rolling_xi_analysis <- function(
     # --- 2. Safe Parallel Setup (Polite Programming) ---
     # Modify the future plan only if the user explicitly specified n_cores,
     # and ensure it is restored upon exit to comply with CRAN policies.
-    if (!is.null(n_cores)) {
-        # Save the current future plan
-        old_plan <- future::plan()
+    old_opts <- options(doFuture.rng.onMisuse = "ignore")
+    old_plan <- future::plan()
 
-        # Set the new multisession plan
-        future::plan(future::multisession, workers = n_cores)
-
-        # Restore the original plan on exit (even in case of errors)
-        on.exit(future::plan(old_plan), add = TRUE)
-    }
+    on.exit(
+        {
+            options(old_opts)
+            future::plan(old_plan)
+        },
+        add = TRUE
+    )
 
     doFuture::registerDoFuture()
+    if (!is.null(n_cores) && n_cores > 1) {
+        future::plan(future::multisession, workers = n_cores)
+    } else {
+        future::plan(future::sequential)
+    }
 
     # --- 3. Prepare Windows ---
     starts <- seq(1, n_total - window_size + 1, by = step_size)
