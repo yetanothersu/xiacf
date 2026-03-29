@@ -109,6 +109,7 @@ run_rolling_xi_ccf <- function(
             .errorhandling = 'pass'
         ) %dofuture%
             {
+                p() # Update progress bar
                 idx_start <- start_indices[i]
                 idx_end <- idx_start + window_size - 1
 
@@ -154,7 +155,6 @@ run_rolling_xi_ccf <- function(
                     saveRDS(df_window, file = out_file)
                 }
 
-                p() # Update progress bar
                 return(df_window)
             }
         return(results_list)
