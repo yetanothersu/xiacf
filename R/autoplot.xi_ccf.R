@@ -153,7 +153,15 @@ autoplot.xi_ccf <- function(object, ...) {
     max_y <- min(max_y, 1.05)
     min_y <- max(min_y, -1.05)
 
-    p <- p + coord_cartesian(ylim = c(min_y, max_y))
-
+    p <- p +
+        coord_cartesian(ylim = c(min_y, max_y)) +
+        # Force X-axis (Lag) breaks to be integers only
+        scale_x_continuous(breaks = function(x) {
+            seq(
+                ceiling(x[1]),
+                floor(x[2]),
+                by = max(1, floor((x[2] - x[1]) / 10))
+            )
+        })
     return(p)
 }
