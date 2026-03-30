@@ -20,8 +20,9 @@ xi_acf <- function(x, max_lag = 20, n_surr = 100) {
     }
 
     if (any(is.na(x))) {
-        warning("'x' contains NA values. Removing them before analysis.")
-        x <- as.numeric(stats::na.omit(x))
+        stop(
+            "Inputs contain NA values. Please handle missing values (e.g., imputation) before running xi_acf."
+        )
     }
 
     n <- length(x)

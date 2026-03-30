@@ -28,13 +28,12 @@ test_that("xi_acf handles input errors gracefully", {
   # Edge case 2: Constant series (zero variance)
   expect_error(xiacf::xi_acf(rep(1, 100)), "zero variance")
 
-  # Edge case 3: Handling of NA values (should warn, remove NA, and compute)
+  # Edge case 3: Handling of NA values (should throw an error)
   x_na <- c(rnorm(10), NA)
-  expect_warning(
-    res <- xiacf::xi_acf(x_na, max_lag = 5, n_surr = 5),
-    "contains NA"
+  expect_error(
+    xiacf::xi_acf(x_na, max_lag = 5, n_surr = 5),
+    "NA values"
   )
-  expect_s3_class(res, "xi_acf")
 })
 
 test_that("xi_test wrapper throws deprecation warning but returns xi_acf object", {
