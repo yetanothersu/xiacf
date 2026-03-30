@@ -157,7 +157,12 @@ ccf_results <- xi_ccf(x = X, y = Y, max_lag = 10, n_surr = 100)
 
 # Visualize the results
 # Standard CCF misses the V-shaped relationship, but Xi-CCF correctly detects that X leads Y by 3 periods.
-autoplot(ccf_results)
+library(ggplot2)
+autoplot(ccf_results) +
+  coord_cartesian(xlim = c(0, 10)) +
+  labs(x = "Lag (X leads Y)")
+#> Coordinate system already present.
+#> ℹ Adding new coordinate system, which will replace the existing one.
 ```
 
 <div class="figure">
