@@ -129,7 +129,12 @@ run_rolling_xi_ccf <- function(
                 }
 
                 # Call C++ Engine
-                res <- compute_xi_ccf_cpp(x_window, y_window, max_lag, n_surr)
+                res <- compute_xi_ccf_miaaft(
+                    x_window,
+                    y_window,
+                    max_lag,
+                    n_surr
+                )
 
                 # Compute 95% threshold from surrogates
                 xi_threshold <- numeric(length(res$lags))

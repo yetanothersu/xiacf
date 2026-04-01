@@ -7,5 +7,7 @@ utils::globalVariables(c(
     "ACF",
     "CCF",
     "Xi",
-    "i"
+    "i",
+    "y_vals",
+    "Direction"
 ))

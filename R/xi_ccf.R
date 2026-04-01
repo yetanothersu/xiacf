@@ -120,6 +120,7 @@ xi_ccf <- function(x, y, max_lag = 20, n_surr = 100, bidirectional = TRUE) {
 #' @param x An object of class \code{"xi_ccf"}.
 #' @param ... Additional arguments.
 #' @return Invisibly returns the original object.
+#' @importFrom utils head
 #' @export
 print.xi_ccf <- function(x, ...) {
     cat("\n=== Directional Chatterjee's Xi Cross-Correlation ===\n")
