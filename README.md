@@ -128,16 +128,14 @@ Comparison between standard linear ACF and Chatterjee’s Xi-ACF.
 
 </div>
 
-## Multivariate Cross-Correlation ($\xi$-CCF)
+## Bidirectional $\xi$-CCF Test (Directional Lead-Lag Analysis)
 
-The package supports multivariate analysis to detect non-linear lead-lag
-relationships between two time series. It uses MIAAFT surrogates to
-preserve both the individual distributions and the lag-0
-cross-correlation, providing a rigorous threshold for significance.
-
-The following example demonstrates a scenario where the standard CCF
-completely fails to detect the relationship, but $\xi$-CCF correctly
-identifies the lead-lag structure.
+While the standard CCF is symmetric in its linear evaluation, `xi_ccf()`
+evaluates the **directional** non-linear lead-lag relationship. By
+default (`bidirectional = TRUE`), it computes both “$X$ leads $Y$” and
+“$Y$ leads $X$” simultaneously. Thanks to our optimized C++ engine, the
+reverse direction is computed essentially at zero additional cost by
+reusing the MIAAFT surrogates.
 
 ``` r
 # Generate a pure non-linear lead-lag relationship
@@ -152,27 +150,17 @@ for (t in 4:n) {
   Y[t] <- abs(X[t - 3]) + rnorm(1, sd = 0.2)
 }
 
-# Run the multivariate Xi-CCF test
+# Run the bidirectional Xi-CCF test
 ccf_results <- xi_ccf(x = X, y = Y, max_lag = 10, n_surr = 100)
 
 # Visualize the results
+# The new autoplot generates a beautiful 2-panel graph showing directional dependence.
 # Standard CCF misses the V-shaped relationship, but Xi-CCF correctly detects that X leads Y by 3 periods.
-library(ggplot2)
-autoplot(ccf_results) +
-  coord_cartesian(xlim = c(0, 10)) +
-  labs(x = "Lag (X leads Y)")
-#> Coordinate system already present.
-#> ℹ Adding new coordinate system, which will replace the existing one.
+
+autoplot(ccf_results)
 ```
 
-<div class="figure">
-
-<img src="man/figures/README-xi-ccf-test-1.png" alt="A cross-correlogram showing a peak at lag 3 for Xi, while standard CCF remains within the noise bounds." width="100%" />
-<p class="caption">
-Multivariate Xi-CCF detecting a purely non-linear lead-lag relationship.
-</p>
-
-</div>
+<img src="man/figures/README-ccf-example-1.png" alt="Directional Xi-CCF correlogram showing a peak at lag 3 in the X leads Y panel, while standard CCF remains within the noise bounds." width="100%" />
 
 ## Rolling Window Analysis
 
@@ -193,19 +181,19 @@ rolling_res <- run_rolling_xi_analysis(
 
 head(rolling_res)
 #>   Window_ID Window_Start_Idx Window_End_Idx Lag Xi_Original Xi_Threshold_95
-#> 1         1                1            100   1   0.9403061       0.1204643
-#> 2         1                1            100   2   0.8819119       0.1163074
-#> 3         1                1            100   3   0.7720026       0.1081154
-#> 4         1                1            100   4   0.5930548       0.1042485
-#> 5         1                1            100   5   0.3085106       0.1070479
-#> 6         2               11            110   1   0.9403061       0.1103010
+#> 1         1                1            100   1   0.9403061      0.09854592
+#> 2         1                1            100   2   0.8819119      0.07225867
+#> 3         1                1            100   3   0.7720026      0.06648597
+#> 4         1                1            100   4   0.5930548      0.09199132
+#> 5         1                1            100   5   0.3085106      0.09597739
+#> 6         2               11            110   1   0.9403061      0.08201531
 #>   Xi_Excess
-#> 1 0.8198418
-#> 2 0.7656045
-#> 3 0.6638871
-#> 4 0.4888063
-#> 5 0.2014628
-#> 6 0.8300051
+#> 1 0.8417602
+#> 2 0.8096532
+#> 3 0.7055166
+#> 4 0.5010635
+#> 5 0.2125332
+#> 6 0.8582908
 ```
 
 ## References

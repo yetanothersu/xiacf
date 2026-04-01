@@ -79,16 +79,11 @@ print(results)
 autoplot(results)
 ```
 
-## Multivariate Cross-Correlation ($\xi$-CCF)
+## Bidirectional $\xi$-CCF Test (Directional Lead-Lag Analysis)
 
-The package supports multivariate analysis to detect non-linear lead-lag relationships between two time series. It uses MIAAFT surrogates to preserve both the individual distributions and the lag-0 cross-correlation, providing a rigorous threshold for significance.
+While the standard CCF is symmetric in its linear evaluation, `xi_ccf()` evaluates the **directional** non-linear lead-lag relationship. By default (`bidirectional = TRUE`), it computes both "$X$ leads $Y$" and "$Y$ leads $X$" simultaneously. Thanks to our optimized C++ engine, the reverse direction is computed essentially at zero additional cost by reusing the MIAAFT surrogates.
 
-The following example demonstrates a scenario where the standard CCF completely fails to detect the relationship, but $\xi$-CCF correctly identifies the lead-lag structure.
-
-```{r xi-ccf-test}
-#| fig.cap: "Multivariate Xi-CCF detecting a purely non-linear lead-lag relationship."
-#| fig.alt: "A cross-correlogram showing a peak at lag 3 for Xi, while standard CCF remains within the noise bounds."
-
+```{r ccf-example, fig.alt="Directional Xi-CCF correlogram showing a peak at lag 3 in the X leads Y panel, while standard CCF remains within the noise bounds."}
 # Generate a pure non-linear lead-lag relationship
 # Y is driven by the absolute value of X from 3 periods ago.
 set.seed(42)
@@ -101,15 +96,14 @@ for (t in 4:n) {
   Y[t] <- abs(X[t - 3]) + rnorm(1, sd = 0.2)
 }
 
-# Run the multivariate Xi-CCF test
+# Run the bidirectional Xi-CCF test
 ccf_results <- xi_ccf(x = X, y = Y, max_lag = 10, n_surr = 100)
 
 # Visualize the results
+# The new autoplot generates a beautiful 2-panel graph showing directional dependence.
 # Standard CCF misses the V-shaped relationship, but Xi-CCF correctly detects that X leads Y by 3 periods.
-library(ggplot2)
-autoplot(ccf_results) +
-  coord_cartesian(xlim = c(0, 10)) +
-  labs(x = "Lag (X leads Y)")
+
+autoplot(ccf_results)
 ```
 
 ## Rolling Window Analysis
