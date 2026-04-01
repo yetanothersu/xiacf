@@ -2,23 +2,25 @@
 % Please edit documentation in R/xi_ccf.R
 \name{xi_ccf}
 \alias{xi_ccf}
-\title{Xi-CCF Test for Multivariate Time Series}
+\title{Directional Xi-CCF Test for Multivariate Time Series}
 \usage{
-xi_ccf(x, y, max_lag = 20, n_surr = 100)
+xi_ccf(x, y, max_lag = 20, n_surr = 100, bidirectional = TRUE)
 }
 \arguments{
-\item{x}{A numeric vector representing the first time series (predictor/lead candidate).}
+\item{x}{A numeric vector representing the first time series (potential cause / lead).}
 
-\item{y}{A numeric vector representing the second time series (response/lag candidate).}
+\item{y}{A numeric vector representing the second time series (potential effect / lag).}
 
-\item{max_lag}{An integer specifying the maximum number of lags to compute (computes from -max_lag to +max_lag).}
+\item{max_lag}{An integer specifying the maximum positive lag to compute.}
 
-\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets to generate for the null hypothesis test.}
+\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets.}
+
+\item{bidirectional}{Logical. If TRUE (default), computes both "X leads Y" and "Y leads X" using the same surrogates for zero extra computational cost.}
 }
 \value{
-An object of class \code{"xi_ccf"} containing the computed statistics and metadata.
+An object of class \code{"xi_ccf"} containing the computed statistics in a tidy long-format.
 }
 \description{
 Calculates Chatterjee's Xi cross-correlation and the standard Cross-Correlation Function (CCF)
-across positive and negative lags, along with their respective MIAAFT significance thresholds.
+across positive lags to evaluate directional lead-lag relationships.
 }

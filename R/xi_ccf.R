@@ -1,20 +1,21 @@
-#' Xi-CCF Test for Multivariate Time Series
+#' Directional Xi-CCF Test for Multivariate Time Series
 #'
 #' Calculates Chatterjee's Xi cross-correlation and the standard Cross-Correlation Function (CCF)
-#' across positive and negative lags, along with their respective MIAAFT significance thresholds.
+#' across positive lags to evaluate directional lead-lag relationships.
 #'
 #' @useDynLib xiacf, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
 #' @importFrom stats na.omit sd ccf quantile qnorm
 #'
-#' @param x A numeric vector representing the first time series (predictor/lead candidate).
-#' @param y A numeric vector representing the second time series (response/lag candidate).
-#' @param max_lag An integer specifying the maximum number of lags to compute (computes from -max_lag to +max_lag).
-#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets to generate for the null hypothesis test.
-#' @return An object of class \code{"xi_ccf"} containing the computed statistics and metadata.
+#' @param x A numeric vector representing the first time series (potential cause / lead).
+#' @param y A numeric vector representing the second time series (potential effect / lag).
+#' @param max_lag An integer specifying the maximum positive lag to compute.
+#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets.
+#' @param bidirectional Logical. If TRUE (default), computes both "X leads Y" and "Y leads X" using the same surrogates for zero extra computational cost.
+#' @return An object of class \code{"xi_ccf"} containing the computed statistics in a tidy long-format.
 #' @rdname xi_ccf
 #' @export
-xi_ccf <- function(x, y, max_lag = 20, n_surr = 100) {
+xi_ccf <- function(x, y, max_lag = 20, n_surr = 100, bidirectional = TRUE) {
     # --- 1. Robust Input Validation ---
     if (!is.numeric(x) || !is.numeric(y)) {
         stop("Inputs 'x' and 'y' must be numeric vectors.")
@@ -26,55 +27,90 @@ xi_ccf <- function(x, y, max_lag = 20, n_surr = 100) {
 
     if (any(is.na(x)) || any(is.na(y))) {
         stop(
-            "Inputs contain NA values. Please handle missing values (e.g., imputation or removal) before running xi_ccf."
+            "Inputs contain NA values. Please handle missing values (e.g., via interpolation or na.omit) before running xi_ccf() to ensure data alignment integrity."
+        )
+    }
+
+    if (stats::var(x) == 0 || stats::var(y) == 0) {
+        stop(
+            "Time series 'x' or 'y' has zero variance. Correlation cannot be computed."
         )
     }
 
     n <- length(x)
-    if (n < 5) {
-        stop("Time series length is too short (n < 5).")
+
+    # --- 2. C++ Engine Call (The magic of simultaneous bidirectional computation) ---
+    # NOTE: Function name updated to match the new naming convention!
+    xi_res <- compute_xi_ccf_miaaft(x, y, max_lag, n_surr)
+
+    # Helper function to calculate the 95% threshold from surrogate matrix rows
+    calc_threshold <- function(surr_matrix) {
+        apply(surr_matrix, 1, function(row) {
+            stats::quantile(row, probs = 0.95, na.rm = TRUE)
+        })
     }
-    if (stats::sd(x) == 0 || stats::sd(y) == 0) {
-        stop("One or both time series have zero variance.")
-    }
 
-    # --- 2. Call C++ Engine for Multivariate Xi Analysis ---
-    xi_res <- compute_xi_ccf_cpp(x, y, max_lag, n_surr)
+    # Standard CCF Confidence Interval
+    ccf_ci <- stats::qnorm((1 + 0.95) / 2) / sqrt(n)
 
-    # Calculate the 95% significance threshold for each lag from the surrogates
-    surr_mat <- as.matrix(xi_res$xi_surrogates)
-    xi_threshold <- apply(
-        surr_mat,
-        1,
-        function(row) {
-            if (n_surr > 0) stats::quantile(row, 0.95, na.rm = TRUE) else NA
-        }
-    )
+    # --- 3. Build Long-Format DataFrames ---
 
-    # --- 3. Compute Standard CCF ---
-    # Note: R's stats::ccf(x, y) calculates correlation between x[t+k] and y[t].
-    # Our C++ convention is x[t] and y[t+k] (Positive lag = x leads y).
-    # To perfectly align the lags, we call stats::ccf(y, x).
-    ccf_res <- stats::ccf(
+    # (A) Forward: X leads Y
+    # In base R stats::ccf(y, x), positive lags measure correlation between y[t+k] and x[t], meaning x leads y.
+    ccf_fwd_full <- stats::ccf(
         y,
         x,
         lag.max = max_lag,
         plot = FALSE,
         na.action = stats::na.pass
     )
-    ccf_ci <- stats::qnorm((1 + 0.95) / 2) / sqrt(n)
+    ccf_fwd <- as.numeric(ccf_fwd_full$acf[(max_lag + 1):(2 * max_lag + 1)])
 
-    # --- 4. Construct S3 Object ---
-    df_res <- data.frame(
+    df_fwd <- data.frame(
+        Direction = "X leads Y",
         Lag = as.numeric(xi_res$lags),
-        CCF = as.numeric(ccf_res$acf),
-        Xi = as.numeric(xi_res$xi_original),
-        Xi_Threshold_95 = xi_threshold,
+        CCF = ccf_fwd,
+        Xi = as.numeric(xi_res$xi_original_forward),
+        Xi_Threshold_95 = calc_threshold(xi_res$xi_surrogates_forward),
         CCF_CI = ccf_ci
     )
 
+    # (B) Backward: Y leads X
+    if (bidirectional) {
+        # stats::ccf(x, y) positive lags mean y leads x.
+        ccf_bwd_full <- stats::ccf(
+            x,
+            y,
+            lag.max = max_lag,
+            plot = FALSE,
+            na.action = stats::na.pass
+        )
+        ccf_bwd <- as.numeric(ccf_bwd_full$acf[(max_lag + 1):(2 * max_lag + 1)])
+
+        df_bwd <- data.frame(
+            Direction = "Y leads X",
+            Lag = as.numeric(xi_res$lags),
+            CCF = ccf_bwd,
+            Xi = as.numeric(xi_res$xi_original_backward),
+            Xi_Threshold_95 = calc_threshold(xi_res$xi_surrogates_backward),
+            CCF_CI = ccf_ci
+        )
+
+        # Combine into a tidy long-format dataframe
+        df_res <- rbind(df_fwd, df_bwd)
+    } else {
+        df_res <- df_fwd
+    }
+
+    # --- 4. Construct S3 Object ---
     structure(
-        list(data = df_res, n = n, max_lag = max_lag, n_surr = n_surr),
+        list(
+            data = df_res,
+            n = n,
+            max_lag = max_lag,
+            n_surr = n_surr,
+            bidirectional = bidirectional
+        ),
         class = "xi_ccf"
     )
 }
@@ -86,20 +122,18 @@ xi_ccf <- function(x, y, max_lag = 20, n_surr = 100) {
 #' @return Invisibly returns the original object.
 #' @export
 print.xi_ccf <- function(x, ...) {
-    cat("\n=== Multivariate Chatterjee's Xi Cross-Correlation (CCF) ===\n")
+    cat("\n=== Directional Chatterjee's Xi Cross-Correlation ===\n")
     cat("Time series length (n):", x$n, "\n")
-    cat("Maximum lag:", x$max_lag, "\n")
-    cat("Number of MIAAFT surrogates:", x$n_surr, "\n")
-    cat("\nLags around 0 (Lead-Lag relationship):\n")
+    cat("Maximum positive lag:  ", x$max_lag, "\n")
+    cat("Number of surrogates:  ", x$n_surr, "\n")
+    cat("Bidirectional evaluation:", x$bidirectional, "\n\n")
 
-    # Show lags around 0 (e.g., -2, -1, 0, 1, 2)
-    zero_idx <- which(x$data$Lag == 0)
-    show_idx <- max(1, zero_idx - 2):min(nrow(x$data), zero_idx + 2)
+    print(head(x$data, 10), row.names = FALSE)
 
-    print(
-        x$data[show_idx, c("Lag", "CCF", "Xi", "Xi_Threshold_95")],
-        row.names = FALSE
-    )
-    cat("...\n")
+    if (nrow(x$data) > 10) {
+        cat("... (Showing first 10 rows. Use `object$data` to see all)\n")
+    }
+    cat("\n")
+
     invisible(x)
 }

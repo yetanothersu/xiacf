@@ -110,51 +110,56 @@ NumericMatrix generate_miaaft_surrogate_cpp(NumericMatrix x, int max_iter = 100)
 // ============================================================
 // Step 3: Multivariate Xi CCF (Cross-Correlation) Wrapper
 // ============================================================
-//' Compute Lagged Xi Cross-Correlation with MIAAFT Surrogates
+//' Compute MIAAFT-based Directional Xi-CCF
 //'
-//' @param x A numeric vector (Variable 1)
-//' @param y A numeric vector (Variable 2)
-//' @param max_lag The maximum lag to compute (computes from -max_lag to +max_lag)
-//' @param n_surr Number of MIAAFT surrogates to generate
-//' @return A list containing lags, original xi values, and surrogate xi values.
+//' @param x First time series (numeric vector, potential cause)
+//' @param y Second time series (numeric vector, potential effect)
+//' @param max_lag Maximum positive lag to evaluate
+//' @param n_surr Number of surrogate datasets to generate
+//' @return A list containing forward (X leads Y) and backward (Y leads X) Xi coefficients and surrogates.
 //' @export
 // [[Rcpp::export]]
-List compute_xi_ccf_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr) {
+List compute_xi_ccf_miaaft(NumericVector x, NumericVector y, int max_lag, int n_surr) {
     vec xv = as<vec>(x);
     vec yv = as<vec>(y);
     int n = xv.n_elem;
     
-    // Calculate number of lags (-max_lag to +max_lag)
-    int n_lags = 2 * max_lag + 1;
-    vec lags = regspace<vec>(-max_lag, max_lag);
+    // 1. Restrict lags to positive values (0 to max_lag) to halve computation time
+    vec lags = linspace<vec>(0, max_lag, max_lag + 1);
+    int n_lags = lags.n_elem;
     
-    vec xi_original(n_lags, fill::zeros);
-    mat xi_surrogates(n_lags, n_surr, fill::zeros);
+    // 2. Prepare output containers for Forward (X leads Y) and Backward (Y leads X)
+    vec xi_orig_fwd(n_lags, fill::value(datum::nan));
+    vec xi_orig_bwd(n_lags, fill::value(datum::nan));
     
-    // --- 1. Compute Original CCF ---
+    mat xi_surr_fwd(n_lags, n_surr, fill::value(datum::nan));
+    mat xi_surr_bwd(n_lags, n_surr, fill::value(datum::nan));
+    
+    // --- 3. Compute Xi for the original data (Both directions simultaneously) ---
     for(int i = 0; i < n_lags; i++) {
         int k = lags(i);
-        if (k >= 0) {
-            vec x_lagged = xv.subvec(0, n - k - 1);
-            vec y_target = yv.subvec(k, n - 1);
-            xi_original(i) = xi_coefficient(x_lagged, y_target);
-        } else {
-            int abs_k = -k; // Negative lag means Y leads X
-            vec x_lagged = xv.subvec(abs_k, n - 1);
-            vec y_target = yv.subvec(0, n - abs_k - 1);
-            xi_original(i) = xi_coefficient(x_lagged, y_target);
+        if (n > k) {
+            // Forward (X leads Y): Shift X to the past, target Y's present
+            vec x_lagged_fwd = xv.subvec(0, n - k - 1);
+            vec y_target_fwd = yv.subvec(k, n - 1);
+            xi_orig_fwd(i) = xi_coefficient(x_lagged_fwd, y_target_fwd);
+            
+            // Backward (Y leads X): Shift Y to the past, target X's present
+            vec y_lagged_bwd = yv.subvec(0, n - k - 1);
+            vec x_target_bwd = xv.subvec(k, n - 1);
+            xi_orig_bwd(i) = xi_coefficient(y_lagged_bwd, x_target_bwd);
         }
     }
     
-    // --- 2. Generate Surrogates and Compute CCF ---
-    // Combine x and y into a 2-column matrix
+    // --- 4. Generate surrogates and compute Xi (Both directions simultaneously) ---
+    // Combine variables into a 2-column matrix
     mat Z(n, 2);
     Z.col(0) = xv;
     Z.col(1) = yv;
     NumericMatrix Z_rcpp = wrap(Z);
     
     for(int s = 0; s < n_surr; s++) {
-        // Generate 1 MIAAFT surrogate preserving cross-correlation
+        // Expensive MIAAFT surrogate generation is executed ONLY ONCE per iteration
         NumericMatrix Z_surr_rcpp = generate_miaaft_surrogate_cpp(Z_rcpp, 100);
         mat Z_surr = as<mat>(Z_surr_rcpp);
         
@@ -163,22 +168,26 @@ List compute_xi_ccf_cpp(NumericVector x, NumericVector y, int max_lag, int n_sur
         
         for(int i = 0; i < n_lags; i++) {
             int k = lags(i);
-            if (k >= 0) {
-                vec x_lagged = x_surr.subvec(0, n - k - 1);
-                vec y_target = y_surr.subvec(k, n - 1);
-                xi_surrogates(i, s) = xi_coefficient(x_lagged, y_target);
-            } else {
-                int abs_k = -k;
-                vec x_lagged = x_surr.subvec(abs_k, n - 1);
-                vec y_target = y_surr.subvec(0, n - abs_k - 1);
-                xi_surrogates(i, s) = xi_coefficient(x_lagged, y_target);
+            if (n > k) {
+                // Reuse the generated surrogate for Forward computation
+                vec x_lagged_fwd = x_surr.subvec(0, n - k - 1);
+                vec y_target_fwd = y_surr.subvec(k, n - 1);
+                xi_surr_fwd(i, s) = xi_coefficient(x_lagged_fwd, y_target_fwd);
+                
+                // Reuse the EXACT SAME surrogate for Backward computation
+                vec y_lagged_bwd = y_surr.subvec(0, n - k - 1);
+                vec x_target_bwd = x_surr.subvec(k, n - 1);
+                xi_surr_bwd(i, s) = xi_coefficient(y_lagged_bwd, x_target_bwd);
             }
         }
     }
     
+    // 5. Return results to R
     return List::create(
-        Named("lags") = lags,
-        Named("xi_original") = xi_original,
-        Named("xi_surrogates") = xi_surrogates
+        _["lags"] = lags,
+        _["xi_original_forward"] = xi_orig_fwd,
+        _["xi_surrogates_forward"] = xi_surr_fwd,
+        _["xi_original_backward"] = xi_orig_bwd,
+        _["xi_surrogates_backward"] = xi_surr_bwd
     );
 }

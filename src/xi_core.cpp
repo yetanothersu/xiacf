@@ -145,7 +145,7 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
 //' and \code{xi_surrogates} (a matrix of Xi coefficients for the surrogate datasets).
 //' @export
 // [[Rcpp::export]]
-List compute_xi_lags(NumericVector x, int max_lag, int n_surr) {
+List compute_xi_acf_iaaft(NumericVector x, int max_lag, int n_surr) {
     vec y = as<vec>(x); // Convert R vector to Armadillo vector
     int n = y.n_elem;
     

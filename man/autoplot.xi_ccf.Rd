@@ -2,7 +2,7 @@
 % Please edit documentation in R/autoplot.xi_ccf.R
 \name{autoplot.xi_ccf}
 \alias{autoplot.xi_ccf}
-\title{Plot Xi-CCF Comparison}
+\title{Plot Directional Xi-CCF Comparison}
 \usage{
 \method{autoplot}{xi_ccf}(object, ...)
 }
@@ -12,9 +12,9 @@
 \item{...}{Additional arguments passed to other methods.}
 }
 \value{
-A \code{ggplot} object representing the cross-correlogram.
+A \code{ggplot} object representing the directional cross-correlogram.
 }
 \description{
 Visualizes the comparison between the standard linear Cross-Correlation Function (CCF)
-and the non-linear Chatterjee's Xi cross-correlation, including their significance thresholds.
+and the non-linear Chatterjee's Xi cross-correlation across two directions (X leads Y, Y leads X).
 }
