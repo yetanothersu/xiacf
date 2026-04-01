@@ -36,7 +36,7 @@ test_that("Xi coefficient is close to 0 for independent noise", {
     expect_lt(abs(xi_val_noise), 0.1)
 })
 
-test_that("compute_xi_lags handles initialization correctly (NA check)", {
+test_that("compute_xi_acf_iaaft handles initialization correctly (NA check)", {
     # Case 4: Regression test for initialization bug
     # Edge case where max_lag (20) is greater than the data length (10).
     x_short <- rnorm(10)
@@ -44,7 +44,7 @@ test_that("compute_xi_lags handles initialization correctly (NA check)", {
     n_surr <- 5
 
     # Ensure it returns a result without throwing an error
-    res <- xiacf::compute_xi_lags(x_short, max_lag, n_surr)
+    res <- xiacf::compute_xi_acf_iaaft(x_short, max_lag, n_surr)
 
     # Check if uncomputable lags (>= 11) are filled with NaN.
     # Note: Rcpp's datum::nan is treated as NaN in R.

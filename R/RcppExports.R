@@ -11,16 +11,16 @@ generate_miaaft_surrogate_cpp <- function(x, max_iter = 100L) {
     .Call(`_xiacf_generate_miaaft_surrogate_cpp`, x, max_iter)
 }
 
-#' Compute Lagged Xi Cross-Correlation with MIAAFT Surrogates
+#' Compute MIAAFT-based Directional Xi-CCF
 #'
-#' @param x A numeric vector (Variable 1)
-#' @param y A numeric vector (Variable 2)
-#' @param max_lag The maximum lag to compute (computes from -max_lag to +max_lag)
-#' @param n_surr Number of MIAAFT surrogates to generate
-#' @return A list containing lags, original xi values, and surrogate xi values.
+#' @param x First time series (numeric vector, potential cause)
+#' @param y Second time series (numeric vector, potential effect)
+#' @param max_lag Maximum positive lag to evaluate
+#' @param n_surr Number of surrogate datasets to generate
+#' @return A list containing forward (X leads Y) and backward (Y leads X) Xi coefficients and surrogates.
 #' @export
-compute_xi_ccf_cpp <- function(x, y, max_lag, n_surr) {
-    .Call(`_xiacf_compute_xi_ccf_cpp`, x, y, max_lag, n_surr)
+compute_xi_ccf_miaaft <- function(x, y, max_lag, n_surr) {
+    .Call(`_xiacf_compute_xi_ccf_miaaft`, x, y, max_lag, n_surr)
 }
 
 #' Calculate Chatterjee's Rank Correlation Coefficient (Xi)
@@ -52,7 +52,7 @@ generate_iaaft_surrogates <- function(x, n_surr, max_iter = 100L) {
 #' @return A list containing \code{xi_original} (the Xi coefficients for the original series) 
 #' and \code{xi_surrogates} (a matrix of Xi coefficients for the surrogate datasets).
 #' @export
-compute_xi_lags <- function(x, max_lag, n_surr) {
-    .Call(`_xiacf_compute_xi_lags`, x, max_lag, n_surr)
+compute_xi_acf_iaaft <- function(x, max_lag, n_surr) {
+    .Call(`_xiacf_compute_xi_acf_iaaft`, x, max_lag, n_surr)
 }
 

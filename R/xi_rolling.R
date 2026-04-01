@@ -107,7 +107,7 @@ run_rolling_xi_analysis <- function(
                     }
 
                     # Call the C++ engine
-                    res <- compute_xi_lags(y_sub, max_lag, n_surr)
+                    res <- compute_xi_acf_iaaft(y_sub, max_lag, n_surr)
 
                     # Calculate thresholds (NA removal is required since uncomputable lags return NaN in C++)
                     xi_threshold <- rep(NA, max_lag)

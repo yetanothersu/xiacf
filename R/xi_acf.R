@@ -34,7 +34,7 @@ xi_acf <- function(x, max_lag = 20, n_surr = 100) {
     }
 
     # --- 2. Call C++ Engine for Xi Analysis ---
-    xi_res <- compute_xi_lags(x, max_lag, n_surr)
+    xi_res <- compute_xi_acf_iaaft(x, max_lag, n_surr)
 
     xi_threshold <- rep(NA, max_lag)
     if (n_surr > 0) {
