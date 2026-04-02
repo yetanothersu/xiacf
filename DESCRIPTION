@@ -1,15 +1,19 @@
 Package: xiacf
 Type: Package
-Title: Quantifying Nonlinear Dependence via Xi-ACF and IAAFT Surrogates
-Version: 0.2.1
+Title: Quantifying Nonlinear Dependence and Lead-Lag Dynamics via Chatterjee's Xi
+Version: 0.3.0
 Authors@R: person(given = "Yasunori", family = "Watanabe",
                   role = c("aut", "cre"),
                   email = "watanabe.yasunori@outlook.com")
 Maintainer: Yasunori Watanabe <watanabe.yasunori@outlook.com>
-Description: Implements the Xi-ACF framework for detecting deterministic chaos 
-    in financial time series. Includes high-performance C++ implementations of 
-    Chatterjee's Xi correlation coefficient and the IAAFT (Iterated Amplitude 
-    Adjusted Fourier Transform) surrogate algorithm.
+Description: Implements a robust framework for detecting non-linear dependence 
+    and directional lead-lag relationships in time series data. Utilizing 
+    Chatterjee's rank correlation (Xi), it provides tools for both univariate 
+    (Xi-ACF) and multivariate (Xi-CCF) analyses. Features include rigorous 
+    hypothesis testing via IAAFT and MIAAFT surrogate data generation algorithms, 
+    bidirectional lead-lag evaluation, and parallelized rolling window analysis 
+    for detecting structural breaks. Core computations are highly optimized 
+    in C++ using 'RcppArmadillo'.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
