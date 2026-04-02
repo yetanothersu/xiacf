@@ -108,20 +108,46 @@ autoplot(ccf_results)
 
 ## Rolling Window Analysis
 
-For advanced market microstructure or structural break detection, you can run a rolling $\xi$-ACF analysis. This function supports parallel processing using the `future` ecosystem.
+For advanced market microstructure or structural break detection, you can run rolling $\xi$-ACF or $\xi$-CCF analyses. These functions support robust parallel processing via the `future` ecosystem and seamlessly integrate with timestamps for intuitive visualization.
 
-```{r xi-acf-rolling}
-# Run rolling analysis with a window size of 100 and step size of 10
-rolling_res <- run_rolling_xi_analysis(
-  x = x,
+```{r xi-ccf-rolling, fig.alt="Heatmap of rolling bidirectional Xi-CCF showing a time-varying non-linear lead-lag relationship."}
+library(ggplot2)
+
+# Generate dummy time series data with a structural break
+set.seed(123)
+dates <- seq(as.Date("2020-01-01"), by = "1 day", length.out = 300)
+X <- rnorm(300)
+Y <- numeric(300)
+
+# First half (Day 1-150): X leads Y by 3 days (non-linear relationship)
+Y[1:150] <- c(rnorm(3), abs(X[1:147])) + rnorm(150, sd = 0.1)
+# Second half (Day 151-300): The relationship breaks down (pure noise)
+Y[151:300] <- rnorm(150)
+
+# Run rolling bidirectional Xi-CCF with time_index
+rolling_res <- run_rolling_xi_ccf(
+  x = X,
+  y = Y,
+  time_index = dates, # Pass the dates directly!
   window_size = 100,
-  step_size = 10,
+  step_size = 5,
   max_lag = 5,
   n_surr = 50,
   n_cores = 2 # Set to NULL for sequential execution
 )
 
-head(rolling_res)
+# Visualize the dynamic relationship as a beautiful heatmap
+ggplot(rolling_res, aes(x = Window_End_Time, y = Lag, fill = Xi_Excess)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "white", high = "firebrick", mid = "white", midpoint = 0) +
+  facet_wrap(~Direction, ncol = 1) +
+  labs(
+    title = "Rolling Bidirectional Xi-CCF Heatmap",
+    subtitle = "Detecting structural breaks in non-linear lead-lag dynamics",
+    x = "Date",
+    fill = "Excess Xi"
+  ) +
+  theme_minimal()
 ```
 
 ## References
