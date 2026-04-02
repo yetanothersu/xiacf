@@ -5,29 +5,33 @@
 #'
 #' @param x A numeric vector representing the first time series (predictor/lead candidate).
 #' @param y A numeric vector representing the second time series (response/lag candidate).
+#' @param time_index Optional vector of timestamps (e.g., Date, POSIXct) corresponding to x and y.
 #' @param window_size An integer specifying the size of the rolling window.
 #' @param step_size An integer specifying the step size by which the window is shifted. Default is 1.
-#' @param max_lag An integer specifying the maximum lag to compute (computes from -max_lag to +max_lag).
+#' @param max_lag An integer specifying the maximum positive lag to compute.
 #' @param n_surr An integer specifying the number of MIAAFT surrogate datasets for the null hypothesis test.
+#' @param bidirectional Logical. If TRUE (default), computes both "X leads Y" and "Y leads X".
 #' @param n_cores An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.
 #' @param save_dir A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.
 #'
-#' @return A \code{data.frame} containing the rolling window results.
+#' @return A \code{data.frame} containing the rolling window results in a tidy long-format.
 #'
 #' @importFrom foreach foreach
 #' @importFrom doFuture registerDoFuture %dofuture%
 #' @importFrom future plan multisession sequential
 #' @importFrom progressr progressor with_progress
 #' @importFrom dplyr bind_rows
-#' @importFrom stats quantile sd
+#' @importFrom stats quantile sd ccf qnorm na.pass
 #' @export
 run_rolling_xi_ccf <- function(
     x,
     y,
+    time_index = NULL,
     window_size,
     step_size = 1,
     max_lag = 20,
     n_surr = 100,
+    bidirectional = TRUE,
     n_cores = NULL,
     save_dir = NULL
 ) {
@@ -40,6 +44,11 @@ run_rolling_xi_ccf <- function(
         stop(
             "Invalid window_size. Must be <= length(x) and reasonably larger than max_lag."
         )
+    }
+    if (!is.null(time_index)) {
+        if (length(time_index) != n) {
+            stop("time_index must have the exact same length as x and y.")
+        }
     }
 
     # Calculate starting indices for each window
@@ -128,6 +137,9 @@ run_rolling_xi_ccf <- function(
                     return(NULL)
                 }
 
+                # Standard CCF Confidence Interval
+                ccf_ci <- stats::qnorm((1 + 0.95) / 2) / sqrt(window_size)
+
                 # Call C++ Engine
                 res <- compute_xi_ccf_miaaft(
                     x_window,
@@ -136,27 +148,81 @@ run_rolling_xi_ccf <- function(
                     n_surr
                 )
 
-                # Compute 95% threshold from surrogates
-                xi_threshold <- numeric(length(res$lags))
-                if (n_surr > 0) {
-                    xi_threshold <- apply(res$xi_surrogates, 1, function(r) {
+                # Helper to calculate 95% threshold
+                calc_threshold <- function(surr_matrix) {
+                    if (n_surr == 0) {
+                        return(rep(NA, length(res$lags)))
+                    }
+                    apply(surr_matrix, 1, function(r) {
                         stats::quantile(r, 0.95, na.rm = TRUE)
                     })
                 }
 
-                # Construct the result data.frame for this window
-                df_window <- data.frame(
-                    Window_ID = i,
-                    Window_Start_Idx = idx_start,
-                    Window_End_Idx = idx_end,
-                    Lag = as.numeric(res$lags),
-                    Xi_Original = as.numeric(res$xi_original),
-                    Xi_Threshold_95 = xi_threshold,
-                    Xi_Excess = pmax(
-                        0,
-                        as.numeric(res$xi_original) - xi_threshold
-                    )
+                # --- Build Long-Format DataFrame for the Window ---
+
+                # (A) Forward: X leads Y
+                ccf_fwd_full <- stats::ccf(
+                    y_window,
+                    x_window,
+                    lag.max = max_lag,
+                    plot = FALSE,
+                    na.action = stats::na.pass
                 )
+                ccf_fwd <- as.numeric(ccf_fwd_full$acf[
+                    (max_lag + 1):(2 * max_lag + 1)
+                ])
+
+                df_fwd <- data.frame(
+                    Direction = "X leads Y",
+                    Lag = as.numeric(res$lags),
+                    CCF = ccf_fwd,
+                    Xi = as.numeric(res$xi_original_forward),
+                    Xi_Threshold_95 = calc_threshold(res$xi_surrogates_forward),
+                    CCF_CI = ccf_ci
+                )
+
+                # (B) Backward: Y leads X
+                if (bidirectional) {
+                    ccf_bwd_full <- stats::ccf(
+                        x_window,
+                        y_window,
+                        lag.max = max_lag,
+                        plot = FALSE,
+                        na.action = stats::na.pass
+                    )
+                    ccf_bwd <- as.numeric(ccf_bwd_full$acf[
+                        (max_lag + 1):(2 * max_lag + 1)
+                    ])
+
+                    df_bwd <- data.frame(
+                        Direction = "Y leads X",
+                        Lag = as.numeric(res$lags),
+                        CCF = ccf_bwd,
+                        Xi = as.numeric(res$xi_original_backward),
+                        Xi_Threshold_95 = calc_threshold(
+                            res$xi_surrogates_backward
+                        ),
+                        CCF_CI = ccf_ci
+                    )
+                    df_window <- rbind(df_fwd, df_bwd)
+                } else {
+                    df_window <- df_fwd
+                }
+
+                # Add Excess Xi and Window Metadata
+                df_window$Xi_Excess <- pmax(
+                    0,
+                    df_window$Xi - df_window$Xi_Threshold_95
+                )
+                df_window$Window_ID <- i
+                df_window$Window_Start_Idx <- idx_start
+                df_window$Window_End_Idx <- idx_end
+
+                # Map the actual timestamps if time_index was provided
+                if (!is.null(time_index)) {
+                    df_window$Window_Start_Time <- time_index[idx_start]
+                    df_window$Window_End_Time <- time_index[idx_end]
+                }
 
                 # Save checkpoint
                 if (!is.null(save_dir)) {
@@ -189,7 +255,13 @@ run_rolling_xi_ccf <- function(
         old_results_list <- lapply(old_files, readRDS)
         old_df <- dplyr::bind_rows(old_results_list)
         final_df <- dplyr::bind_rows(old_df, final_df)
-        final_df <- final_df[order(final_df$Window_ID, final_df$Lag), ]
+    }
+
+    # Sort correctly taking Direction into account
+    if (nrow(final_df) > 0) {
+        final_df <- final_df[
+            order(final_df$Window_ID, final_df$Direction, final_df$Lag),
+        ]
     }
 
     return(final_df)

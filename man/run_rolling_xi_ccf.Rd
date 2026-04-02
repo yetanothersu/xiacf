@@ -7,10 +7,12 @@
 run_rolling_xi_ccf(
   x,
   y,
+  time_index = NULL,
   window_size,
   step_size = 1,
   max_lag = 20,
   n_surr = 100,
+  bidirectional = TRUE,
   n_cores = NULL,
   save_dir = NULL
 )
@@ -20,20 +22,24 @@ run_rolling_xi_ccf(
 
 \item{y}{A numeric vector representing the second time series (response/lag candidate).}
 
+\item{time_index}{Optional vector of timestamps (e.g., Date, POSIXct) corresponding to x and y.}
+
 \item{window_size}{An integer specifying the size of the rolling window.}
 
 \item{step_size}{An integer specifying the step size by which the window is shifted. Default is 1.}
 
-\item{max_lag}{An integer specifying the maximum lag to compute (computes from -max_lag to +max_lag).}
+\item{max_lag}{An integer specifying the maximum positive lag to compute.}
 
 \item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets for the null hypothesis test.}
+
+\item{bidirectional}{Logical. If TRUE (default), computes both "X leads Y" and "Y leads X".}
 
 \item{n_cores}{An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.}
 
 \item{save_dir}{A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.}
 }
 \value{
-A \code{data.frame} containing the rolling window results.
+A \code{data.frame} containing the rolling window results in a tidy long-format.
 }
 \description{
 Performs a rolling window analysis using Chatterjee's Xi cross-correlation to assess

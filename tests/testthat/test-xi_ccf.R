@@ -69,37 +69,34 @@ test_that("autoplot.xi_ccf returns a valid ggplot object", {
     expect_s3_class(p, "ggplot")
 })
 
-# TODO: Temporarily commented out until Phase 3 adaptation (long-format adaptation)
-# for xi_rolling_ccf.R is complete.
+test_that("run_rolling_xi_ccf works sequentially", {
+    set.seed(42)
+    x <- rnorm(100)
+    y <- rnorm(100)
 
-# test_that("run_rolling_xi_ccf works sequentially", {
-#     set.seed(42)
-#     x <- rnorm(100)
-#     y <- rnorm(100)
-#
-#     window_size <- 50
-#     step_size <- 10
-#     max_lag <- 2
-#
-#     res <- run_rolling_xi_ccf(
-#         x,
-#         y,
-#         window_size = window_size,
-#         step_size = step_size,
-#         max_lag = max_lag,
-#         n_surr = 5,
-#         n_cores = NULL
-#     )
-#
-#     # クラスと列の確認
-#     expect_s3_class(res, "data.frame")
-#     expect_true(all(
-#         c("Window_ID", "Window_Start_Idx", "Lag", "Xi_Excess") %in%
-#             colnames(res)
-#     ))
-#
-#     # 行数の確認 (ウィンドウ数 × ラグ数)
-#     expected_windows <- length(seq(1, 100 - window_size + 1, by = step_size))
-#     expected_lags <- 2 * max_lag + 1
-#     expect_equal(nrow(res), expected_windows * expected_lags)
-# })
+    window_size <- 50
+    step_size <- 10
+    max_lag <- 2
+
+    res <- run_rolling_xi_ccf(
+        x,
+        y,
+        window_size = window_size,
+        step_size = step_size,
+        max_lag = max_lag,
+        n_surr = 5,
+        n_cores = NULL
+    )
+
+    # Check class and columns
+    expect_s3_class(res, "data.frame")
+    expect_true(all(
+        c("Window_ID", "Window_Start_Idx", "Lag", "Xi_Excess") %in%
+            colnames(res)
+    ))
+
+    # Check number of rows (number of windows × number of rows per window)
+    expected_windows <- length(seq(1, 100 - window_size + 1, by = step_size))
+    expected_rows_per_window <- 2 * (max_lag + 1)
+    expect_equal(nrow(res), expected_windows * expected_rows_per_window)
+})
