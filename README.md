@@ -225,6 +225,7 @@ ggplot(rolling_res, aes(x = Window_End_Time, y = Lag, fill = Xi_Excess)) +
   geom_tile() +
   scale_fill_gradient2(low = "white", high = "firebrick", mid = "white", midpoint = 0) +
   facet_wrap(~Direction, ncol = 1) +
+  scale_x_date(date_labels = "%Y-%m") +
   labs(
     title = "Rolling Bidirectional Xi-CCF Heatmap",
     subtitle = "Detecting structural breaks in non-linear lead-lag dynamics",
