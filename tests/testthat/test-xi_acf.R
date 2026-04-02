@@ -1,3 +1,5 @@
+# tests/testthat/test-xi_acf.R
+
 test_that("xi_acf function works and returns correct structure", {
   # Generate synthetic data
   set.seed(42)
@@ -70,14 +72,16 @@ test_that("autoplot.xi_acf returns a ggplot object", {
   expect_s3_class(p, "ggplot")
 })
 
-test_that("run_rolling_xi_analysis works with sequential execution", {
+test_that("run_rolling_xi_analysis works with sequential execution and time_index", {
   # Test with a small synthetic dataset
   set.seed(42)
   x <- rnorm(50)
+  dates <- seq(as.Date("2020-01-01"), by = "1 day", length.out = 50)
 
   # Execute sequentially to keep the automated test lightweight
   res_df <- xiacf::run_rolling_xi_analysis(
     x = x,
+    time_index = dates,
     window_size = 20,
     step_size = 10,
     max_lag = 5,
@@ -89,6 +93,28 @@ test_that("run_rolling_xi_analysis works with sequential execution", {
   expect_s3_class(res_df, "data.frame")
   expect_true("Xi_Excess" %in% names(res_df))
   expect_true(nrow(res_df) > 0)
+
+  # Verify the time_index columns are properly mapped
+  expect_true(all(c("Window_Start_Time", "Window_End_Time") %in% names(res_df)))
+  expect_s3_class(res_df$Window_Start_Time, "Date")
+  expect_s3_class(res_df$Window_End_Time, "Date")
+})
+
+test_that("run_rolling_xi_analysis handles invalid time_index correctly", {
+  set.seed(42)
+  x <- rnorm(50)
+  dates_short <- seq(as.Date("2020-01-01"), by = "1 day", length.out = 30)
+
+  # When lengths differ
+  expect_error(
+    xiacf::run_rolling_xi_analysis(
+      x,
+      time_index = dates_short,
+      window_size = 20,
+      max_lag = 5
+    ),
+    "exact same length"
+  )
 })
 
 test_that("run_rolling_xi_analysis saves and loads intermediate results correctly", {

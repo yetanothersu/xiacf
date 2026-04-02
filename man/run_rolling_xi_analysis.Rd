@@ -6,6 +6,7 @@
 \usage{
 run_rolling_xi_analysis(
   x,
+  time_index = NULL,
   window_size,
   step_size = 1,
   max_lag = 20,
@@ -16,6 +17,8 @@ run_rolling_xi_analysis(
 }
 \arguments{
 \item{x}{A numeric vector representing the time series (e.g., log-returns).}
+
+\item{time_index}{Optional vector of timestamps (e.g., Date, POSIXct) corresponding to x.}
 
 \item{window_size}{An integer specifying the size of the rolling window.}
 
@@ -30,7 +33,7 @@ run_rolling_xi_analysis(
 \item{save_dir}{A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.}
 }
 \value{
-A \code{data.frame} containing the rolling window results, including window indices, lags, computed Xi values, surrogate thresholds, and the excess Xi.
+A \code{data.frame} containing the rolling window results, including timestamps if provided.
 }
 \description{
 Performs a rolling window analysis using Chatterjee's Xi coefficient to assess
