@@ -23,6 +23,18 @@ compute_xi_ccf_miaaft <- function(x, y, max_lag, n_surr) {
     .Call(`_xiacf_compute_xi_ccf_miaaft`, x, y, max_lag, n_surr)
 }
 
+#' Compute Pairwise Directional Xi-CCF for a Multivariate Matrix
+#'
+#' @param x A numeric matrix (rows = time, cols = variables).
+#' @param max_lag An integer specifying the maximum positive lag.
+#' @param n_surr An integer specifying the number of surrogate datasets.
+#' @return A list containing flat vectors for lead/lag variable indices, lags, 
+#'         original Xi values, and a matrix of surrogate Xi values.
+#' @export
+compute_xi_matrix_miaaft <- function(x, max_lag, n_surr) {
+    .Call(`_xiacf_compute_xi_matrix_miaaft`, x, max_lag, n_surr)
+}
+
 #' Calculate Chatterjee's Rank Correlation Coefficient (Xi)
 #' 
 #' Computes Chatterjee's rank correlation coefficient (Xi) between two numeric vectors.

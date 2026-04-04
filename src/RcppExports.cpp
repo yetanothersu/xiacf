@@ -37,6 +37,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compute_xi_matrix_miaaft
+List compute_xi_matrix_miaaft(NumericMatrix x, int max_lag, int n_surr);
+RcppExport SEXP _xiacf_compute_xi_matrix_miaaft(SEXP xSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
+    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_xi_matrix_miaaft(x, max_lag, n_surr));
+    return rcpp_result_gen;
+END_RCPP
+}
 // xi_coefficient
 double xi_coefficient(arma::vec x, arma::vec y);
 RcppExport SEXP _xiacf_xi_coefficient(SEXP xSEXP, SEXP ySEXP) {
@@ -79,6 +92,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_xiacf_generate_miaaft_surrogate_cpp", (DL_FUNC) &_xiacf_generate_miaaft_surrogate_cpp, 2},
     {"_xiacf_compute_xi_ccf_miaaft", (DL_FUNC) &_xiacf_compute_xi_ccf_miaaft, 4},
+    {"_xiacf_compute_xi_matrix_miaaft", (DL_FUNC) &_xiacf_compute_xi_matrix_miaaft, 3},
     {"_xiacf_xi_coefficient", (DL_FUNC) &_xiacf_xi_coefficient, 2},
     {"_xiacf_generate_iaaft_surrogates", (DL_FUNC) &_xiacf_generate_iaaft_surrogates, 3},
     {"_xiacf_compute_xi_acf_iaaft", (DL_FUNC) &_xiacf_compute_xi_acf_iaaft, 3},

@@ -191,3 +191,83 @@ List compute_xi_ccf_miaaft(NumericVector x, NumericVector y, int max_lag, int n_
         _["xi_surrogates_backward"] = xi_surr_bwd
     );
 }
+
+// ============================================================
+// Phase 3 Milestone 2: N-Dimensional MIAAFT Engine for Matrix
+// ============================================================
+//' Compute Pairwise Directional Xi-CCF for a Multivariate Matrix
+//'
+//' @param x A numeric matrix (rows = time, cols = variables).
+//' @param max_lag An integer specifying the maximum positive lag.
+//' @param n_surr An integer specifying the number of surrogate datasets.
+//' @return A list containing flat vectors for lead/lag variable indices, lags, 
+//'         original Xi values, and a matrix of surrogate Xi values.
+//' @export
+// [[Rcpp::export]]
+List compute_xi_matrix_miaaft(NumericMatrix x, int max_lag, int n_surr) {
+    mat Y = as<mat>(x);
+    int n = Y.n_rows;
+    int M = Y.n_cols;
+    int n_lags = max_lag + 1; // lags from 0 to max_lag
+    int total_combinations = M * M * n_lags;
+    
+    // Output structures (Flat format, easy to convert to a data.frame in R)
+    IntegerVector out_var_lead(total_combinations);
+    IntegerVector out_var_lag(total_combinations);
+    IntegerVector out_lag(total_combinations);
+    NumericVector out_xi_orig(total_combinations);
+    mat out_xi_surr(total_combinations, n_surr, fill::value(datum::nan));
+    
+    // --- 1. Calculate Original Xi for all pairs and lags ---
+    int idx = 0;
+    for (int i = 0; i < M; i++) {
+        for (int j = 0; j < M; j++) {
+            for (int k = 0; k <= max_lag; k++) {
+                out_var_lead[idx] = i + 1; // 1-based index for R
+                out_var_lag[idx]  = j + 1; // 1-based index for R
+                out_lag[idx]      = k;
+                
+                if (n > k) {
+                    vec lead_lagged = Y.col(i).subvec(0, n - k - 1);
+                    vec lag_target  = Y.col(j).subvec(k, n - 1);
+                    out_xi_orig[idx] = xi_coefficient(lead_lagged, lag_target);
+                } else {
+                    out_xi_orig[idx] = NA_REAL;
+                }
+                idx++;
+            }
+        }
+    }
+    
+    // --- 2. Generate Surrogates and Calculate Xi ---
+    for (int s = 0; s < n_surr; s++) {
+        // MAGIC HAPPENS HERE:
+        // Expensive MIAAFT surrogate generation is executed ONLY ONCE per iteration
+        // for the entire M-column matrix!
+        NumericMatrix surr_rcpp = generate_miaaft_surrogate_cpp(x, 100);
+        mat surr = as<mat>(surr_rcpp);
+        
+        idx = 0; // Reset flat index for each surrogate iteration
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < M; j++) {
+                for (int k = 0; k <= max_lag; k++) {
+                    if (n > k) {
+                        vec lead_lagged = surr.col(i).subvec(0, n - k - 1);
+                        vec lag_target  = surr.col(j).subvec(k, n - 1);
+                        out_xi_surr(idx, s) = xi_coefficient(lead_lagged, lag_target);
+                    }
+                    idx++;
+                }
+            }
+        }
+    }
+    
+    // Return as a List
+    return List::create(
+        Named("var_lead") = out_var_lead,
+        Named("var_lag") = out_var_lag,
+        Named("lag") = out_lag,
+        Named("xi_original") = out_xi_orig,
+        Named("xi_surrogates") = wrap(out_xi_surr)
+    );
+}
