@@ -1,7 +1,7 @@
 Package: xiacf
 Type: Package
 Title: Quantifying Nonlinear Dependence and Lead-Lag Dynamics via Chatterjee's Xi
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: person(given = "Yasunori", family = "Watanabe",
                   role = c("aut", "cre"),
                   email = "watanabe.yasunori@outlook.com")
