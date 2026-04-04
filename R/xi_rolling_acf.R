@@ -9,6 +9,7 @@
 #' @param step_size An integer specifying the step size by which the window is shifted. Default is 1.
 #' @param max_lag An integer specifying the maximum lag to compute Chatterjee's Xi for.
 #' @param n_surr An integer specifying the number of surrogate datasets for the null hypothesis test.
+#' @param sig_level A numeric value specifying the significance level for the confidence intervals. Default is 0.95.
 #' @param n_cores An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.
 #' @param save_dir A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.
 #'
@@ -28,6 +29,7 @@ run_rolling_xi_analysis <- function(
     step_size = 1,
     max_lag = 20,
     n_surr = 100,
+    sig_level = 0.95,
     n_cores = NULL,
     save_dir = NULL
 ) {
@@ -37,7 +39,6 @@ run_rolling_xi_analysis <- function(
         stop("Invalid window_size. Must be <= length(x) and > max_lag.")
     }
 
-    # ★ time_index のバリデーション追加
     if (!is.null(time_index)) {
         if (length(time_index) != n) {
             stop("time_index must have the exact same length as x.")
@@ -125,7 +126,7 @@ run_rolling_xi_analysis <- function(
                     return(NULL)
                 }
 
-                # ★ Call C++ Engine (最新の関数名に更新)
+                # Call C++ Engine to compute Xi-ACF and surrogates
                 res <- compute_xi_acf_iaaft(
                     x_window,
                     max_lag,
@@ -139,10 +140,12 @@ run_rolling_xi_analysis <- function(
                         res$xi_surrogates,
                         1,
                         function(r) {
-                            stats::quantile(r, 0.95, na.rm = TRUE)
+                            stats::quantile(r, sig_level, na.rm = TRUE)
                         }
                     )
                 }
+
+                acf_ci <- stats::qnorm((1 + sig_level) / 2) / sqrt(window_size)
 
                 # Construct the result data frame for the current window
                 df_window <- data.frame(
@@ -151,7 +154,7 @@ run_rolling_xi_analysis <- function(
                     Window_End_Idx = idx_end,
                     Lag = 1:max_lag,
                     Xi_Original = as.numeric(res$xi_original),
-                    Xi_Threshold_95 = xi_threshold,
+                    Xi_Threshold = xi_threshold,
                     # Excess Xi (storing the raw difference)
                     Xi_Excess = pmax(
                         0,
@@ -159,7 +162,7 @@ run_rolling_xi_analysis <- function(
                     )
                 )
 
-                # ★ Map the actual timestamps if time_index was provided
+                # Map the actual timestamps if time_index was provided
                 if (!is.null(time_index)) {
                     df_window$Window_Start_Time <- time_index[idx_start]
                     df_window$Window_End_Time <- time_index[idx_end]

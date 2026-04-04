@@ -11,6 +11,7 @@
 #' @param max_lag An integer specifying the maximum positive lag to compute.
 #' @param n_surr An integer specifying the number of MIAAFT surrogate datasets for the null hypothesis test.
 #' @param bidirectional Logical. If TRUE (default), computes both "X leads Y" and "Y leads X".
+#' @param sig_level A numeric value specifying the significance level for the confidence intervals. Default is 0.95.
 #' @param n_cores An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.
 #' @param save_dir A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.
 #'
@@ -32,6 +33,7 @@ run_rolling_xi_ccf <- function(
     max_lag = 20,
     n_surr = 100,
     bidirectional = TRUE,
+    sig_level = 0.95,
     n_cores = NULL,
     save_dir = NULL
 ) {
@@ -138,7 +140,7 @@ run_rolling_xi_ccf <- function(
                 }
 
                 # Standard CCF Confidence Interval
-                ccf_ci <- stats::qnorm((1 + 0.95) / 2) / sqrt(window_size)
+                ccf_ci <- stats::qnorm((1 + sig_level) / 2) / sqrt(window_size)
 
                 # Call C++ Engine
                 res <- compute_xi_ccf_miaaft(
@@ -154,7 +156,7 @@ run_rolling_xi_ccf <- function(
                         return(rep(NA, length(res$lags)))
                     }
                     apply(surr_matrix, 1, function(r) {
-                        stats::quantile(r, 0.95, na.rm = TRUE)
+                        stats::quantile(r, sig_level, na.rm = TRUE)
                     })
                 }
 
@@ -177,7 +179,7 @@ run_rolling_xi_ccf <- function(
                     Lag = as.numeric(res$lags),
                     CCF = ccf_fwd,
                     Xi = as.numeric(res$xi_original_forward),
-                    Xi_Threshold_95 = calc_threshold(res$xi_surrogates_forward),
+                    Xi_Threshold = calc_threshold(res$xi_surrogates_forward),
                     CCF_CI = ccf_ci
                 )
 
@@ -199,7 +201,7 @@ run_rolling_xi_ccf <- function(
                         Lag = as.numeric(res$lags),
                         CCF = ccf_bwd,
                         Xi = as.numeric(res$xi_original_backward),
-                        Xi_Threshold_95 = calc_threshold(
+                        Xi_Threshold = calc_threshold(
                             res$xi_surrogates_backward
                         ),
                         CCF_CI = ccf_ci
@@ -212,7 +214,7 @@ run_rolling_xi_ccf <- function(
                 # Add Excess Xi and Window Metadata
                 df_window$Xi_Excess <- pmax(
                     0,
-                    df_window$Xi - df_window$Xi_Threshold_95
+                    df_window$Xi - df_window$Xi_Threshold
                 )
                 df_window$Window_ID <- i
                 df_window$Window_Start_Idx <- idx_start
