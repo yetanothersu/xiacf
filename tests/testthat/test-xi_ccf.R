@@ -21,7 +21,15 @@ test_that("xi_ccf computes correctly (bidirectional = TRUE) and returns proper s
 
     # Check new long-format columns
     expect_true(all(
-        c("Direction", "Lag", "CCF", "Xi", "Xi_Threshold_95", "CCF_CI") %in%
+        c(
+            "Direction",
+            "Lag",
+            "CCF",
+            "Xi",
+            "Xi_Threshold",
+            "CCF_CI",
+            "Xi_Excess"
+        ) %in%
             colnames(res$data)
     ))
 
