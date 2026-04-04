@@ -152,6 +152,44 @@ ggplot(rolling_res, aes(x = Window_End_Time, y = Lag, fill = Xi_Excess)) +
   theme_minimal()
 ```
 
+## Multivariate Network Analysis: `xi_matrix()`
+
+For datasets with more than two variables, computing pairwise relationships one by one is computationally expensive due to the combinatorial explosion of surrogate generation. 
+
+In `v0.3.x`, we introduced `xi_matrix()`, which leverages an **n-dimensional MIAAFT C++ engine** to compute all directional relationships simultaneously. It generates the multivariate surrogate matrix *only once* per iteration, allowing for blazing-fast network causal discovery.
+
+Let's test it on a simulated non-linear causal chain ($A \to B \to C$):
+1. **A**: Independent noise
+2. **B**: Depends on the **square** of A from 2 steps ago.
+3. **C**: Depends on the **absolute value** of B from 1 step ago.
+
+```{r xi_matrix_example}
+# Generate a chain of non-linear causality
+set.seed(42)
+n <- 300
+A <- runif(n, min = -2, max = 2)
+B <- numeric(n)
+C <- numeric(n)
+
+for (t in 1:n) {
+  if (t >= 3) B[t] <- A[t - 2]^2 + rnorm(1, sd = 0.5)
+  if (t >= 2) C[t] <- abs(B[t - 1]) + rnorm(1, sd = 0.5)
+}
+
+df_network <- data.frame(A, B, C)
+
+# Compute the multivariate Xi-correlogram matrix (99% confidence level)
+res_matrix <- xi_matrix(df_network, max_lag = 5, n_surr = 100, sig_level = 0.99)
+```
+
+You can visualize the entire network of causal relationships, including the direct links ($A \to B$, $B \to C$) and the indirect ripple effect ($A \to C$ at Lag 3), using the elegant `autoplot` method.
+
+```{r plot_xi_matrix, fig.height = 6, fig.width = 7}
+# The plot will automatically highlight significant points with filled red triangles!
+autoplot(res_matrix)
+```
+
+
 ## References
 
 * Chatterjee, S. (2021). A new coefficient of correlation. *Journal of the American Statistical Association*, 116(536), 2009-2022.

@@ -20,39 +20,29 @@ Cross-Correlation Function (CCF), often fail to detect symmetrical or
 purely non-linear relationships.
 
 This package overcomes these limitations by utilizing **Chatterjee’s
-Rank Correlation
-(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi"))**, offering both univariate
-(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-ACF) and multivariate
-(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-CCF) analysis tools. It features rigorous statistical hypothesis
-testing powered by advanced surrogate data generation algorithms (IAAFT
-and MIAAFT), all implemented in high-performance C++ using
-`RcppArmadillo`.
+Rank Correlation ($\xi$)**, offering both univariate ($\xi$-ACF) and
+multivariate ($\xi$-CCF) analysis tools. It features rigorous
+statistical hypothesis testing powered by advanced surrogate data
+generation algorithms (IAAFT and MIAAFT), all implemented in
+high-performance C++ using `RcppArmadillo`.
 
 ## Key Features
 
-  - **Non-linear Autocorrelation
-    (![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-    "\\xi")-ACF):** Detect time-dependent structures that standard
-    linear ACF completely misses (e.g., chaotic systems, volatility
-    clustering).
-  - **Multivariate Cross-Correlation
-    (![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-    "\\xi")-CCF):** Uncover hidden non-linear lead-lag relationships
-    between two different time series.
-  - **MIAAFT Surrogate Testing:** Rigorous null hypothesis testing using
-    Multivariate Iterative Amplitude Adjusted Fourier Transform
-    (MIAAFT). It preserves the exact marginal distributions and the
-    instantaneous (lag-0) cross-correlation while destroying lagged
-    non-linear dependence.
-  - **Rolling Window Analysis:** Track how non-linear dependencies
-    evolve over time (detecting structural breaks or market regime
-    shifts) with robust parallel processing support via the `future`
-    ecosystem.
-  - **High Performance:** Core algorithms are heavily optimized in C++
-    to handle the computationally intensive surrogate iterations.
+- **Non-linear Autocorrelation ($\xi$-ACF):** Detect time-dependent
+  structures that standard linear ACF completely misses (e.g., chaotic
+  systems, volatility clustering).
+- **Multivariate Cross-Correlation ($\xi$-CCF):** Uncover hidden
+  non-linear lead-lag relationships between two different time series.
+- **MIAAFT Surrogate Testing:** Rigorous null hypothesis testing using
+  Multivariate Iterative Amplitude Adjusted Fourier Transform (MIAAFT).
+  It preserves the exact marginal distributions and the instantaneous
+  (lag-0) cross-correlation while destroying lagged non-linear
+  dependence.
+- **Rolling Window Analysis:** Track how non-linear dependencies evolve
+  over time (detecting structural breaks or market regime shifts) with
+  robust parallel processing support via the `future` ecosystem.
+- **High Performance:** Core algorithms are heavily optimized in C++ to
+  handle the computationally intensive surrogate iterations.
 
 ## Installation
 
@@ -70,8 +60,7 @@ install it via `install.packages("xiacf")`)*
 ## Quick Start
 
 Here is a basic example showing how to compute and visualize the
-![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-ACF against a standard linear ACF.
+$\xi$-ACF against a standard linear ACF.
 
 ``` r
 library(xiacf)
@@ -133,30 +122,20 @@ autoplot(results)
 <div class="figure">
 
 <img src="man/figures/README-xi-acf-test-1.png" alt="A correlogram comparing linear and non-linear dependence." width="100%" />
-
 <p class="caption">
-
 Comparison between standard linear ACF and Chatterjee’s Xi-ACF.
-
 </p>
 
 </div>
 
-## Bidirectional ![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi "\\xi")-CCF Test (Directional Lead-Lag Analysis)
+## Bidirectional $\xi$-CCF Test (Directional Lead-Lag Analysis)
 
 While the standard CCF is symmetric in its linear evaluation, `xi_ccf()`
 evaluates the **directional** non-linear lead-lag relationship. By
-default (`bidirectional = TRUE`), it computes both
-“![X](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;X
-"X") leads
-![Y](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;Y
-"Y")” and
-“![Y](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;Y
-"Y") leads
-![X](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;X
-"X")” simultaneously. Thanks to our optimized C++ engine, the reverse
-direction is computed essentially at zero additional cost by reusing the
-MIAAFT surrogates.
+default (`bidirectional = TRUE`), it computes both “$X$ leads $Y$” and
+“$Y$ leads $X$” simultaneously. Thanks to our optimized C++ engine, the
+reverse direction is computed essentially at zero additional cost by
+reusing the MIAAFT surrogates.
 
 ``` r
 # Generate a pure non-linear lead-lag relationship
@@ -186,13 +165,9 @@ autoplot(ccf_results)
 ## Rolling Window Analysis
 
 For advanced market microstructure or structural break detection, you
-can run rolling
-![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-ACF or
-![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
-"\\xi")-CCF analyses. These functions support robust parallel processing
-via the `future` ecosystem and seamlessly integrate with timestamps for
-intuitive visualization.
+can run rolling $\xi$-ACF or $\xi$-CCF analyses. These functions support
+robust parallel processing via the `future` ecosystem and seamlessly
+integrate with timestamps for intuitive visualization.
 
 ``` r
 library(ggplot2)
@@ -237,10 +212,57 @@ ggplot(rolling_res, aes(x = Window_End_Time, y = Lag, fill = Xi_Excess)) +
 
 <img src="man/figures/README-xi-ccf-rolling-1.png" alt="Heatmap of rolling bidirectional Xi-CCF showing a time-varying non-linear lead-lag relationship." width="100%" />
 
+## Multivariate Network Analysis: `xi_matrix()`
+
+For datasets with more than two variables, computing pairwise
+relationships one by one is computationally expensive due to the
+combinatorial explosion of surrogate generation.
+
+In `v0.3.x`, we introduced `xi_matrix()`, which leverages an
+**n-dimensional MIAAFT C++ engine** to compute all directional
+relationships simultaneously. It generates the multivariate surrogate
+matrix *only once* per iteration, allowing for blazing-fast network
+causal discovery.
+
+Let’s test it on a simulated non-linear causal chain
+($A \to B \to C$): 1. **A**: Independent noise 2. **B**: Depends on the
+**square** of A from 2 steps ago. 3. **C**: Depends on the **absolute
+value** of B from 1 step ago.
+
+``` r
+# Generate a chain of non-linear causality
+set.seed(42)
+n <- 300
+A <- runif(n, min = -2, max = 2)
+B <- numeric(n)
+C <- numeric(n)
+
+for (t in 1:n) {
+  if (t >= 3) B[t] <- A[t - 2]^2 + rnorm(1, sd = 0.5)
+  if (t >= 2) C[t] <- abs(B[t - 1]) + rnorm(1, sd = 0.5)
+}
+
+df_network <- data.frame(A, B, C)
+
+# Compute the multivariate Xi-correlogram matrix (99% confidence level)
+res_matrix <- xi_matrix(df_network, max_lag = 5, n_surr = 100, sig_level = 0.99)
+```
+
+You can visualize the entire network of causal relationships, including
+the direct links ($A \to B$, $B \to C$) and the indirect ripple effect
+($A \to C$ at Lag 3), using the elegant `autoplot` method.
+
+``` r
+# The plot will automatically highlight significant points with filled red triangles!
+autoplot(res_matrix)
+```
+
+<img src="man/figures/README-plot_xi_matrix-1.png" alt="" width="100%" />
+
 ## References
 
-  - Chatterjee, S. (2021). A new coefficient of correlation. *Journal of
-    the American Statistical Association*, 116(536), 2009-2022.
+- Chatterjee, S. (2021). A new coefficient of correlation. *Journal of
+  the American Statistical Association*, 116(536), 2009-2022.
 
 ## License
 
