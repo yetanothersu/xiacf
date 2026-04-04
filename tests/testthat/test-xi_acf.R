@@ -18,7 +18,7 @@ test_that("xi_acf function works and returns correct structure", {
 
   # Verify the structure and contents of the data frame
   expect_true("data.frame" %in% class(res$data))
-  expected_cols <- c("Lag", "ACF", "Xi", "Xi_Threshold_95", "ACF_CI")
+  expected_cols <- c("Lag", "ACF", "Xi", "Xi_Threshold", "ACF_CI", "Xi_Excess")
   expect_true(all(expected_cols %in% names(res$data)))
   expect_equal(nrow(res$data), max_lag)
 })
@@ -154,7 +154,7 @@ test_that("run_rolling_xi_analysis saves and loads intermediate results correctl
     Window_End_Idx = 9999,
     Lag = 1,
     Xi_Original = 1,
-    Xi_Threshold_95 = 1,
+    Xi_Threshold = 1,
     Xi_Excess = 1
   )
   saveRDS(dummy_df, file = file.path(tmp_dir, "window_000001.rds"))
@@ -181,4 +181,20 @@ test_that("run_rolling_xi_analysis saves and loads intermediate results correctl
     1
   ]
   expect_equal(idx_win2_restarted, idx_win2_initial)
+})
+
+test_that("sig_level dynamically adjusts thresholds and CIs", {
+  set.seed(42)
+  x <- rnorm(100)
+
+  # Compare calculations between 95% and 99% significance levels
+  res_95 <- xiacf::xi_acf(x, max_lag = 5, n_surr = 50, sig_level = 0.95)
+  res_99 <- xiacf::xi_acf(x, max_lag = 5, n_surr = 50, sig_level = 0.99)
+
+  # The ACF confidence interval should be wider (larger) for 99%
+  expect_gt(res_99$data$ACF_CI[1], res_95$data$ACF_CI[1])
+
+  # The surrogate thresholds should be generally higher for 99%
+  # Compare the means to ensure robustness against random noise
+  expect_gt(mean(res_99$data$Xi_Threshold), mean(res_95$data$Xi_Threshold))
 })

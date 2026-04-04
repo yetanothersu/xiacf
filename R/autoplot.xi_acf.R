@@ -6,36 +6,32 @@
 #' @param object An object of class \code{"xi_acf"}.
 #' @param ... Additional arguments passed to other methods.
 #' @return A \code{ggplot} object representing the correlogram.
-#' @importFrom ggplot2 autoplot ggplot aes geom_hline geom_ribbon geom_line geom_point
+#' @importFrom ggplot2 autoplot ggplot aes geom_hline geom_ribbon geom_line geom_point guides guide_legend
 #' @importFrom ggplot2 scale_color_manual scale_fill_manual scale_linetype_manual scale_x_continuous
 #' @importFrom ggplot2 labs theme_minimal theme element_text coord_cartesian
 #' @importFrom latex2exp TeX
+#' @importFrom stats setNames
 #' @method autoplot xi_acf
 #' @export
 autoplot.xi_acf <- function(object, ...) {
-    # Check for required packages
     if (!requireNamespace("ggplot2", quietly = TRUE)) {
-        stop("Package 'ggplot2' is required for plotting. Please install it.")
+        stop("Package 'ggplot2' is required.")
     }
     if (!requireNamespace("latex2exp", quietly = TRUE)) {
-        stop(
-            "Package 'latex2exp' is required for LaTeX rendering in plots. Please install it."
-        )
+        stop("Package 'latex2exp' is required.")
     }
-    # Extract data from the object
+
     df <- object$data
+    acf_ci <- df$ACF_CI[1]
+    sig_pct <- object$sig_level * 100
 
-    # ACF confidence interval
-    acf_ci <- object$data$ACF_CI[1]
+    acf_ci_label <- paste0("ACF ", sig_pct, "% CI")
+    xi_thresh_label <- paste0("Xi ", sig_pct, "% Threshold")
 
-    # Initialize the base plot
     p <- ggplot(df, aes(x = Lag)) +
-        # Zero line
         geom_hline(yintercept = 0, color = "gray50", linewidth = 0.3) +
-
-        # 1. Standard ACF 95% Confidence Interval (blue dotted line)
         geom_hline(
-            aes(yintercept = acf_ci, linetype = "ACF 95% CI"),
+            aes(yintercept = acf_ci, linetype = acf_ci_label),
             color = "blue",
             linewidth = 0.4,
             alpha = 0.6
@@ -48,23 +44,15 @@ autoplot.xi_acf <- function(object, ...) {
             alpha = 0.6
         )
 
-    # 2. Xi Surrogate Threshold (gray ribbon)
-    # Draw only if surrogate data exists (i.e., n_surr > 0, no NA in threshold)
-    if (!all(is.na(df$Xi_Threshold_95))) {
+    if (!all(is.na(df$Xi_Threshold))) {
         p <- p +
             geom_ribbon(
-                aes(
-                    ymin = 0,
-                    ymax = Xi_Threshold_95,
-                    fill = "Xi 95% Threshold"
-                ),
+                aes(ymin = 0, ymax = Xi_Threshold, fill = xi_thresh_label),
                 alpha = 0.2
             )
     }
 
-    # 3. Main lines and points
     p <- p +
-        # ACF (Linear)
         geom_line(
             aes(y = ACF, color = "Standard ACF (Linear)"),
             linewidth = 0.6,
@@ -75,31 +63,26 @@ autoplot.xi_acf <- function(object, ...) {
             shape = 16,
             size = 3
         ) +
-
-        # Xi (Non-linear)
         geom_line(
             aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
             linewidth = 0.8
         ) +
+
+        # Highlight significant points (shape = 24)
         geom_point(
             aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
-            shape = 17,
-            size = 3
+            fill = ifelse(df$Xi_Excess > 0, "firebrick", "white"),
+            shape = 24,
+            size = ifelse(df$Xi_Excess > 0, 3, 1.5)
         ) +
 
-        # --- Scales (Color and Label definitions) ---
         scale_color_manual(
             name = "Correlation Measure",
-            # Prevent automatic alphabetical sorting to ensure consistent ordering
-            breaks = c(
-                "Standard ACF (Linear)",
-                "Chatterjee's Xi (Non-linear)"
-            ),
+            breaks = c("Standard ACF (Linear)", "Chatterjee's Xi (Non-linear)"),
             values = c(
                 "Standard ACF (Linear)" = "steelblue",
                 "Chatterjee's Xi (Non-linear)" = "firebrick"
             ),
-            # Convert display names to TeX format for mathematical symbols
             labels = c(
                 "Standard ACF (Linear)",
                 TeX(r"($\xi$-ACF (Non-linear))")
@@ -107,15 +90,23 @@ autoplot.xi_acf <- function(object, ...) {
         ) +
         scale_fill_manual(
             name = "Significance",
-            values = c("Xi 95% Threshold" = "gray50"),
-            labels = TeX(c(r"($\xi$-ACF 95% Threshold)"))
+            values = setNames("gray50", xi_thresh_label),
+            labels = TeX(c(paste0(r"($\xi$-ACF )", sig_pct, r"(% Threshold)")))
         ) +
         scale_linetype_manual(
             name = "Significance",
-            values = c("ACF 95% CI" = "dotted")
+            values = setNames("dotted", acf_ci_label)
         ) +
-
-        # --- Theme & Labels ---
+        # Override aesthetics to display legend icons correctly
+        guides(
+            color = guide_legend(
+                override.aes = list(
+                    shape = c(16, 24),
+                    fill = c(NA, "firebrick"),
+                    size = 3
+                )
+            )
+        ) +
         labs(
             title = TeX(r"($\xi$-ACF Correlogram)"),
             subtitle = paste0(
@@ -134,24 +125,16 @@ autoplot.xi_acf <- function(object, ...) {
             plot.title = element_text(face = "bold")
         )
 
-    # --- Dynamic Y-axis Zoom ---
-    # Retrieve the maximum and minimum values among all plotted elements
-    max_val <- max(c(df$ACF, df$Xi, df$Xi_Threshold_95, acf_ci), na.rm = TRUE)
+    max_val <- max(c(df$ACF, df$Xi, df$Xi_Threshold, acf_ci), na.rm = TRUE)
     min_val <- min(c(df$ACF, df$Xi, -acf_ci, 0), na.rm = TRUE)
-
-    # Add a 10% margin to the top and bottom
     y_margin <- (max_val - min_val) * 0.1
-    min_y <- min_val - y_margin
-    max_y <- max_val + y_margin
-
-    # Cap the limits so they do not exceed the theoretical bounds of correlation (-1.0 to 1.0)
-    # Using 1.05 to give a slight visual buffer even at maximum correlation
-    max_y <- min(max_y, 1.05)
-    min_y <- max(min_y, -1.05)
-
     p <- p +
-        coord_cartesian(ylim = c(min_y, max_y)) +
-        # Force X-axis (Lag) breaks to be integers only
+        coord_cartesian(
+            ylim = c(
+                max(min_val - y_margin, -1.05),
+                min(max_val + y_margin, 1.05)
+            )
+        ) +
         scale_x_continuous(breaks = function(x) {
             seq(
                 ceiling(x[1]),

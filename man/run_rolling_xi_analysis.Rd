@@ -11,6 +11,7 @@ run_rolling_xi_analysis(
   step_size = 1,
   max_lag = 20,
   n_surr = 100,
+  sig_level = 0.95,
   n_cores = NULL,
   save_dir = NULL
 )
@@ -27,6 +28,8 @@ run_rolling_xi_analysis(
 \item{max_lag}{An integer specifying the maximum lag to compute Chatterjee's Xi for.}
 
 \item{n_surr}{An integer specifying the number of surrogate datasets for the null hypothesis test.}
+
+\item{sig_level}{A numeric value specifying the significance level for the confidence intervals. Default is 0.95.}
 
 \item{n_cores}{An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.}
 

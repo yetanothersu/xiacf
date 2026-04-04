@@ -13,6 +13,7 @@ run_rolling_xi_ccf(
   max_lag = 20,
   n_surr = 100,
   bidirectional = TRUE,
+  sig_level = 0.95,
   n_cores = NULL,
   save_dir = NULL
 )
@@ -33,6 +34,8 @@ run_rolling_xi_ccf(
 \item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets for the null hypothesis test.}
 
 \item{bidirectional}{Logical. If TRUE (default), computes both "X leads Y" and "Y leads X".}
+
+\item{sig_level}{A numeric value specifying the significance level for the confidence intervals. Default is 0.95.}
 
 \item{n_cores}{An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.}
 

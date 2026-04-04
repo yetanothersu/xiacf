@@ -5,7 +5,7 @@
 \alias{xi_test}
 \title{Xi-ACF Test for Time Series}
 \usage{
-xi_acf(x, max_lag = 20, n_surr = 100)
+xi_acf(x, max_lag = 20, n_surr = 100, sig_level = 0.95)
 
 xi_test(x, max_lag = 20, n_surr = 100)
 }
@@ -15,6 +15,8 @@ xi_test(x, max_lag = 20, n_surr = 100)
 \item{max_lag}{An integer specifying the maximum number of lags to compute.}
 
 \item{n_surr}{An integer specifying the number of surrogate datasets to generate for the IAAFT test.}
+
+\item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.95.}
 }
 \value{
 An object of class \code{"xi_acf"} containing the computed statistics and metadata.

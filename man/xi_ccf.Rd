@@ -4,21 +4,30 @@
 \alias{xi_ccf}
 \title{Directional Xi-CCF Test for Multivariate Time Series}
 \usage{
-xi_ccf(x, y, max_lag = 20, n_surr = 100, bidirectional = TRUE)
+xi_ccf(
+  x,
+  y,
+  max_lag = 20,
+  n_surr = 100,
+  bidirectional = TRUE,
+  sig_level = 0.95
+)
 }
 \arguments{
-\item{x}{A numeric vector representing the first time series (potential cause / lead).}
+\item{x}{A numeric vector representing the first time series.}
 
-\item{y}{A numeric vector representing the second time series (potential effect / lag).}
+\item{y}{A numeric vector representing the second time series.}
 
-\item{max_lag}{An integer specifying the maximum positive lag to compute.}
+\item{max_lag}{An integer specifying the maximum positive lag.}
 
 \item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets.}
 
-\item{bidirectional}{Logical. If TRUE (default), computes both "X leads Y" and "Y leads X" using the same surrogates for zero extra computational cost.}
+\item{bidirectional}{Logical. If TRUE (default), computes both directions.}
+
+\item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.95.}
 }
 \value{
-An object of class \code{"xi_ccf"} containing the computed statistics in a tidy long-format.
+An object of class \code{"xi_ccf"}.
 }
 \description{
 Calculates Chatterjee's Xi cross-correlation and the standard Cross-Correlation Function (CCF)
