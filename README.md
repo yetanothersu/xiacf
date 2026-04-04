@@ -79,9 +79,7 @@ for (t in 1:(n - 1)) {
 
 # 1. Run the Xi-ACF test
 # Computes up to 20 lags with 100 IAAFT surrogates for significance testing
-results <- xi_test(x, max_lag = 20, n_surr = 100)
-#> Warning in xi_test(x, max_lag = 20, n_surr = 100): `xi_test()` is deprecated.
-#> Please use `xi_acf()` instead.
+results <- xi_acf(x, max_lag = 20, n_surr = 100)
 
 # Print summary
 print(results)
@@ -115,7 +113,9 @@ print(results)
 #>   20  0.030634877 -0.012256998   0.04423478 0.00000000
 
 # 2. Visualize the results
-# The autoplot method automatically generates a ggplot2 object
+# The autoplot method automatically generates a ggplot2 object.
+# Statistically significant lags (exceeding the dynamic threshold) are
+# automatically highlighted with filled red triangles!
 autoplot(results)
 ```
 

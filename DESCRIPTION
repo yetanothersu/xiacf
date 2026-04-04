@@ -8,12 +8,12 @@ Authors@R: person(given = "Yasunori", family = "Watanabe",
 Maintainer: Yasunori Watanabe <watanabe.yasunori@outlook.com>
 Description: Implements a robust framework for detecting non-linear dependence 
     and directional lead-lag relationships in time series data. Utilizing 
-    Chatterjee's rank correlation (Xi), it provides tools for both univariate 
-    (Xi-ACF) and multivariate (Xi-CCF) analyses. Features include rigorous 
-    hypothesis testing via IAAFT and MIAAFT surrogate data generation algorithms, 
-    bidirectional lead-lag evaluation, and parallelized rolling window analysis 
-    for detecting structural breaks. Core computations are highly optimized 
-    in C++ using 'RcppArmadillo'.
+    Chatterjee's rank correlation (Xi), it provides tools for univariate (Xi-ACF), 
+    bivariate (Xi-CCF), and multivariate network (xi_matrix) analyses. 
+    Features include rigorous hypothesis testing with dynamic significance levels 
+    via IAAFT and MIAAFT surrogate data generation algorithms, bidirectional 
+    lead-lag evaluation, and parallelized rolling window analysis for detecting 
+    structural breaks. Core computations are highly optimized in C++ using 'RcppArmadillo'.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
