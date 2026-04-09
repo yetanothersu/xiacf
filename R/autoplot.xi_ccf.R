@@ -35,7 +35,8 @@ autoplot.xi_ccf <- function(object, ...) {
             aes(yintercept = y_vals, linetype = ccf_ci_label),
             color = "blue",
             linewidth = 0.4,
-            alpha = 0.6
+            alpha = 0.6,
+            na.rm = TRUE
         )
 
     if (!all(is.na(df$Xi_Threshold))) {
@@ -50,12 +51,14 @@ autoplot.xi_ccf <- function(object, ...) {
         geom_line(
             aes(y = CCF, color = "Standard CCF (Linear)"),
             linewidth = 0.6,
-            linetype = "dashed"
+            linetype = "dashed",
+            na.rm = TRUE
         ) +
         geom_point(
             aes(y = CCF, color = "Standard CCF (Linear)"),
             shape = 16,
-            size = 3
+            size = 3,
+            na.rm = TRUE
         ) +
         geom_line(
             aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
