@@ -6,14 +6,15 @@ Authors@R: person(given = "Yasunori", family = "Watanabe",
                   role = c("aut", "cre"),
                   email = "watanabe.yasunori@outlook.com")
 Maintainer: Yasunori Watanabe <watanabe.yasunori@outlook.com>
-Description: Implements a robust framework for detecting non-linear dependence 
-    and directional lead-lag relationships in time series data. Utilizing 
-    Chatterjee's rank correlation (Xi), it provides tools for univariate (Xi-ACF), 
-    bivariate (Xi-CCF), and multivariate network (xi_matrix) analyses. 
-    Features include rigorous hypothesis testing with dynamic significance levels 
-    via IAAFT and MIAAFT surrogate data generation algorithms, bidirectional 
-    lead-lag evaluation, and parallelized rolling window analysis for detecting 
-    structural breaks. Core computations are highly optimized in C++ using 'RcppArmadillo'.
+Description: Computes Chatterjee's non-parametric correlation coefficient for time series data.
+    It extends the original metric to time series analysis by providing the
+    Xi-Autocorrelation Function (Xi-ACF) and Xi-Cross-Correlation Function (Xi-CCF).
+    The package allows users to test for non-linear dependence using
+    Iterative Amplitude Adjusted Fourier Transform (IAAFT) surrogate data.
+    Main functions include xi_acf() and xi_ccf() for computation, along with
+    matrix extraction tools. Methodologies are based on Chatterjee (2021)
+    <doi:10.1080/01621459.2020.1758115> and surrogate data testing methods by
+    Schreiber and Schmitz (1996) <doi:10.1103/PhysRevLett.77.635>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

@@ -94,6 +94,7 @@ xi_matrix <- function(x, max_lag = 20, n_surr = 100, sig_level = 0.95) {
 #' Print method for xi_matrix
 #' @param x An object of class \code{xi_matrix}.
 #' @param ... Additional arguments passed to print.
+#' @return The original object \code{x} invisibly. Called primarily for its side effect of printing the matrix to the console.
 #' @export
 print.xi_matrix <- function(x, ...) {
     cat("\n=== Multivariate Xi-Correlogram Matrix ===\n")
