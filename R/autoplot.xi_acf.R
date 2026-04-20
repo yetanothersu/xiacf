@@ -34,14 +34,16 @@ autoplot.xi_acf <- function(object, ...) {
             aes(yintercept = acf_ci, linetype = acf_ci_label),
             color = "blue",
             linewidth = 0.4,
-            alpha = 0.6
+            alpha = 0.6,
+            na.rm = TRUE
         ) +
         geom_hline(
             yintercept = -acf_ci,
             color = "blue",
             linetype = "dotted",
             linewidth = 0.4,
-            alpha = 0.6
+            alpha = 0.6,
+            na.rm = TRUE
         )
 
     if (!all(is.na(df$Xi_Threshold))) {
@@ -56,12 +58,14 @@ autoplot.xi_acf <- function(object, ...) {
         geom_line(
             aes(y = ACF, color = "Standard ACF (Linear)"),
             linewidth = 0.6,
-            linetype = "dashed"
+            linetype = "dashed",
+            na.rm = TRUE
         ) +
         geom_point(
             aes(y = ACF, color = "Standard ACF (Linear)"),
             shape = 16,
-            size = 3
+            size = 3,
+            na.rm = TRUE
         ) +
         geom_line(
             aes(y = Xi, color = "Chatterjee's Xi (Non-linear)"),
