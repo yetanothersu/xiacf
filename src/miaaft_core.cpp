@@ -14,7 +14,6 @@ double xi_coefficient(arma::vec x, arma::vec y);
 // so that the inverse FFT results in a real-valued time series.
 vec generate_shared_random_phases(int n) {
     vec phases(n, fill::zeros);
-    GetRNGstate(); // Pull RNG state from R
     
     // Generate random phases for positive frequencies
     for(int i = 1; i <= (n - 1) / 2; i++) {
@@ -28,7 +27,6 @@ vec generate_shared_random_phases(int n) {
         phases(n / 2) = 0;
     }
     
-    PutRNGstate(); // Return RNG state to R
     return phases;
 }
 
