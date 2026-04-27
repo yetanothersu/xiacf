@@ -10,7 +10,6 @@ using namespace arma;
 // Shuffles indices using R's random number generator to ensure
 // exact reproducibility with set.seed() from the R environment.
 void shuffle_indices_with_r_seed(uvec& idx) {
-    GetRNGstate(); // Pull RNG state from R
     int n = idx.n_elem;
     for (int i = n - 1; i > 0; i--) {
         int j = floor(R::runif(0, 1) * (i + 1));
@@ -18,7 +17,6 @@ void shuffle_indices_with_r_seed(uvec& idx) {
         idx[i] = idx[j];
         idx[j] = tmp;
     }
-    PutRNGstate(); // Return RNG state to R
 }
 
 // ============================================================
@@ -99,7 +97,6 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
     vec amplitudes = abs(X_fft); 
     
     vec x_sorted = sort(x);
-    GetRNGstate();
 
     for(int s = 0; s < n_surr; s++) {
         vec surr = shuffle(x);
@@ -125,7 +122,6 @@ arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter = 100)
         surrogates.col(s) = surr;
     }
     
-    PutRNGstate();
     return surrogates;
 }
 
