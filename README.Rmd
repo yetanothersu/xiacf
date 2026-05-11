@@ -15,7 +15,7 @@ options(doFuture.rng.onMisuse = "ignore")
 Sys.setlocale("LC_TIME", "C")
 ```
 
-# xiacf: Chatterjee's Rank Correlation for Time Series Analysis
+# xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi
 
 <!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/package=xiacf)

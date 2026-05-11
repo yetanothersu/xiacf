@@ -1,8 +1,26 @@
+citHeader("To cite 'xiacf' in publications use:")
+
 bibentry(
-bibtype = "Manual",
-  title = "xiacf: Chatterjee’s Rank Correlation for Time Series Analysis",
+  bibtype = "Manual",
+  title = "xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi",
   author = person("Yasunori", "Watanabe"),
-  year = 2026,
-  note = "R package version 0.4.1, DOI:10.5281/zenodo.19247735",
-  doi = "10.5281/zenodo.19247735"
+  year = "2026",
+  note = "R package version 0.5.0",
+  url = "https://github.com/yetanothersu/xiacf",
+  doi = "10.5281/zenodo.19247735",
+  textVersion = paste0(
+    "Watanabe, Y. (2026). xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi.\n",
+    "R package version 0.5.0. https://doi.org/10.5281/zenodo.19247735"
+  )
+)
+
+citHeader("For the theoretical background and applications of the xi-ACF framework, please also cite:")
+
+bibentry(
+  bibtype = "Unpublished",
+  title = "The U-Shaped Evolution of Bitcoin Efficiency",
+  author = person("Yasunori", "Watanabe"),
+  year = "2026",
+  note = "mimeo",
+  textVersion = "Watanabe, Y. (2026). The U-Shaped Evolution of Bitcoin Efficiency, mimeo."
 )
