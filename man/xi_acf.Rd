@@ -2,26 +2,30 @@
 % Please edit documentation in R/xi_acf.R
 \name{xi_acf}
 \alias{xi_acf}
-\alias{xi_test}
-\title{Xi-ACF Test for Time Series}
+\alias{print.xi_acf}
+\title{Compute empirical Xi-ACF and its significance via IAAFT surrogates}
 \usage{
-xi_acf(x, max_lag = 20, n_surr = 100, sig_level = 0.95)
+xi_acf(x, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
 
-xi_test(x, max_lag = 20, n_surr = 100)
+\method{print}{xi_acf}(x, ...)
 }
 \arguments{
-\item{x}{A numeric vector representing the time series data.}
+\item{x}{A numeric vector representing the time series data. Must not contain missing values (NA) or be a constant.}
 
-\item{max_lag}{An integer specifying the maximum number of lags to compute.}
+\item{max_lag}{An integer specifying the maximum lag to compute. Default is 10.}
 
-\item{n_surr}{An integer specifying the number of surrogate datasets to generate for the IAAFT test.}
+\item{n_surr}{An integer specifying the number of surrogate datasets to generate. Default is 399.}
 
-\item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.95.}
+\item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.05.}
+
+\item{max_iter}{An integer specifying the maximum iterations for the IAAFT algorithm. Default is 100.}
+
+\item{...}{Additional arguments (currently ignored).}
 }
 \value{
-An object of class \code{"xi_acf"} containing the computed statistics and metadata.
+An object of class \code{xi_acf} containing the empirical ACF,
+  pointwise thresholds, global threshold, and metadata.
 }
 \description{
-Calculates Chatterjee's Xi and the standard Autocorrelation Function (ACF)
-along with their respective significance thresholds.
+Compute empirical Xi-ACF and its significance via IAAFT surrogates
 }

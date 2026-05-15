@@ -82,7 +82,9 @@ void generate_single_miaaft(const arma::mat& X, arma::mat& X_surr, int max_iter)
         mat S_t_matched(n, p);
         for (int j = 0; j < p; ++j) {
             uvec rank_idx = sort_index(S_t.col(j));
-            S_t_matched(rank_idx, j) = X_sorted.col(j);
+            vec temp(n);                           
+            temp(rank_idx) = X_sorted.col(j);      
+            S_t_matched.col(j) = temp;             
         }
         
         mat S_t_new(n, p);
@@ -102,7 +104,9 @@ void generate_single_miaaft(const arma::mat& X, arma::mat& X_surr, int max_iter)
     
     for (int j = 0; j < p; ++j) {
         uvec rank_idx = sort_index(S_t.col(j));
-        X_surr(rank_idx, j) = X_sorted.col(j);
+        vec temp(n);
+        temp(rank_idx) = X_sorted.col(j);
+        X_surr.col(j) = temp;
     }
 }
 

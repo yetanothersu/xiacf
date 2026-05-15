@@ -2,7 +2,7 @@
 % Please edit documentation in R/extract.R
 \name{extract_xi_acf}
 \alias{extract_xi_acf}
-\title{Extract Individual Xi-ACF from Xi-Matrix}
+\title{Extract Individual Xi-ACF from a Multivariate Xi-Matrix}
 \usage{
 extract_xi_acf(object, var, x_raw = NULL)
 }
@@ -11,13 +11,12 @@ extract_xi_acf(object, var, x_raw = NULL)
 
 \item{var}{A character string specifying the variable name to extract.}
 
-\item{x_raw}{Optional. The original multivariate data (matrix or data.frame) used to
-compute the matrix. If provided, standard linear ACF will be re-calculated.}
+\item{x_raw}{Optional. The original multivariate data matrix/data.frame.
+If provided, standard linear ACF will be calculated and included.}
 }
 \value{
 An object of class \code{xi_acf}.
 }
 \description{
-Extracts the autocorrelation results for a specific variable from a \code{xi_matrix} object
-and converts it into a \code{xi_acf} S3 object.
+Extract Individual Xi-ACF from a Multivariate Xi-Matrix
 }

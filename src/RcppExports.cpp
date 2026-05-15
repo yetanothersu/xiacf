@@ -11,21 +11,49 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// generate_miaaft_surrogate_cpp
-NumericMatrix generate_miaaft_surrogate_cpp(NumericMatrix x, int max_iter);
-RcppExport SEXP _xiacf_generate_miaaft_surrogate_cpp(SEXP xSEXP, SEXP max_iterSEXP) {
+// surrogate_iaaft_cpp
+arma::mat surrogate_iaaft_cpp(const arma::vec& x, int n_surr, int max_iter);
+RcppExport SEXP _xiacf_surrogate_iaaft_cpp(SEXP xSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::vec& >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
     Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    rcpp_result_gen = Rcpp::wrap(generate_miaaft_surrogate_cpp(x, max_iter));
+    rcpp_result_gen = Rcpp::wrap(surrogate_iaaft_cpp(x, n_surr, max_iter));
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_xi_ccf_miaaft
-List compute_xi_ccf_miaaft(NumericVector x, NumericVector y, int max_lag, int n_surr);
-RcppExport SEXP _xiacf_compute_xi_ccf_miaaft(SEXP xSEXP, SEXP ySEXP, SEXP max_lagSEXP, SEXP n_surrSEXP) {
+// surrogate_miaaft_cpp
+arma::cube surrogate_miaaft_cpp(const arma::mat& X, int n_surr, int max_iter);
+RcppExport SEXP _xiacf_surrogate_miaaft_cpp(SEXP XSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(surrogate_miaaft_cpp(X, n_surr, max_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_xi_acf_maxstat_cpp
+List compute_xi_acf_maxstat_cpp(NumericVector x, int max_lag, int n_surr, int max_iter);
+RcppExport SEXP _xiacf_compute_xi_acf_maxstat_cpp(SEXP xSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
+    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_xi_acf_maxstat_cpp(x, max_lag, n_surr, max_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
+// compute_xi_ccf_maxstat_cpp
+List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr, int max_iter);
+RcppExport SEXP _xiacf_compute_xi_ccf_maxstat_cpp(SEXP xSEXP, SEXP ySEXP, SEXP max_lagSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -33,69 +61,45 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
     Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
     Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_xi_ccf_miaaft(x, y, max_lag, n_surr));
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_xi_ccf_maxstat_cpp(x, y, max_lag, n_surr, max_iter));
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_xi_matrix_miaaft
-List compute_xi_matrix_miaaft(NumericMatrix x, int max_lag, int n_surr);
-RcppExport SEXP _xiacf_compute_xi_matrix_miaaft(SEXP xSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP) {
+// compute_xi_matrix_maxstat_cpp
+List compute_xi_matrix_maxstat_cpp(const arma::mat& X, int max_lag, int n_surr, int max_iter);
+RcppExport SEXP _xiacf_compute_xi_matrix_maxstat_cpp(SEXP XSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
     Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
     Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_xi_matrix_miaaft(x, max_lag, n_surr));
-    return rcpp_result_gen;
-END_RCPP
-}
-// xi_coefficient
-double xi_coefficient(arma::vec x, arma::vec y);
-RcppExport SEXP _xiacf_xi_coefficient(SEXP xSEXP, SEXP ySEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
-    rcpp_result_gen = Rcpp::wrap(xi_coefficient(x, y));
-    return rcpp_result_gen;
-END_RCPP
-}
-// generate_iaaft_surrogates
-arma::mat generate_iaaft_surrogates(arma::vec x, int n_surr, int max_iter);
-RcppExport SEXP _xiacf_generate_iaaft_surrogates(SEXP xSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< arma::vec >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
     Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    rcpp_result_gen = Rcpp::wrap(generate_iaaft_surrogates(x, n_surr, max_iter));
+    rcpp_result_gen = Rcpp::wrap(compute_xi_matrix_maxstat_cpp(X, max_lag, n_surr, max_iter));
     return rcpp_result_gen;
 END_RCPP
 }
-// compute_xi_acf_iaaft
-List compute_xi_acf_iaaft(NumericVector x, int max_lag, int n_surr);
-RcppExport SEXP _xiacf_compute_xi_acf_iaaft(SEXP xSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP) {
+// xi_coefficient_export
+double xi_coefficient_export(NumericVector x, NumericVector y);
+RcppExport SEXP _xiacf_xi_coefficient_export(SEXP xSEXP, SEXP ySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
-    Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
-    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_xi_acf_iaaft(x, max_lag, n_surr));
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(xi_coefficient_export(x, y));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_xiacf_generate_miaaft_surrogate_cpp", (DL_FUNC) &_xiacf_generate_miaaft_surrogate_cpp, 2},
-    {"_xiacf_compute_xi_ccf_miaaft", (DL_FUNC) &_xiacf_compute_xi_ccf_miaaft, 4},
-    {"_xiacf_compute_xi_matrix_miaaft", (DL_FUNC) &_xiacf_compute_xi_matrix_miaaft, 3},
-    {"_xiacf_xi_coefficient", (DL_FUNC) &_xiacf_xi_coefficient, 2},
-    {"_xiacf_generate_iaaft_surrogates", (DL_FUNC) &_xiacf_generate_iaaft_surrogates, 3},
-    {"_xiacf_compute_xi_acf_iaaft", (DL_FUNC) &_xiacf_compute_xi_acf_iaaft, 3},
+    {"_xiacf_surrogate_iaaft_cpp", (DL_FUNC) &_xiacf_surrogate_iaaft_cpp, 3},
+    {"_xiacf_surrogate_miaaft_cpp", (DL_FUNC) &_xiacf_surrogate_miaaft_cpp, 3},
+    {"_xiacf_compute_xi_acf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_acf_maxstat_cpp, 4},
+    {"_xiacf_compute_xi_ccf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_ccf_maxstat_cpp, 5},
+    {"_xiacf_compute_xi_matrix_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_matrix_maxstat_cpp, 4},
+    {"_xiacf_xi_coefficient_export", (DL_FUNC) &_xiacf_xi_coefficient_export, 2},
     {NULL, NULL, 0}
 };
 
