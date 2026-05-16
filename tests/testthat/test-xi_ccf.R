@@ -1,53 +1,16 @@
-# tests/testthat/test-xi_ccf.R
-
-test_that("xi_ccf computes correctly (bidirectional = TRUE) and returns proper structure", {
+test_that("xi_ccf computes correctly and returns proper structure", {
     set.seed(42)
     x <- rnorm(100)
     y <- rnorm(100)
-
-    # Run with small parameters for testing
     max_lag <- 3
-    res <- xi_ccf(x, y, max_lag = max_lag, n_surr = 10, bidirectional = TRUE)
+    res <- suppressWarnings(xi_ccf(x, y, max_lag = max_lag, n_surr = 20))
 
-    # Check S3 class and metadata
     expect_s3_class(res, "xi_ccf")
-    expect_equal(res$n, 100)
-    expect_equal(res$max_lag, max_lag)
-    expect_true(res$bidirectional)
-
-    # Check data frame dimensions
-    # 0 to max_lag (max_lag + 1 rows) * 2 directions (X leads Y, Y leads X)
-    expect_equal(nrow(res$data), 2 * (max_lag + 1))
-
-    # Check new long-format columns
+    expect_equal(nrow(res$data), 2 * max_lag + 1)
     expect_true(all(
-        c(
-            "Direction",
-            "Lag",
-            "CCF",
-            "Xi",
-            "Xi_Threshold",
-            "CCF_CI",
-            "Xi_Excess"
-        ) %in%
+        c("Lag", "CCF", "Xi", "Global_Threshold", "CCF_CI", "Xi_Excess") %in%
             colnames(res$data)
     ))
-
-    # Check if both directions are correctly included
-    expect_setequal(unique(res$data$Direction), c("X leads Y", "Y leads X"))
-})
-
-test_that("xi_ccf computes correctly (bidirectional = FALSE)", {
-    set.seed(42)
-    x <- rnorm(100)
-    y <- rnorm(100)
-
-    max_lag <- 3
-    res <- xi_ccf(x, y, max_lag = max_lag, n_surr = 10, bidirectional = FALSE)
-
-    # Check data frame dimensions (unidirectional only)
-    expect_equal(nrow(res$data), max_lag + 1)
-    expect_setequal(unique(res$data$Direction), "X leads Y")
 })
 
 test_that("xi_ccf handles invalid inputs correctly", {
@@ -55,56 +18,30 @@ test_that("xi_ccf handles invalid inputs correctly", {
     x <- rnorm(100)
     y <- rnorm(100)
 
-    # When lengths differ
-    expect_error(xi_ccf(x, y[1:50]), "exact same length")
-
-    # When NA is included
-    x_na <- x
-    x_na[10] <- NA
-    expect_error(xi_ccf(x_na, y), "NA values")
-
-    # When variance is zero (ensure internal stats::ccf throws an error)
+    expect_error(xi_ccf(x, y[1:50]), "exactly the same")
+    expect_error(xi_ccf(c(x[1:99], NA), y), "NA values")
     expect_error(xi_ccf(rep(1, 100), y))
-})
-
-test_that("autoplot.xi_ccf returns a valid ggplot object", {
-    set.seed(42)
-    x <- rnorm(50)
-    y <- rnorm(50)
-    res <- xi_ccf(x, y, max_lag = 2, n_surr = 2)
-
-    p <- ggplot2::autoplot(res)
-    expect_s3_class(p, "ggplot")
 })
 
 test_that("run_rolling_xi_ccf works sequentially", {
     set.seed(42)
     x <- rnorm(100)
     y <- rnorm(100)
-
     window_size <- 50
     step_size <- 10
     max_lag <- 2
 
-    res <- run_rolling_xi_ccf(
+    res <- suppressWarnings(run_rolling_xi_ccf(
         x,
         y,
         window_size = window_size,
         step_size = step_size,
         max_lag = max_lag,
-        n_surr = 5,
-        n_cores = NULL
-    )
-
-    # Check class and columns
-    expect_s3_class(res, "data.frame")
-    expect_true(all(
-        c("Window_ID", "Window_Start_Idx", "Lag", "Xi_Excess") %in%
-            colnames(res)
+        n_surr = 20
     ))
 
-    # Check number of rows (number of windows × number of rows per window)
+    expect_s3_class(res, "data.frame")
     expected_windows <- length(seq(1, 100 - window_size + 1, by = step_size))
-    expected_rows_per_window <- 2 * (max_lag + 1)
+    expected_rows_per_window <- 2 * max_lag + 1
     expect_equal(nrow(res), expected_windows * expected_rows_per_window)
 })

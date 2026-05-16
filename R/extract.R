@@ -16,7 +16,7 @@ extract_xi_acf <- function(object, var, x_raw = NULL) {
         stop(sprintf("Variable '%s' not found.", var))
     }
 
-    # 基本構造の構築
+    # Build base structure
     res_df <- data.frame(
         Lag = sub_df$Lag,
         ACF = NA_real_,
@@ -26,7 +26,7 @@ extract_xi_acf <- function(object, var, x_raw = NULL) {
         ACF_CI = stats::qnorm(1 - object$sig_level / 2) / sqrt(object$n)
     )
 
-    # 線形指標の補完
+    # Fill in linear correlation
     if (!is.null(x_raw)) {
         x_vec <- as.numeric(x_raw[, var])
         lin_acf <- stats::acf(
@@ -100,7 +100,7 @@ extract_xi_ccf <- function(object, var_x, var_y, x_raw = NULL) {
             plot = FALSE,
             na.action = stats::na.pass
         )
-        # stats::ccfの結果とラグを正確に紐付け
+        # Accurately map lags to stats::ccf results
         ccf_map <- stats::setNames(
             as.numeric(lin_ccf$acf),
             as.numeric(lin_ccf$lag)

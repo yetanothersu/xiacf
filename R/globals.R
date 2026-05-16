@@ -1,14 +1,14 @@
 # R/globals.R
 
-# This file is for declaring global variables to avoid "no visible binding for global variable" notes during R CMD check.
 utils::globalVariables(c(
-    "Lag",
-    "Xi_Threshold",
+    "Global_Threshold",
+    "Lead_Var",
+    "Lag_Var",
     "Significant",
     "ACF",
     "CCF",
     "Xi",
-    "i",
-    "y_vals",
-    "Direction"
+    "Lag",
+    "Window_End_Time",
+    "Xi_Excess"
 ))

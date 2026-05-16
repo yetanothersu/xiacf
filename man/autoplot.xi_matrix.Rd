@@ -6,6 +6,11 @@
 \usage{
 \method{autoplot}{xi_matrix}(object, ...)
 }
+\arguments{
+\item{object}{An object of class \code{xi_matrix}.}
+
+\item{...}{Additional arguments passed to other methods.}
+}
 \description{
 Plot method for xi_matrix objects
 }

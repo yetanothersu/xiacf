@@ -122,7 +122,7 @@ print.xi_ccf <- function(x, ...) {
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
     cat("===============================================\n")
 
-    # 有意な関係を抽出
+    # Extract significant relationships
     sig_data <- x$data[
         x$data$Xi_Excess > 0,
         c("Lag", "Xi", "Global_Threshold", "Xi_Excess")
@@ -133,7 +133,7 @@ print.xi_ccf <- function(x, ...) {
             "No significant cross-correlations found above the global threshold.\n"
         )
     } else {
-        # 影響が強い順（Xi_Excessの降順）に並べ替えて上位5つを表示
+        # Sort in descending order of impact (Xi_Excess) and show the top 5
         cat("Top Significant Lead-Lag Relationships:\n")
         top_sig <- sig_data[order(sig_data$Xi_Excess, decreasing = TRUE), ]
         print(head(top_sig, 5), row.names = FALSE)

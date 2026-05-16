@@ -5,3 +5,6 @@
 ^\.github$
 ^CONTRIBUTING\.md$
 ^pkg.lock$
+^git\.log$
+^repomix-output\.md$
+^repomix-output\.xml$

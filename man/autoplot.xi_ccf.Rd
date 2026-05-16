@@ -6,6 +6,11 @@
 \usage{
 \method{autoplot}{xi_ccf}(object, ...)
 }
+\arguments{
+\item{object}{An object of class \code{xi_ccf}.}
+
+\item{...}{Additional arguments passed to other methods.}
+}
 \description{
 Plot method for xi_ccf objects
 }
