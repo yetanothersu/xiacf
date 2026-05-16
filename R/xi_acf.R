@@ -22,7 +22,23 @@ xi_acf <- function(
     max_iter = 100,
     ...
 ) {
-    # 1. Strict Input Validation
+    # --- Backward Compatibility Check for sig_level ---
+    if (sig_level <= 0 || sig_level >= 1) {
+        stop("Parameter 'sig_level' must be strictly between 0 and 1.")
+    }
+    if (sig_level > 0.5) {
+        warning(
+            sprintf(
+                "The interpretation of 'sig_level' has changed from Confidence Level to Significance Level. Your input %g has been automatically converted to %g. Please use sig_level = %g in the future.",
+                sig_level,
+                1 - sig_level,
+                1 - sig_level
+            ),
+            call. = FALSE
+        )
+        sig_level <- 1 - sig_level
+    }
+
     if (!is.numeric(x)) {
         stop("Input 'x' must be a numeric vector.")
     }
@@ -33,29 +49,47 @@ xi_acf <- function(
     }
 
     n <- length(x)
-    if (n < max_lag + 2) {
+    if (n < (max_lag + 2)) {
         stop(sprintf(
-            "Time series length (%d) is too short for max_lag = %d.",
+            "Time series length (%d) is too short for max_lag = %d. Minimum length required is %d.",
             n,
-            max_lag
+            max_lag,
+            max_lag + 2
         ))
     }
-
-    # Check for zero variance (constant series)
     if (stats::var(x) == 0) {
         stop(
-            "Input 'x' has zero variance (it is a constant). Cannot compute rank-based correlation."
+            "Input 'x' has zero variance (constant series). Xi coefficient cannot be computed."
         )
     }
 
-    if (sig_level <= 0 || sig_level >= 1) {
-        stop("'sig_level' must be strictly between 0 and 1 (e.g., 0.05).")
+    check_surrogate_count <- function(n_surr, sig_level, max_lag) {
+        min_required <- ceiling(1 / sig_level) - 1
+        if (n_surr < min_required) {
+            stop(sprintf(
+                "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
+                n_surr,
+                as.integer((1 - sig_level) * 100),
+                min_required
+            ))
+        }
+        recommended <- ceiling(max_lag / sig_level)
+        if (n_surr < recommended) {
+            warning(sprintf(
+                "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
+                max_lag,
+                sig_level,
+                n_surr,
+                recommended
+            ))
+        }
     }
-
-    # 2. Check surrogate count for stable Max-Statistic
     check_surrogate_count(n_surr, sig_level, max_lag)
 
-    # 3. Call the highly optimized C++ engine
+    acf_vals <- as.numeric(stats::acf(x, lag.max = max_lag, plot = FALSE)$acf[
+        -1
+    ])
+
     cpp_res <- compute_xi_acf_maxstat_cpp(
         x = as.numeric(x),
         max_lag = as.integer(max_lag),
@@ -63,34 +97,19 @@ xi_acf <- function(
         max_iter = as.integer(max_iter)
     )
 
-    # 4. Process results and calculate thresholds
-    empirical_xi <- cpp_res$xi_empirical
-    pointwise_dist <- cpp_res$pointwise_dist
-    maxstat_dist <- cpp_res$max_statistic_dist
-
-    # Calculate pointwise threshold (per lag)
-    pointwise_threshold <- apply(pointwise_dist, 1, function(row) {
-        stats::quantile(row, probs = 1 - sig_level, names = FALSE)
-    })
-
-    # Calculate GLOBAL threshold for FWER control
+    pointwise_threshold <- stats::quantile(
+        cpp_res$pointwise_statistic_dist,
+        probs = 1 - sig_level,
+        names = FALSE
+    )
     global_threshold <- stats::quantile(
-        maxstat_dist,
+        cpp_res$max_statistic_dist,
         probs = 1 - sig_level,
         names = FALSE
     )
 
-    # Standard linear ACF confidence interval (for comparison)
-    linear_acf <- stats::acf(
-        x,
-        lag.max = max_lag,
-        plot = FALSE,
-        na.action = stats::na.pass
-    )
-    acf_vals <- as.numeric(linear_acf$acf)[-1] # Remove lag 0
-    acf_ci <- stats::qnorm(1 - sig_level / 2) / sqrt(n)
+    acf_ci <- stats::qnorm((1 + (1 - sig_level)) / 2) / sqrt(n)
 
-    # Prepare output data frame
     df_res <- data.frame(
         Lag = 1:max_lag,
         ACF = acf_vals,
@@ -100,10 +119,8 @@ xi_acf <- function(
         ACF_CI = rep(acf_ci, max_lag)
     )
 
-    # Flag for statistical significance (using Global Threshold for FWER control)
     df_res$Xi_Excess <- pmax(0, df_res$Xi - df_res$Global_Threshold)
 
-    # 5. Attach attributes for smart plotting and printing
     structure(
         list(
             data = df_res,
@@ -126,7 +143,6 @@ print.xi_acf <- function(x, ...) {
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
     cat("==============================================\n")
 
-    # Extract only significant lags (Xi_Excess > 0)
     sig_data <- x$data[
         x$data$Xi_Excess > 0,
         c("Lag", "Xi", "Global_Threshold", "Xi_Excess")
@@ -138,7 +154,6 @@ print.xi_acf <- function(x, ...) {
         )
     } else {
         cat("Significant Lags:\n")
-        # 出力を少し綺麗に整えて表示
         print(sig_data, row.names = FALSE)
     }
     cat("\n")

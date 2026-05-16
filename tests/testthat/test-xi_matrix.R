@@ -2,7 +2,7 @@ test_that("xi_matrix input validation works", {
     expect_error(xi_matrix(c(1, 2, 3)), "numeric matrix or data.frame")
     expect_error(
         xi_matrix(data.frame(A = letters[1:10], B = 1:10)),
-        "must be numeric"
+        "completely numeric"
     )
     df_na <- data.frame(A = c(1, NA, 3, 4, 5), B = 1:5)
     expect_error(xi_matrix(df_na), "NA values")

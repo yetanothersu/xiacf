@@ -11,7 +11,7 @@ xi_matrix(x, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
 
 \item{max_lag}{An integer specifying the maximum positive lag to compute. Default is 10.}
 
-\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets for hypothesis testing. Default is 399.}
+\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets. Default is 399.}
 
 \item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.05.}
 
@@ -23,7 +23,5 @@ xi_matrix(x, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
 An S3 object of class \code{xi_matrix} containing a tidy data frame of pairwise results.
 }
 \description{
-Computes the pairwise directional Chatterjee's Xi coefficient for a multivariate
-time series dataset. It evaluates both "Lead -> Lag" and "Lag -> Lead" relationships
-across all variable pairs, as well as the Xi-ACF (autocorrelation) for individual variables.
+Computes the pairwise directional Chatterjee's Xi coefficient for a multivariate time series.
 }

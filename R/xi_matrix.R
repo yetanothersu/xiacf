@@ -1,12 +1,10 @@
 #' Multivariate Xi-Correlogram Matrix
 #'
-#' Computes the pairwise directional Chatterjee's Xi coefficient for a multivariate
-#' time series dataset. It evaluates both "Lead -> Lag" and "Lag -> Lead" relationships
-#' across all variable pairs, as well as the Xi-ACF (autocorrelation) for individual variables.
+#' Computes the pairwise directional Chatterjee's Xi coefficient for a multivariate time series.
 #'
 #' @param x A numeric matrix or data.frame containing the multivariate time series (columns = variables).
 #' @param max_lag An integer specifying the maximum positive lag to compute. Default is 10.
-#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets for hypothesis testing. Default is 399.
+#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets. Default is 399.
 #' @param sig_level A numeric value between 0 and 1 specifying the significance level. Default is 0.05.
 #' @param max_iter An integer specifying the maximum iterations for the MIAAFT algorithm. Default is 100.
 #' @param ... Additional arguments.
@@ -22,7 +20,23 @@ xi_matrix <- function(
     max_iter = 100,
     ...
 ) {
-    # --- 1. Strict Input Validation ---
+    # --- Backward Compatibility Check for sig_level ---
+    if (sig_level <= 0 || sig_level >= 1) {
+        stop("Parameter 'sig_level' must be strictly between 0 and 1.")
+    }
+    if (sig_level > 0.5) {
+        warning(
+            sprintf(
+                "The interpretation of 'sig_level' has changed from Confidence Level to Significance Level. Your input %g has been automatically converted to %g. Please use sig_level = %g in the future.",
+                sig_level,
+                1 - sig_level,
+                1 - sig_level
+            ),
+            call. = FALSE
+        )
+        sig_level <- 1 - sig_level
+    }
+
     if (!is.matrix(x) && !is.data.frame(x)) {
         stop("Input 'x' must be a numeric matrix or data.frame.")
     }
@@ -30,11 +44,11 @@ xi_matrix <- function(
     x_mat <- as.matrix(x)
 
     if (!is.numeric(x_mat)) {
-        stop("All columns in 'x' must be numeric.")
+        stop("Input 'x' must be completely numeric.")
     }
     if (any(is.na(x_mat))) {
         stop(
-            "Input contains NA values. Please handle missing values before running xi_matrix()."
+            "Input 'x' contains NA values. Please handle them before running xi_matrix()."
         )
     }
 
@@ -43,71 +57,111 @@ xi_matrix <- function(
 
     if (p < 2) {
         stop(
-            "'x' must have at least 2 columns to compute pairwise correlations."
+            "Input 'x' must have at least 2 columns to compute pairwise correlations."
         )
     }
-    if (n < max_lag + 2) {
+    if (n < (max_lag + 2)) {
         stop(sprintf(
             "Time series length (%d) is too short for max_lag = %d.",
             n,
             max_lag
         ))
     }
-
-    # Check zero variance for each column
-    vars <- apply(x_mat, 2, stats::var)
-    if (any(vars == 0)) {
-        bad_cols <- paste(which(vars == 0), collapse = ", ")
-        stop(sprintf(
-            "The following columns have zero variance (constant values): %s",
-            bad_cols
-        ))
-    }
-
     if (sig_level <= 0 || sig_level >= 1) {
-        stop("'sig_level' must be strictly between 0 and 1 (e.g., 0.05).")
+        stop("Parameter 'sig_level' must be strictly between 0 and 1.")
     }
 
-    # --- 2. Check surrogate count for stable Max-Statistic ---
-    # Total tests = p * p * max_lag (including ACF on the diagonal)
-    num_tests <- p * p * max_lag
-    check_surrogate_count(n_surr, sig_level, num_tests)
-
-    # Handle variable names for clean output
-    var_names <- colnames(x_mat)
+    var_names <- colnames(x)
     if (is.null(var_names)) {
         var_names <- paste0("V", 1:p)
     }
 
-    # --- 3. Call the highly optimized C++ engine ---
-    # C++ returns: var_lead, var_lag, lag, xi_original, and max_statistic_dist
-    res_cpp <- compute_xi_matrix_maxstat_cpp(
+    for (j in 1:p) {
+        if (stats::var(x_mat[, j]) == 0) {
+            stop(sprintf(
+                "Variable '%s' has zero variance. Matrix calculations cannot proceed.",
+                var_names[j]
+            ))
+        }
+    }
+
+    num_pairs <- p * p
+    num_tests <- num_pairs * max_lag
+    check_surrogate_count <- function(n_surr, sig_level, num_tests) {
+        min_required <- ceiling(1 / sig_level) - 1
+        if (n_surr < min_required) {
+            stop(sprintf(
+                "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
+                n_surr,
+                as.integer((1 - sig_level) * 100),
+                min_required
+            ))
+        }
+        recommended <- ceiling(num_tests / sig_level)
+        if (n_surr < recommended) {
+            warning(sprintf(
+                "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
+                num_tests,
+                sig_level,
+                n_surr,
+                recommended
+            ))
+        }
+    }
+    check_surrogate_count(n_surr, sig_level, num_tests)
+
+    cpp_res <- compute_xi_matrix_maxstat_cpp(
         X = x_mat,
         max_lag = as.integer(max_lag),
         n_surr = as.integer(n_surr),
         max_iter = as.integer(max_iter)
     )
 
-    # --- 4. Process Thresholds ---
     global_threshold <- stats::quantile(
-        res_cpp$max_statistic_dist,
+        cpp_res$max_statistic_dist,
         probs = 1 - sig_level,
         names = FALSE
     )
 
-    # --- 5. Format Output as a Tidy Data Frame ---
-    res_df <- data.frame(
-        Lead_Var = var_names[res_cpp$var_lead],
-        Lag_Var = var_names[res_cpp$var_lag],
-        Lag = res_cpp$lag,
-        Xi = res_cpp$xi_original,
-        Global_Threshold = rep(global_threshold, length(res_cpp$lag))
-    )
+    xi_data <- cpp_res$xi_matrix_empirical
+    if (is.null(xi_data)) {
+        xi_data <- cpp_res$xi_empirical
+    }
 
-    # Calculate excess Xi (clamped at 0 for non-significant values)
+    is_3d <- !is.null(dim(xi_data)) && length(dim(xi_data)) == 3
+
+    res_list <- list()
+    idx <- 1
+    for (i in 1:p) {
+        for (j in 1:p) {
+            for (l in 1:max_lag) {
+                if (is_3d) {
+                    val <- xi_data[i, j, l]
+                } else {
+                    flat_idx <- i + (j - 1) * p + (l - 1) * p * p
+                    val <- xi_data[flat_idx]
+                }
+
+                if (length(val) == 0) {
+                    val <- NA
+                }
+
+                res_list[[idx]] <- data.frame(
+                    Lead_Var = var_names[i],
+                    Lag_Var = var_names[j],
+                    Lag = l,
+                    Xi = as.numeric(val),
+                    stringsAsFactors = FALSE
+                )
+                idx <- idx + 1
+            }
+        }
+    }
+
+    res_df <- do.call(rbind, res_list)
+    res_df$Global_Threshold <- rep(global_threshold, nrow(res_df))
     res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
 
-    # --- 6. Return S3 Object ---
     out <- list(
         data = res_df,
         n = n,
@@ -141,15 +195,21 @@ print.xi_matrix <- function(x, ...) {
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
     cat("==========================================\n")
 
-    # Print top 5 strongest dependencies (based on Excess Xi)
-    cat("Top 5 Significant Dependencies:\n")
-    top_deps <- x$data[order(x$data$Xi_Excess, decreasing = TRUE), ]
-    top_deps <- head(top_deps[top_deps$Xi_Excess > 0, ], 5)
+    sig_data <- x$data[
+        x$data$Xi_Excess > 0,
+        c("Lead_Var", "Lag_Var", "Lag", "Xi", "Global_Threshold", "Xi_Excess")
+    ]
 
-    if (nrow(top_deps) == 0) {
-        cat("No significant dependencies found above the global threshold.\n")
+    if (nrow(sig_data) == 0) {
+        cat(
+            "No significant multivariate dependencies found above the global threshold.\n"
+        )
     } else {
-        print(top_deps, row.names = FALSE)
+        cat("Top 5 Strongest Non-linear Causal Pathways:\n")
+        print(
+            utils::head(sig_data[order(-sig_data$Xi_Excess), ], 5),
+            row.names = FALSE
+        )
     }
     cat("\n")
     invisible(x)
