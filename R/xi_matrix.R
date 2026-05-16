@@ -120,46 +120,19 @@ xi_matrix <- function(
     global_threshold <- stats::quantile(
         cpp_res$max_statistic_dist,
         probs = 1 - sig_level,
-        names = FALSE
+        names = FALSE,
+        na.rm = TRUE
     )
 
-    xi_data <- cpp_res$xi_matrix_empirical
-    if (is.null(xi_data)) {
-        xi_data <- cpp_res$xi_empirical
-    }
+    res_df <- data.frame(
+        Lead_Var = var_names[cpp_res$var_lead],
+        Lag_Var = var_names[cpp_res$var_lag],
+        Lag = cpp_res$lag,
+        Xi = cpp_res$xi_original,
+        stringsAsFactors = FALSE
+    )
 
-    is_3d <- !is.null(dim(xi_data)) && length(dim(xi_data)) == 3
-
-    res_list <- list()
-    idx <- 1
-    for (i in 1:p) {
-        for (j in 1:p) {
-            for (l in 1:max_lag) {
-                if (is_3d) {
-                    val <- xi_data[i, j, l]
-                } else {
-                    flat_idx <- i + (j - 1) * p + (l - 1) * p * p
-                    val <- xi_data[flat_idx]
-                }
-
-                if (length(val) == 0) {
-                    val <- NA
-                }
-
-                res_list[[idx]] <- data.frame(
-                    Lead_Var = var_names[i],
-                    Lag_Var = var_names[j],
-                    Lag = l,
-                    Xi = as.numeric(val),
-                    stringsAsFactors = FALSE
-                )
-                idx <- idx + 1
-            }
-        }
-    }
-
-    res_df <- do.call(rbind, res_list)
-    res_df$Global_Threshold <- rep(global_threshold, nrow(res_df))
+    res_df$Global_Threshold <- global_threshold
     res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
 
     out <- list(
@@ -196,7 +169,7 @@ print.xi_matrix <- function(x, ...) {
     cat("==========================================\n")
 
     sig_data <- x$data[
-        x$data$Xi_Excess > 0,
+        which(x$data$Xi_Excess > 0),
         c("Lead_Var", "Lag_Var", "Lag", "Xi", "Global_Threshold", "Xi_Excess")
     ]
 
