@@ -12,7 +12,7 @@
 \item{...}{Additional arguments passed to print.}
 }
 \value{
-The original object \code{x} invisibly. Called primarily for its side effect of printing the matrix to the console.
+The original object \code{x} invisibly.
 }
 \description{
 Print method for xi_matrix

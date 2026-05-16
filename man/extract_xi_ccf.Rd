@@ -2,23 +2,22 @@
 % Please edit documentation in R/extract.R
 \name{extract_xi_ccf}
 \alias{extract_xi_ccf}
-\title{Extract Individual Xi-CCF from Xi-Matrix}
+\title{Extract Pairwise Xi-CCF from a Multivariate Xi-Matrix}
 \usage{
 extract_xi_ccf(object, var_x, var_y, x_raw = NULL)
 }
 \arguments{
 \item{object}{An object of class \code{xi_matrix}.}
 
-\item{var_x}{A character string for the first variable (X).}
+\item{var_x}{Variable X name.}
 
-\item{var_y}{A character string for the second variable (Y).}
+\item{var_y}{Variable Y name.}
 
-\item{x_raw}{Optional. The original multivariate data used to compute the matrix.}
+\item{x_raw}{Optional. The original data to calculate linear CCF.}
 }
 \value{
 An object of class \code{xi_ccf}.
 }
 \description{
-Extracts the cross-correlation results for a specific pair of variables from
-a \code{xi_matrix} object and converts it into a \code{xi_ccf} S3 object.
+Extract Pairwise Xi-CCF from a Multivariate Xi-Matrix
 }

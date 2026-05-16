@@ -2,34 +2,35 @@
 % Please edit documentation in R/xi_ccf.R
 \name{xi_ccf}
 \alias{xi_ccf}
-\title{Directional Xi-CCF Test for Multivariate Time Series}
+\alias{print.xi_ccf}
+\title{Directional Xi-CCF Test for Bivariate Time Series}
 \usage{
-xi_ccf(
-  x,
-  y,
-  max_lag = 20,
-  n_surr = 100,
-  bidirectional = TRUE,
-  sig_level = 0.95
-)
+xi_ccf(x, y, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
+
+\method{print}{xi_ccf}(x, ...)
 }
 \arguments{
-\item{x}{A numeric vector representing the first time series.}
+\item{x}{A numeric vector. Must not contain missing values (NA) or be a constant.}
 
-\item{y}{A numeric vector representing the second time series.}
+\item{y}{A numeric vector of the same length as x. Must not contain missing values or be a constant.}
 
-\item{max_lag}{An integer specifying the maximum positive lag.}
+\item{max_lag}{An integer specifying the maximum lag (evaluates both forward and backward). Default is 10.}
 
-\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets.}
+\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets to generate. Default is 399.}
 
-\item{bidirectional}{Logical. If TRUE (default), computes both directions.}
+\item{sig_level}{A numeric value between 0 and 1 specifying the significance level for FWER control. Default is 0.05.}
 
-\item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.95.}
+\item{max_iter}{An integer specifying the maximum iterations for the MIAAFT algorithm. Default is 100.}
+
+\item{...}{Additional arguments.}
 }
 \value{
-An object of class \code{"xi_ccf"}.
+An object of class \code{"xi_ccf"} containing the empirical correlations and Max-statistic thresholds.
 }
 \description{
-Calculates Chatterjee's Xi cross-correlation and the standard Cross-Correlation Function (CCF)
-across positive lags to evaluate directional lead-lag relationships.
+Computes the empirical Cross-Correlation Function (CCF) based on Chatterjee's Xi,
+and evaluates its statistical significance using MIAAFT surrogates.
+To strictly control the Family-Wise Error Rate (FWER) and prevent data snooping,
+this function systematically evaluates all lead and lag relationships
+simultaneously up to the specified maximum lag.
 }

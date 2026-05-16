@@ -4,16 +4,20 @@
 \alias{xi_matrix}
 \title{Multivariate Xi-Correlogram Matrix}
 \usage{
-xi_matrix(x, max_lag = 20, n_surr = 100, sig_level = 0.95)
+xi_matrix(x, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
 }
 \arguments{
 \item{x}{A numeric matrix or data.frame containing the multivariate time series (columns = variables).}
 
-\item{max_lag}{An integer specifying the maximum positive lag to compute.}
+\item{max_lag}{An integer specifying the maximum positive lag to compute. Default is 10.}
 
-\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets for hypothesis testing.}
+\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets for hypothesis testing. Default is 399.}
 
-\item{sig_level}{A numeric value between 0 and 1 specifying the significance level for the surrogate threshold. Default is 0.95.}
+\item{sig_level}{A numeric value between 0 and 1 specifying the significance level. Default is 0.05.}
+
+\item{max_iter}{An integer specifying the maximum iterations for the MIAAFT algorithm. Default is 100.}
+
+\item{...}{Additional arguments.}
 }
 \value{
 An S3 object of class \code{xi_matrix} containing a tidy data frame of pairwise results.
