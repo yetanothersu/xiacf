@@ -113,6 +113,7 @@ xi_ccf <- function(
 }
 
 #' @rdname xi_ccf
+#' @importFrom utils head
 #' @export
 print.xi_ccf <- function(x, ...) {
     cat("\n=== Bivariate Xi-Cross-Correlation Function ===\n")

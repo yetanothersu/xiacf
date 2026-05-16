@@ -25,6 +25,7 @@ test_that("compute_xi_acf_maxstat_cpp throws error when max_lag is too large", {
     max_lag <- 20
     n_surr <- 20
 
+    # Test strict validation 'n > max_lag + 1' in C++ engine
     expect_error(
         xiacf:::compute_xi_acf_maxstat_cpp(x_short, max_lag, n_surr, 10L),
         "strictly greater"

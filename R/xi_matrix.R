@@ -126,6 +126,7 @@ xi_matrix <- function(
 #' @param x An object of class \code{xi_matrix}.
 #' @param ... Additional arguments passed to print.
 #' @return The original object \code{x} invisibly.
+#' @importFrom utils head
 #' @export
 print.xi_matrix <- function(x, ...) {
     cat("\n=== Multivariate Xi-Correlogram Matrix ===\n")

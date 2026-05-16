@@ -11,6 +11,7 @@ test_that("xi_matrix input validation works", {
         "at least 2 columns"
     )
 
+    # Set max_lag=2 to pass length check and explicitly catch sig_level error
     expect_error(
         xi_matrix(data.frame(A = 1:10, B = 1:10), max_lag = 2, sig_level = 1.5),
         "strictly between 0 and 1"

@@ -126,7 +126,7 @@ print.xi_acf <- function(x, ...) {
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
     cat("==============================================\n")
 
-    # 有意なラグのみ抽出（Xi_Excess > 0）
+    # Extract only significant lags (Xi_Excess > 0)
     sig_data <- x$data[
         x$data$Xi_Excess > 0,
         c("Lag", "Xi", "Global_Threshold", "Xi_Excess")

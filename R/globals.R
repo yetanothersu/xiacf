@@ -10,5 +10,6 @@ utils::globalVariables(c(
     "Xi",
     "Lag",
     "Window_End_Time",
-    "Xi_Excess"
+    "Xi_Excess",
+    "i"
 ))
