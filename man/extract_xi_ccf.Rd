@@ -9,11 +9,11 @@ extract_xi_ccf(object, var_x, var_y, x_raw = NULL)
 \arguments{
 \item{object}{An object of class \code{xi_matrix}.}
 
-\item{var_x}{A character string specifying the first variable (X).}
+\item{var_x}{Variable X name.}
 
-\item{var_y}{A character string specifying the second variable (Y).}
+\item{var_y}{Variable Y name.}
 
-\item{x_raw}{Optional. The original multivariate data matrix/data.frame.}
+\item{x_raw}{Optional. The original data to calculate linear CCF.}
 }
 \value{
 An object of class \code{xi_ccf}.

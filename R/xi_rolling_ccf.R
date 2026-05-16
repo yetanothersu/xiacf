@@ -1,28 +1,27 @@
-#' Rolling Multivariate Xi-CCF Analysis
+#' Rolling Directional Xi-CCF Analysis
 #'
 #' Performs a rolling window analysis using Chatterjee's Xi cross-correlation to assess
-#' the time-varying non-linear lead-lag relationship between two time series.
+#' the time-varying non-linear lead-lag relationship between two time series with FWER control.
 #'
 #' @param x A numeric vector representing the first time series (predictor/lead candidate).
 #' @param y A numeric vector representing the second time series (response/lag candidate).
-#' @param time_index Optional vector of timestamps (e.g., Date, POSIXct) corresponding to x and y.
+#' @param time_index Optional vector of timestamps.
 #' @param window_size An integer specifying the size of the rolling window.
-#' @param step_size An integer specifying the step size by which the window is shifted. Default is 1.
+#' @param step_size An integer specifying the step size. Default is 1.
 #' @param max_lag An integer specifying the maximum positive lag to compute.
-#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets for the null hypothesis test.
-#' @param bidirectional Logical. If TRUE (default), computes both "X leads Y" and "Y leads X".
-#' @param sig_level A numeric value specifying the significance level for the confidence intervals. Default is 0.95.
-#' @param n_cores An integer specifying the number of cores for parallel execution. If \code{NULL}, runs sequentially.
-#' @param save_dir A character string specifying the directory path to save intermediate window results as RDS files. If \code{NULL} (default), results are not saved to disk.
+#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets. Default is 399.
+#' @param sig_level A numeric value specifying the significance level (FWER). Default is 0.05.
+#' @param n_cores An integer specifying the number of cores for parallel execution.
+#' @param save_dir A character string specifying the directory path to save intermediate results.
 #'
-#' @return A \code{data.frame} containing the rolling window results in a tidy long-format.
+#' @return A \code{data.frame} containing the rolling window results.
 #'
 #' @importFrom foreach foreach
 #' @importFrom doFuture registerDoFuture %dofuture%
 #' @importFrom future plan multisession sequential
 #' @importFrom progressr progressor with_progress
 #' @importFrom dplyr bind_rows
-#' @importFrom stats quantile sd ccf qnorm na.pass
+#' @importFrom stats quantile
 #' @export
 run_rolling_xi_ccf <- function(
     x,
@@ -30,197 +29,81 @@ run_rolling_xi_ccf <- function(
     time_index = NULL,
     window_size,
     step_size = 1,
-    max_lag = 20,
-    n_surr = 100,
-    bidirectional = TRUE,
-    sig_level = 0.95,
+    max_lag,
+    n_surr = 399,
+    sig_level = 0.05,
     n_cores = NULL,
     save_dir = NULL
 ) {
-    # --- 1. Robust Input Validation ---
-    if (length(x) != length(y)) {
-        stop("Time series 'x' and 'y' must have the exact same length.")
-    }
     n <- length(x)
-    if (window_size > n || window_size <= 2 * max_lag + 5) {
-        stop(
-            "Invalid window_size. Must be <= length(x) and reasonably larger than max_lag."
-        )
+    if (n != length(y)) {
+        stop("x and y must have the same length.")
     }
-    if (!is.null(time_index)) {
-        if (length(time_index) != n) {
-            stop("time_index must have the exact same length as x and y.")
-        }
+    if (n < window_size) {
+        stop("Time series is shorter than the window size.")
     }
 
-    # Calculate starting indices for each window
-    start_indices <- seq(1, n - window_size + 1, by = step_size)
-    n_windows <- length(start_indices)
+    starts <- seq(1, n - window_size + 1, by = step_size)
+    n_windows <- length(starts)
 
-    # --- 2. Setup Checkpointing ---
-    completed_windows <- integer(0)
+    # Create directory for saving intermediate results if specified
     if (!is.null(save_dir)) {
-        if (!dir.exists(save_dir)) {
-            dir.create(save_dir, recursive = TRUE)
-        }
-        existing_files <- list.files(
-            save_dir,
-            pattern = "^window_.*\\.rds$",
-            full.names = TRUE
-        )
-        if (length(existing_files) > 0) {
-            # Extract window IDs from filenames
-            completed_windows <- as.integer(gsub(
-                ".*window_([0-9]+)\\.rds",
-                "\\1",
-                existing_files
-            ))
-            message(sprintf(
-                "Found %d completed windows in %s. Resuming...",
-                length(completed_windows),
-                save_dir
-            ))
-        }
+        if (!dir.exists(save_dir)) dir.create(save_dir, recursive = TRUE)
     }
 
-    # Identify windows that still need to be processed
-    windows_to_process <- setdiff(1:n_windows, completed_windows)
-
-    # If all windows are already processed, load and return them
-    if (length(windows_to_process) == 0) {
-        message("All windows are already processed. Loading from disk...")
-        all_files <- list.files(
-            save_dir,
-            pattern = "^window_.*\\.rds$",
-            full.names = TRUE
-        )
-        res_list <- lapply(all_files, readRDS)
-        return(dplyr::bind_rows(res_list))
-    }
-
-    # --- 3. Parallel Backend Setup ---
-    old_opts <- options(doFuture.rng.onMisuse = "ignore")
-    old_plan <- future::plan()
-
-    on.exit(
-        {
-            options(old_opts)
-            future::plan(old_plan)
-        },
-        add = TRUE
-    )
-
+    # Setup parallel backend
     doFuture::registerDoFuture()
-    if (!is.null(n_cores) && n_cores > 1) {
+    if (!is.null(n_cores)) {
         future::plan(future::multisession, workers = n_cores)
     } else {
         future::plan(future::sequential)
     }
 
-    # --- 4. Main Rolling Execution ---
-    # Define a wrapper for progress reporting
     run_with_progress <- function() {
-        p <- progressr::progressor(steps = length(windows_to_process))
+        p <- progressr::progressor(steps = n_windows)
 
         results_list <- foreach::foreach(
-            i = windows_to_process,
-            .errorhandling = 'pass'
+            i = 1:n_windows,
+            .options.future = list(packages = c("xiacf", "stats"), seed = TRUE)
         ) %dofuture%
             {
-                p() # Update progress bar
-                idx_start <- start_indices[i]
+                p()
+                idx_start <- starts[i]
                 idx_end <- idx_start + window_size - 1
-
                 x_window <- x[idx_start:idx_end]
                 y_window <- y[idx_start:idx_end]
 
-                # If variance is zero, return NULL to skip
-                if (stats::sd(x_window) == 0 || stats::sd(y_window) == 0) {
-                    return(NULL)
-                }
-
-                # Standard CCF Confidence Interval
-                ccf_ci <- stats::qnorm((1 + sig_level) / 2) / sqrt(window_size)
-
-                # Call C++ Engine
-                res <- compute_xi_ccf_miaaft(
-                    x_window,
-                    y_window,
-                    max_lag,
-                    n_surr
+                # Call the latest C++ function (bidirectional FWER control engine)
+                cpp_res <- compute_xi_ccf_maxstat_cpp(
+                    x = as.numeric(x_window),
+                    y = as.numeric(y_window),
+                    max_lag = as.integer(max_lag),
+                    n_surr = as.integer(n_surr),
+                    max_iter = 100L
                 )
 
-                # Helper to calculate 95% threshold
-                calc_threshold <- function(surr_matrix) {
-                    if (n_surr == 0) {
-                        return(rep(NA, length(res$lags)))
-                    }
-                    apply(surr_matrix, 1, function(r) {
-                        stats::quantile(r, sig_level, na.rm = TRUE)
-                    })
-                }
-
-                # --- Build Long-Format DataFrame for the Window ---
-
-                # (A) Forward: X leads Y
-                ccf_fwd_full <- stats::ccf(
-                    y_window,
-                    x_window,
-                    lag.max = max_lag,
-                    plot = FALSE,
-                    na.action = stats::na.pass
-                )
-                ccf_fwd <- as.numeric(ccf_fwd_full$acf[
-                    (max_lag + 1):(2 * max_lag + 1)
-                ])
-
-                df_fwd <- data.frame(
-                    Direction = "X leads Y",
-                    Lag = as.numeric(res$lags),
-                    CCF = ccf_fwd,
-                    Xi = as.numeric(res$xi_original_forward),
-                    Xi_Threshold = calc_threshold(res$xi_surrogates_forward),
-                    CCF_CI = ccf_ci
+                # Calculate the global threshold from the Max-statistic distribution
+                global_threshold <- stats::quantile(
+                    cpp_res$max_statistic_dist,
+                    probs = 1 - sig_level,
+                    names = FALSE
                 )
 
-                # (B) Backward: Y leads X
-                if (bidirectional) {
-                    ccf_bwd_full <- stats::ccf(
-                        x_window,
-                        y_window,
-                        lag.max = max_lag,
-                        plot = FALSE,
-                        na.action = stats::na.pass
-                    )
-                    ccf_bwd <- as.numeric(ccf_bwd_full$acf[
-                        (max_lag + 1):(2 * max_lag + 1)
-                    ])
+                num_tests <- 2 * max_lag + 1
+                df_window <- data.frame(
+                    Window_ID = i,
+                    Lag = seq(-max_lag, max_lag, by = 1),
+                    Xi = cpp_res$xi_empirical,
+                    Global_Threshold = rep(global_threshold, num_tests)
+                )
 
-                    df_bwd <- data.frame(
-                        Direction = "Y leads X",
-                        Lag = as.numeric(res$lags),
-                        CCF = ccf_bwd,
-                        Xi = as.numeric(res$xi_original_backward),
-                        Xi_Threshold = calc_threshold(
-                            res$xi_surrogates_backward
-                        ),
-                        CCF_CI = ccf_ci
-                    )
-                    df_window <- rbind(df_fwd, df_bwd)
-                } else {
-                    df_window <- df_fwd
-                }
-
-                # Add Excess Xi and Window Metadata
+                # Calculate excess Xi above the threshold
                 df_window$Xi_Excess <- pmax(
                     0,
-                    df_window$Xi - df_window$Xi_Threshold
+                    df_window$Xi - df_window$Global_Threshold
                 )
-                df_window$Window_ID <- i
-                df_window$Window_Start_Idx <- idx_start
-                df_window$Window_End_Idx <- idx_end
 
-                # Map the actual timestamps if time_index was provided
+                # Map timestamps if available
                 if (!is.null(time_index)) {
                     df_window$Window_Start_Time <- time_index[idx_start]
                     df_window$Window_End_Time <- time_index[idx_end]
@@ -228,11 +111,13 @@ run_rolling_xi_ccf <- function(
 
                 # Save checkpoint
                 if (!is.null(save_dir)) {
-                    out_file <- file.path(
-                        save_dir,
-                        sprintf("window_%06d.rds", i)
+                    saveRDS(
+                        df_window,
+                        file = file.path(
+                            save_dir,
+                            sprintf("window_%06d.rds", i)
+                        )
                     )
-                    saveRDS(df_window, file = out_file)
                 }
 
                 return(df_window)
@@ -243,28 +128,9 @@ run_rolling_xi_ccf <- function(
     # Execute with progress bar
     new_results_list <- progressr::with_progress(run_with_progress())
 
-    # --- 5. Final Result Compilation ---
-    # Filter out potential errors/NULLs from parallel execution
-    new_results_list <- Filter(function(x) is.data.frame(x), new_results_list)
+    # Filter valid data frames and combine
+    new_results_list <- Filter(is.data.frame, new_results_list)
     final_df <- dplyr::bind_rows(new_results_list)
-
-    # If resumed from disk, combine newly calculated results with old ones
-    if (length(completed_windows) > 0 && !is.null(save_dir)) {
-        old_files <- file.path(
-            save_dir,
-            sprintf("window_%06d.rds", completed_windows)
-        )
-        old_results_list <- lapply(old_files, readRDS)
-        old_df <- dplyr::bind_rows(old_results_list)
-        final_df <- dplyr::bind_rows(old_df, final_df)
-    }
-
-    # Sort correctly taking Direction into account
-    if (nrow(final_df) > 0) {
-        final_df <- final_df[
-            order(final_df$Window_ID, final_df$Direction, final_df$Lag),
-        ]
-    }
 
     return(final_df)
 }

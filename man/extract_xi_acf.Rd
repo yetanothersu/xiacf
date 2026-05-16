@@ -9,10 +9,9 @@ extract_xi_acf(object, var, x_raw = NULL)
 \arguments{
 \item{object}{An object of class \code{xi_matrix}.}
 
-\item{var}{A character string specifying the variable name to extract.}
+\item{var}{A character string specifying the variable name.}
 
-\item{x_raw}{Optional. The original multivariate data matrix/data.frame.
-If provided, standard linear ACF will be calculated and included.}
+\item{x_raw}{Optional. The original data to calculate linear ACF.}
 }
 \value{
 An object of class \code{xi_acf}.
