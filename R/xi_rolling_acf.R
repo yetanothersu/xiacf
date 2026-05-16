@@ -33,6 +33,23 @@ run_rolling_xi_acf <- function(
     n_cores = NULL,
     save_dir = NULL
 ) {
+    # --- Backward Compatibility Check for sig_level ---
+    if (sig_level <= 0 || sig_level >= 1) {
+        stop("Parameter 'sig_level' must be strictly between 0 and 1.")
+    }
+    if (sig_level > 0.5) {
+        warning(
+            sprintf(
+                "The interpretation of 'sig_level' has changed from Confidence Level to Significance Level. Your input %g has been automatically converted to %g. Please use sig_level = %g in the future.",
+                sig_level,
+                1 - sig_level,
+                1 - sig_level
+            ),
+            call. = FALSE
+        )
+        sig_level <- 1 - sig_level
+    }
+
     n <- length(x)
     if (n < window_size) {
         stop("Time series is shorter than the window size.")

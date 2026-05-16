@@ -14,7 +14,7 @@ xi_ccf(x, y, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
 
 \item{y}{A numeric vector of the same length as x. Must not contain missing values or be a constant.}
 
-\item{max_lag}{An integer specifying the maximum lag (evaluates both forward and backward). Default is 10.}
+\item{max_lag}{An integer specifying the maximum lag. Default is 10.}
 
 \item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets to generate. Default is 399.}
 
@@ -30,7 +30,4 @@ An object of class \code{"xi_ccf"} containing the empirical correlations and Max
 \description{
 Computes the empirical Cross-Correlation Function (CCF) based on Chatterjee's Xi,
 and evaluates its statistical significance using MIAAFT surrogates.
-To strictly control the Family-Wise Error Rate (FWER) and prevent data snooping,
-this function systematically evaluates all lead and lag relationships
-simultaneously up to the specified maximum lag.
 }
