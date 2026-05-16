@@ -170,10 +170,6 @@ res_matrix <- xi_matrix(df_network, max_lag = 4, n_surr = 799)
 
 # Plot the entire network of causal relationships
 autoplot(res_matrix)
-#> Warning: Removed 36 rows containing missing values or values outside the scale range
-#> (`geom_line()`).
-#> Warning: Removed 36 rows containing missing values or values outside the scale range
-#> (`geom_point()`).
 ```
 
 <img src="man/figures/README-xi_matrix_example-1.png" alt="" width="100%" />
@@ -189,14 +185,6 @@ baselines without re-running the surrogates.
 # Passing the original data allows calculation of the standard linear CCF for comparison
 ccf_A_C <- extract_xi_ccf(res_matrix, var_x = "A", var_y = "C", x_raw = df_network)
 autoplot(ccf_A_C)
-#> Warning: Removed 4 rows containing missing values or values outside the scale range
-#> (`geom_line()`).
-#> Warning: Removed 4 rows containing missing values or values outside the scale range
-#> (`geom_point()`).
-#> Warning: Removed 4 rows containing missing values or values outside the scale range
-#> (`geom_line()`).
-#> Warning: Removed 4 rows containing missing values or values outside the scale range
-#> (`geom_point()`).
 ```
 
 <img src="man/figures/README-extract_example-1.png" alt="" width="100%" />
