@@ -2,36 +2,14 @@ Package: xiacf
 Type: Package
 Title: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi
 Version: 0.5.0
-Authors@R: person(given = "Yasunori", family = "Watanabe",
-                  role = c("aut", "cre"),
-                  email = "watanabe.yasunori@outlook.com")
+Authors@R: person(given = "Yasunori", family = "Watanabe", role = c("aut", "cre"), email = "watanabe.yasunori@outlook.com")
 Maintainer: Yasunori Watanabe <watanabe.yasunori@outlook.com>
-Description: Computes Chatterjee's non-parametric correlation coefficient for time series data.
-    It extends the original metric to time series analysis by providing the
-    Xi-Autocorrelation Function (Xi-ACF) and Xi-Cross-Correlation Function (Xi-CCF).
-    The package allows users to test for non-linear dependence using
-    Iterative Amplitude Adjusted Fourier Transform (IAAFT) surrogate data.
-    Main functions include xi_acf() and xi_ccf() for computation, along with
-    matrix extraction tools. Methodologies are based on Chatterjee (2021)
-    <doi:10.1080/01621459.2020.1758115> and surrogate data testing methods by
-    Schreiber and Schmitz (1996) <doi:10.1103/PhysRevLett.77.635>.
+Description: Computes Chatterjee's non-parametric correlation coefficient for time series data. It extends the original metric to time series analysis by providing the Xi-Autocorrelation Function (Xi-ACF) and Xi-Cross-Correlation Function (Xi-CCF). The package allows users to test for non-linear dependence using Iterative Amplitude Adjusted Fourier Transform (IAAFT) surrogate data with strict Family-Wise Error Rate (FWER) control via Max-statistic approaches. Methodologies are based on Chatterjee (2021) <doi:10.1080/01621459.2020.1758115> and surrogate data testing methods by Schreiber and Schmitz (1996) <doi:10.1103/PhysRevLett.77.635>.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: 
-    dplyr (>= 1.1.4),
-    doFuture,
-    foreach,
-    future,
-    ggplot2 (>= 4.0.1),
-    latex2exp,
-    progressr,
-    Rcpp (>= 1.1.0),
-    stats
-LinkingTo: 
-    Rcpp,
-    RcppArmadillo
+Imports: dplyr (>= 1.1.4), doFuture, foreach, future, ggplot2 (>= 4.0.1), patchwork, latex2exp, progressr, Rcpp (>= 1.1.0), stats
+LinkingTo: Rcpp, RcppArmadillo
 RoxygenNote: 7.3.3
-Suggests: 
-    testthat (>= 3.3.2)
+Suggests: testthat (>= 3.3.2)
 Config/testthat/edition: 3
