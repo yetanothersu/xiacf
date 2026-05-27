@@ -85,7 +85,7 @@ xi_matrix <- function(
         }
     }
 
-    num_pairs <- p * p
+    num_pairs <- p * (p - 1)
     num_tests <- num_pairs * max_lag
     check_surrogate_count <- function(n_surr, sig_level, num_tests) {
         min_required <- ceiling(1 / sig_level) - 1
@@ -134,6 +134,12 @@ xi_matrix <- function(
 
     res_df$Global_Threshold <- global_threshold
     res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
+
+    is_self <- res_df$Lead_Var == res_df$Lag_Var
+    if (any(is_self)) {
+        res_df$Global_Threshold[is_self] <- NA
+        res_df$Xi_Excess[is_self] <- NA
+    }
 
     out <- list(
         data = res_df,
