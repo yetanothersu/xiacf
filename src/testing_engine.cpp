@@ -163,6 +163,7 @@ List compute_xi_matrix_maxstat_cpp(const arma::mat& X, int max_lag, int n_surr, 
         
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < p; j++) {
+                if (i == j) continue; // Skip autocorrelation for max-statistic
                 for (int k = 1; k <= max_lag; k++) {
                     double val = xi_coefficient(X_surr.col(i).subvec(0, n - k - 1), X_surr.col(j).subvec(k, n - 1));
                     if (val > current_max) current_max = val; // Find max across ALL pairs and lags
