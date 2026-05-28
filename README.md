@@ -15,28 +15,45 @@ This package overcomes these limitations by utilizing **Chatterjee’s
 Rank Correlation ($\xi$)**, offering both univariate ($\xi$-ACF) and
 multivariate ($\xi$-CCF) analysis tools. It features rigorous
 statistical hypothesis testing powered by advanced surrogate data
-generation algorithms (IAAFT and MIAAFT), all implemented in
-high-performance C++ using `RcppArmadillo`.
+generation algorithms (IAAFT and MIAAFT) and dynamic Family-Wise Error
+Rate (FWER) control, all implemented in high-performance C++ using
+`RcppArmadillo`.
+
+## Citation
+
+If you use `xiacf` in your research, please cite our latest working
+paper detailing the methodology and its application to financial
+markets:
+
+> Watanabe, Y. (2026). Differential diagnosis of nonlinearity:
+> Integrating the BDS omnibus test with chatterjee’s xi for local
+> structural identification. In Social Science Research Network.
+> <https://doi.org/10.2139/ssrn.6829431>
 
 ## Key Features
 
 - **Non-linear Autocorrelation ($\xi$-ACF):** Detect time-dependent
-  structures that standard linear ACF completely misses (e.g., chaotic
-  systems, volatility clustering).
-- **Multivariate Cross-Correlation ($\xi$-CCF):** Uncover hidden
-  non-linear lead-lag relationships between two different time series.
-- **Strict FWER Control:** To prevent data snooping across multiple lags
-  and variable pairs, `xiacf` strictly controls the Family-Wise Error
-  Rate (FWER) using the Max-statistic approach. It provides a robust
-  “Global Threshold” to confidently identify true non-linear dynamics.
-- **MIAAFT Surrogate Testing:** Rigorous null hypothesis testing using
-  Multivariate Iterative Amplitude Adjusted Fourier Transform (MIAAFT).
-  It preserves the exact marginal distributions and the instantaneous
-  (lag-0) linear cross-correlation while destroying lagged non-linear
-  dependence.
-- **High Performance C++ Engine:** Core algorithms are heavily optimized
-  in C++ to handle computationally intensive surrogate iterations
-  simultaneously across all lags and pairs.
+  structures that standard linear ACF completely misses, such as chaotic
+  systems or volatility clustering (e.g., $X_t = |X_{t-1}|$).
+- **Directional Cross-Correlation ($\xi$-CCF):** Uncover asymmetrical
+  causal pathways. The metric clearly separates causal directions
+  (`X leads Y` vs `Y leads X`) and captures contemporaneous effects
+  (Lag 0) where traditional Pearson CCF fails.
+- **Multivariate Network Matrix (`xi_matrix`):** Simultaneously evaluate
+  causal pathways across an entire system of time series to build
+  directed non-linear networks.
+- **Rigorous Statistical Inference:** Utilizes phase-randomized
+  surrogate data (IAAFT / MIAAFT) and dynamically controls the
+  Family-Wise Error Rate (FWER) via Max-Statistic distributions,
+  strictly protecting against false positives ($p$-hacking).
+- **Tidyverse-ready & Publication-Quality UI:** All functions return
+  Tidy data frames. The `autoplot()` methods instantly generate
+  beautiful, unified, and publication-ready `ggplot2` visualizations.
+- **High-Performance Rolling Analysis:** Fully parallelized (via
+  `doFuture`) rolling window functions to capture time-varying
+  dependencies smoothly and efficiently.
+
+------------------------------------------------------------------------
 
 ## Installation
 
@@ -54,192 +71,155 @@ You can install the development version from
 remotes::install_github("yetanothersu/xiacf")
 ```
 
-## Quick Start: Univariate $\xi$-ACF
+## Basic Usage
 
-Here is a basic example showing how to compute and visualize the
-$\xi$-ACF against a standard linear ACF.
+### 1. Univariate Non-linear ACF ($\xi$-ACF)
+
+Detecting strong non-linear auto-dependence that standard linear ACF
+fails to capture.
 
 ``` r
+### 1. Univariate Non-linear ACF (xi-ACF)
+
 library(xiacf)
 library(ggplot2)
 
-# Generate a chaotic Logistic Map: x_{t+1} = r * x_t * (1 - x_t)
 set.seed(42)
-n <- 500
-x <- numeric(n)
-x[1] <- 0.1
-r <- 4.0 # Fully chaotic regime
+n <- 300 # サンプルサイズを少し増やしてシグナルを安定させます
 
-for (t in 1:(n - 1)) {
-  x[t + 1] <- r * x[t] * (1 - x[t])
+# Generate a series with V-shaped auto-dependence (mean zero)
+# Standard Pearson ACF will miss this, but Xi-ACF will detect it.
+A <- numeric(n)
+A[1] <- rnorm(1)
+for (t in 2:n) {
+  # Subtracting 0.8 keeps the series centered around 0
+  A[t] <- abs(A[t - 1]) - 0.8 + rnorm(1, sd = 0.2)
 }
 
-# 1. Run the Xi-ACF test
-# Computes up to 10 lags. Default n_surr = 399 controls FWER at sig_level = 0.05.
-results <- xi_acf(x, max_lag = 10)
-
-# Print summary
-print(results)
+res_acf <- xi_acf(A, max_lag = 5, n_surr = 240)
+print(res_acf)
 #> 
 #> === Univariate Xi-Autocorrelation Function ===
-#> Time series length: 500
-#> Max Lag: 10
-#> Surrogates (IAAFT): 399
+#> Time series length: 300
+#> Max Lag: 5
+#> Surrogates (IAAFT): 240
 #> Significance Level: 0.05 (FWER controlled)
 #> ==============================================
 #> Significant Lags:
-#>  Lag        Xi Global_Threshold  Xi_Excess
-#>    1 0.9919920        0.3812919 0.61070012
-#>    2 0.9839923        0.3812919 0.60270041
-#>    3 0.9681476        0.3812919 0.58685570
-#>    4 0.9375611        0.3812919 0.55626920
-#>    5 0.8802274        0.3812919 0.49893548
-#>    6 0.7783380        0.3812919 0.39704613
-#>    7 0.6318376        0.3812919 0.25054570
-#>    8 0.4731095        0.3812919 0.09181757
-#>    9 0.4007648        0.3812919 0.01947289
-
-# 2. Visualize the results
-# Significant non-linear lags (piercing the gray FWER ribbon) are highlighted
-# with filled red triangles.
-autoplot(results)
+#>  Lag        Xi Global_Threshold Xi_Excess
+#>    1 0.6301542        0.5301385 0.1000157
+autoplot(res_acf)
 ```
 
-<div class="figure">
+<img src="man/figures/README-xi-acf-1.png" alt="" width="100%" />
 
-<img src="man/figures/README-xi-acf-test-1.png" alt="A correlogram comparing linear and non-linear dependence." width="100%" />
-<p class="caption">
-Comparison between standard linear ACF and Chatterjee’s Xi-ACF.
-</p>
+### 2. Bivariate Non-linear CCF ($\xi$-CCF)
 
-</div>
-
-## Directional $\xi$-CCF Test (Lead-Lag Analysis)
-
-While the standard CCF is symmetric in its linear evaluation, `xi_ccf()`
-evaluates the **directional** non-linear lead-lag relationship. It
-computes both “$X$ leads $Y$” and “$Y$ leads $X$” simultaneously.
+Discovering hidden causal pathways across different time series.
 
 ``` r
-# Generate a pure non-linear lead-lag relationship
-# Y is driven by the square of X from 1 period ago.
-set.seed(42)
-n <- 300
+### 2. Bivariate Non-linear CCF (xi-CCF)
+
+# X is pure noise (mean 0, symmetric)
 X <- rnorm(n)
-Y <- c(0, X[-n]^2) + rnorm(n, sd = 0.1)
+Y <- numeric(n)
 
-# Run the directional Xi-CCF test
-ccf_results <- xi_ccf(X, Y, max_lag = 5)
-
-# Visualize the differential diagnosis
-# Standard CCF (blue dashed line) misses the squared relationship, but Xi-CCF (red line)
-# correctly detects that X leads Y by 1 period.
-autoplot(ccf_results)
-```
-
-<img src="man/figures/README-ccf-example-1.png" alt="" width="100%" />
-
-## Multivariate Network Analysis: `xi_matrix()`
-
-For datasets with more than two variables, computing pairwise
-relationships one by one is computationally expensive and inflates false
-positives.
-
-`xi_matrix()` leverages an **n-dimensional MIAAFT C++ engine** to
-compute all directional relationships simultaneously. It generates the
-multivariate surrogate matrix *only once* per iteration and strictly
-controls the FWER across the entire network.
-
-``` r
-# Generate a chain of non-linear causality: A -> B -> C
-set.seed(42)
-n <- 300
-A <- runif(n, min = -2, max = 2)
-B <- numeric(n)
-C <- numeric(n)
-
-for (t in 1:n) {
-  if (t >= 3) B[t] <- A[t - 2]^2 + rnorm(1, sd = 0.5)
-  if (t >= 2) C[t] <- abs(B[t - 1]) + rnorm(1, sd = 0.5)
+# Y is a purely quadratic function of X at lag 2
+for (t in 3:n) {
+  Y[t] <- X[t - 2]^2 + rnorm(1, sd = 0.2)
 }
 
-df_network <- data.frame(A, B, C)
+# Center Y so it contains both negative and positive values.
+# Without this, Y is always positive, making abs(Y) purely linear later!
+Y <- as.numeric(scale(Y))
+
+res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 240, direction = "both")
+print(res_ccf)
+#> 
+#> === Bivariate Xi-Cross-Correlation (CCF) ===
+#> Variables: X, Y
+#> Time series length: 300
+#> Max Lag: 5
+#> Direction: both
+#> Surrogates (MIAAFT): 240
+#> Significance Level: 0.05 (FWER controlled)
+#> ============================================
+#> Top 5 Strongest Causal Pathways:
+#>  Lead_Var Lag_Var Lag        Xi        CCF Global_Threshold Xi_Excess
+#>         X       Y   2 0.7937993 -0.0216747        0.4887269 0.3050724
+autoplot(res_ccf)
+```
+
+<img src="man/figures/README-xi-ccf-1.png" alt="" width="100%" />
+
+### 3. Multivariate Network Matrix
+
+Analyze an entire system of variables at once.
+
+``` r
+### 3. Multivariate Network Matrix & Pathway Extraction
+
+Z <- numeric(n)
+
+# Z depends on the absolute value of Y at lag 1
+# Because Y is centered, this creates a true V-shaped non-linear relationship
+for (t in 2:n) {
+  Z[t] <- abs(Y[t - 1]) + rnorm(1, sd = 0.2)
+}
+Z <- as.numeric(scale(Z))
+
+df_system <- data.frame(X = X, Y = Y, Z = Z)
 
 # Compute the multivariate Xi-correlogram matrix
-res_matrix <- xi_matrix(df_network, max_lag = 4, n_surr = 799)
+res_matrix <- xi_matrix(df_system, max_lag = 3, n_surr = 360)
+#> Warning in check_surrogate_count(n_surr, sig_level, num_tests): Warning: For 24
+#> simultaneous tests at sig_level = 0.05, the empirical distribution of the
+#> max-statistic may be unstable with n_surr = 360. Recommended n_surr is at least
+#> 480.
 
-# Plot the entire network of causal relationships
 autoplot(res_matrix)
 ```
 
-<img src="man/figures/README-xi_matrix_example-1.png" alt="" width="100%" />
-
-### Extracting Pairwise Relationships
-
-Once the heavy matrix calculation is done, you can instantly extract
-individual ACF or CCF objects for detailed inspection against linear
-baselines without re-running the surrogates.
+<img src="man/figures/README-xi-matrix-1.png" alt="" width="100%" />
 
 ``` r
-# Extract the relationship between A and C (Indirect effect)
-# Passing the original data allows calculation of the standard linear CCF for comparison
-ccf_A_C <- extract_xi_ccf(res_matrix, var_x = "A", var_y = "C", x_raw = df_network)
-autoplot(ccf_A_C)
+
+# Extract it for a detailed bivariate analysis with exact FWER re-evaluation!
+ext_ccf <- extract_xi_ccf(res_matrix, var_x = "X", var_y = "Z", direction = "x_leads")
+autoplot(ext_ccf)
 ```
 
-<img src="man/figures/README-extract_example-1.png" alt="" width="100%" />
+<img src="man/figures/README-xi-matrix-2.png" alt="" width="100%" />
 
-## Rolling Window Analysis
+### 4. Rolling Analysis for Dynamic Relationships
 
-For advanced market microstructure or structural break detection, you
-can run rolling analyses. The functions support robust parallel
-processing via the `future` ecosystem and seamlessly integrate with
-timestamps.
+Extract time-varying non-linear dependencies. The output is a Tidy data
+frame, perfectly structured for custom EDA and visualization.
 
 ``` r
-library(ggplot2)
+### 4. Rolling Analysis for Dynamic Relationships
 
-# Generate dummy time series data with a structural break
-set.seed(123)
-dates <- seq(as.Date("2020-01-01"), by = "1 day", length.out = 300)
-X <- rnorm(300)
-Y <- numeric(300)
+library(future)
+plan(multisession) # or multicore on Linux/macOS
 
-# First half (Day 1-150): X leads Y by 3 days (non-linear relationship)
-Y[1:150] <- c(rnorm(3), abs(X[1:147])) + rnorm(150, sd = 0.1)
-# Second half (Day 151-300): The relationship breaks down (pure noise)
-Y[151:300] <- rnorm(150)
-
-# Run rolling Xi-CCF with time_index
 rolling_res <- run_rolling_xi_ccf(
   x = X,
   y = Y,
-  time_index = dates,
-  window_size = 100,
-  step_size = 5,
-  max_lag = 5,
-  n_surr = 199, # Reduced for vignette speed
-  n_cores = 2 # Set to NULL for sequential execution
+  window_size = 50,
+  step_size = 10,
+  max_lag = 3,
+  n_surr = 200
 )
 
-# Visualize the dynamic relationship as a beautiful heatmap
-ggplot(rolling_res, aes(x = Window_End_Time, y = Lag, fill = Xi_Excess)) +
-  geom_tile() +
-  scale_fill_gradient(low = "white", high = "firebrick") +
-  geom_hline(yintercept = 0, color = "black", linewidth = 0.5) +
-  scale_y_continuous(breaks = -5:5) +
-  scale_x_date(date_labels = "%Y-%m") +
-  labs(
-    title = "Rolling Directional Xi-CCF Heatmap",
-    subtitle = "Detecting structural breaks in non-linear lead-lag dynamics",
-    x = "Date",
-    y = "Lag (Positive: X leads Y, Negative: Y leads X)",
-    fill = "Excess Xi\n(Above FWER)"
-  ) +
-  theme_minimal()
+head(rolling_res)
+#>   Window_ID Lead_Var Lag_Var Lag        Xi Global_Threshold Xi_Excess
+#> 1         1        x       y   0 0.3240816        0.5813469 0.0000000
+#> 2         1        x       y   1 0.3494898        0.5813469 0.0000000
+#> 3         1        x       y   2 0.8324468        0.5813469 0.2510999
+#> 4         1        x       y   3 0.3098982        0.5813469 0.0000000
+#> 5         1        y       x   0 0.2930612        0.5813469 0.0000000
+#> 6         1        y       x   1 0.2789116        0.5813469 0.0000000
 ```
-
-<img src="man/figures/README-xi-ccf-rolling-1.png" alt="" width="100%" />
 
 ## References
 

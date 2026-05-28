@@ -1,26 +1,38 @@
-citHeader("To cite 'xiacf' in publications use:")
+# inst/CITATION
 
-bibentry(
-  bibtype = "Manual",
-  title = "xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi",
-  author = person("Yasunori", "Watanabe"),
-  year = "2026",
-  note = "R package version 0.5.0",
-  url = "https://github.com/yetanothersu/xiacf",
-  doi = "10.5281/zenodo.19247735",
-  textVersion = paste0(
-    "Watanabe, Y. (2026). xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi.\n",
-    "R package version 0.5.0. https://doi.org/10.5281/zenodo.19247735"
+bib <- c(
+  bibentry(
+    bibtype = "Manual",
+    title = paste("xiacf:", meta$Title),
+    author = person(given = "Yasunori", family = "Watanabe"),
+    year = format(Sys.Date(), "%Y"),
+    note = paste("R package version", meta$Version),
+    url = "https://github.com/yetanothersu/xiacf",
+    doi = "10.5281/zenodo.19247735",
+    textVersion = paste0(
+      "Watanabe, Y. (",
+      format(Sys.Date(), "%Y"),
+      "). xiacf: ",
+      meta$Title,
+      ".\n",
+      "R package version ",
+      meta$Version,
+      ". https://doi.org/10.5281/zenodo.19247735"
+    ),
+    header = "To cite the 'xiacf' package in publications, please use:"
+  ),
+  bibentry(
+    bibtype = "Unpublished",
+    title = "Differential diagnosis of nonlinearity: Integrating the BDS omnibus test with chatterjee’s xi for local structural identification",
+    author = person(given = "Yasunori", family = "Watanabe"),
+    year = "2026",
+    note = "SSRN Preprint",
+    url = "https://ssrn.com/abstract=6829431",
+    doi = "10.2139/ssrn.6829431",
+    textVersion = "Watanabe, Y. (2026). Differential diagnosis of nonlinearity: Integrating the BDS omnibus test with chatterjee’s xi for local structural identification. SSRN Preprint. Available at: https://ssrn.com/abstract=6829431",
+    header = "For the theoretical background and methodology, please also cite:"
   )
 )
 
-citHeader("For the theoretical background and applications of the xi-ACF framework, please also cite:")
-
-bibentry(
-  bibtype = "Unpublished",
-  title = "The U-Shaped Evolution of Bitcoin Efficiency",
-  author = person("Yasunori", "Watanabe"),
-  year = "2026",
-  note = "mimeo",
-  textVersion = "Watanabe, Y. (2026). The U-Shaped Evolution of Bitcoin Efficiency, mimeo."
-)
+# Return the combined citation object
+bib
