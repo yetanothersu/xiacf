@@ -139,7 +139,7 @@ List compute_xi_matrix_maxstat_cpp(const arma::mat& X, int max_lag, int n_surr, 
     }
     
     // Total tests: ACF and CCF for all positive lags up to max_lag
-    int num_tests = p * p * max_lag; 
+    int num_tests = p * p * (max_lag + 1); 
     
     IntegerVector var_lead(num_tests);
     IntegerVector var_lag(num_tests);
@@ -150,7 +150,7 @@ List compute_xi_matrix_maxstat_cpp(const arma::mat& X, int max_lag, int n_surr, 
     int idx = 0;
     for (int i = 0; i < p; i++) {
         for (int j = 0; j < p; j++) {
-            for (int k = 1; k <= max_lag; k++) {
+            for (int k = 0; k <= max_lag; k++) {
                 var_lead[idx] = i + 1; // 1-based index for R
                 var_lag[idx] = j + 1;
                 lag_vec[idx] = k;
@@ -171,7 +171,7 @@ List compute_xi_matrix_maxstat_cpp(const arma::mat& X, int max_lag, int n_surr, 
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < p; j++) {
                 if (i == j) continue; // Skip autocorrelation for max-statistic
-                for (int k = 1; k <= max_lag; k++) {
+                for (int k = 0; k <= max_lag; k++) {
                     double val = xi_coefficient(X_surr.col(i).subvec(0, n - k - 1), X_surr.col(j).subvec(k, n - 1));
                     if (val > current_max) current_max = val; // Find max across ALL pairs and lags
                 }

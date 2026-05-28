@@ -2,7 +2,6 @@
 % Please edit documentation in R/xi_ccf.R
 \name{xi_ccf}
 \alias{xi_ccf}
-\alias{print.xi_ccf}
 \title{Bivariate Xi-Cross-Correlation Function}
 \usage{
 xi_ccf(
@@ -15,8 +14,6 @@ xi_ccf(
   direction = c("both", "x_leads"),
   ...
 )
-
-\method{print}{xi_ccf}(x, ...)
 }
 \arguments{
 \item{x}{A numeric vector representing the first time series.}

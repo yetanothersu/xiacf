@@ -184,28 +184,42 @@ xi_ccf <- function(
     return(out)
 }
 
-#' @rdname xi_ccf
+#' Print method for xi_ccf
+#' @param x An object of class \code{xi_ccf}.
+#' @param ... Additional arguments passed to print.
+#' @return The original object \code{x} invisibly.
 #' @importFrom utils head
 #' @export
 print.xi_ccf <- function(x, ...) {
-    cat("\n=== Bivariate Xi-Cross-Correlation Function ===\n")
+    cat("\n=== Bivariate Xi-Cross-Correlation (CCF) ===\n")
+    cat(sprintf("Variables: %s, %s\n", x$x_name, x$y_name))
     cat(sprintf("Time series length: %d\n", x$n))
-    cat(sprintf("Max Lag Range: [-%d, %d]\n", x$max_lag, x$max_lag))
+    cat(sprintf("Max Lag: %d\n", x$max_lag))
+    cat(sprintf("Direction: %s\n", x$direction))
     cat(sprintf("Surrogates (MIAAFT): %d\n", x$n_surr))
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
-    cat("===============================================\n")
+    cat("============================================\n")
 
+    # NAを安全に除外しつつ、有意な経路を抽出
     sig_data <- x$data[
-        x$data$Xi_Excess > 0,
-        c("Lag", "Xi", "Global_Threshold", "Xi_Excess")
+        which(x$data$Xi_Excess > 0),
+        c(
+            "Lead_Var",
+            "Lag_Var",
+            "Lag",
+            "Xi",
+            "CCF",
+            "Global_Threshold",
+            "Xi_Excess"
+        )
     ]
 
     if (nrow(sig_data) == 0) {
         cat(
-            "No significant cross-correlations found above the global threshold.\n"
+            "No significant directional dependencies found above the global threshold.\n"
         )
     } else {
-        cat("Top Significant Lead-Lag Relationships:\n")
+        cat("Top 5 Strongest Causal Pathways:\n")
         print(
             utils::head(sig_data[order(-sig_data$Xi_Excess), ], 5),
             row.names = FALSE

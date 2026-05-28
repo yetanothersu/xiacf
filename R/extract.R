@@ -1,123 +1,106 @@
-#' Extract Individual Xi-ACF from a Multivariate Xi-Matrix
-#' @param object An object of class \code{xi_matrix}.
-#' @param var A character string specifying the variable name.
-#' @param x_raw Optional. The original data to calculate linear ACF.
+#' Extract Univariate Xi-ACF from a Multivariate Xi-Matrix
+#'
+#' @param obj An object of class \code{xi_matrix}.
+#' @param var A character string specifying the variable name to extract.
+#' @param ... Additional arguments passed to xi_acf.
+#'
 #' @return An object of class \code{xi_acf}.
 #' @export
-extract_xi_acf <- function(object, var, x_raw = NULL) {
-    if (!inherits(object, "xi_matrix")) {
-        stop("Input must be a 'xi_matrix' object.")
+extract_xi_acf <- function(obj, var, ...) {
+    if (!inherits(obj, "xi_matrix")) {
+        stop("Object must be of class 'xi_matrix'.")
     }
 
-    sub_df <- object$data[
-        object$data$Lead_Var == var & object$data$Lag_Var == var,
-    ]
-    if (nrow(sub_df) == 0) {
-        stop(sprintf("Variable '%s' not found.", var))
-    }
-
-    # Build base structure
-    res_df <- data.frame(
-        Lag = sub_df$Lag,
-        ACF = NA_real_,
-        Xi = sub_df$Xi,
-        Pointwise_Threshold = NA_real_,
-        Global_Threshold = sub_df$Global_Threshold,
-        ACF_CI = stats::qnorm(1 - object$sig_level / 2) / sqrt(object$n)
-    )
-
-    # Fill in linear correlation
-    if (!is.null(x_raw)) {
-        x_vec <- as.numeric(x_raw[, var])
-        lin_acf <- stats::acf(
-            x_vec,
-            lag.max = object$max_lag,
-            plot = FALSE,
-            na.action = stats::na.pass
+    raw_data_name <- "data_raw"
+    if (is.null(obj[[raw_data_name]])) {
+        stop(
+            "Raw data is not preserved in the xi_matrix object. Cannot compute on-demand ACF."
         )
-        res_df$ACF <- as.numeric(lin_acf$acf)[-1]
     }
 
-    res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
+    if (!(var %in% colnames(obj[[raw_data_name]]))) {
+        stop(sprintf(
+            "Variable '%s' not found in the original matrix data.",
+            var
+        ))
+    }
 
-    structure(
-        list(
-            data = res_df,
-            n = object$n,
-            max_lag = object$max_lag,
-            n_surr = object$n_surr,
-            sig_level = object$sig_level
-        ),
-        class = "xi_acf"
+    x_raw <- obj[[raw_data_name]][[var]]
+
+    # Re-calculate xi_acf on demand
+    res <- xi_acf(
+        x = x_raw,
+        max_lag = obj$max_lag,
+        n_surr = obj$n_surr,
+        sig_level = obj$sig_level,
+        ...
     )
+
+    # Clean up the messy deparsed variable name
+    res$x_name <- var
+
+    return(res)
 }
 
-#' Extract Pairwise Xi-CCF from a Multivariate Xi-Matrix
-#' @param object An object of class \code{xi_matrix}.
-#' @param var_x Variable X name.
-#' @param var_y Variable Y name.
-#' @param x_raw Optional. The original data to calculate linear CCF.
+#' Extract Bivariate Xi-CCF from a Multivariate Xi-Matrix
+#'
+#' @param obj An object of class \code{xi_matrix}.
+#' @param var_x A character string specifying the lead variable.
+#' @param var_y A character string specifying the lag variable.
+#' @param ... Additional arguments passed to xi_ccf.
+#'
 #' @return An object of class \code{xi_ccf}.
 #' @export
-extract_xi_ccf <- function(object, var_x, var_y, x_raw = NULL) {
-    if (!inherits(object, "xi_matrix")) {
-        stop("Input must be a 'xi_matrix' object.")
+extract_xi_ccf <- function(obj, var_x, var_y, ...) {
+    if (!inherits(obj, "xi_matrix")) {
+        stop("Object must be of class 'xi_matrix'.")
     }
 
-    # X leads Y (Positive lags in CCF sense)
-    sub_fwd <- object$data[
-        object$data$Lead_Var == var_x & object$data$Lag_Var == var_y,
-    ]
-    # Y leads X (Negative lags in CCF sense)
-    sub_bwd <- object$data[
-        object$data$Lead_Var == var_y & object$data$Lag_Var == var_x,
-    ]
-
-    if (nrow(sub_fwd) == 0 && nrow(sub_bwd) == 0) {
-        stop("Variable pair not found.")
+    raw_data_name <- "data_raw"
+    if (is.null(obj[[raw_data_name]])) {
+        stop(
+            "Raw data is not preserved in the xi_matrix object. Cannot compute on-demand CCF."
+        )
     }
 
-    if (nrow(sub_bwd) > 0) {
-        sub_bwd$Lag <- -sub_bwd$Lag
+    if (
+        !(var_x %in% colnames(obj[[raw_data_name]])) ||
+            !(var_y %in% colnames(obj[[raw_data_name]]))
+    ) {
+        stop(sprintf(
+            "Variables '%s' and/or '%s' not found in the original matrix data.",
+            var_x,
+            var_y
+        ))
     }
-    combined <- rbind(sub_bwd, sub_fwd)
-    combined <- combined[order(combined$Lag), ]
 
-    res_df <- data.frame(
-        Lag = combined$Lag,
-        CCF = NA_real_,
-        Xi = combined$Xi,
-        Pointwise_Threshold = NA_real_,
-        Global_Threshold = combined$Global_Threshold,
-        CCF_CI = stats::qnorm(1 - object$sig_level / 2) / sqrt(object$n)
+    # Re-calculate xi_ccf on demand
+    res <- xi_ccf(
+        x = obj[[raw_data_name]][[var_x]],
+        y = obj[[raw_data_name]][[var_y]],
+        max_lag = obj$max_lag,
+        n_surr = obj$n_surr,
+        sig_level = obj$sig_level,
+        ...
     )
 
-    if (!is.null(x_raw)) {
-        lin_ccf <- stats::ccf(
-            as.numeric(x_raw[, var_x]),
-            as.numeric(x_raw[, var_y]),
-            lag.max = object$max_lag,
-            plot = FALSE,
-            na.action = stats::na.pass
-        )
-        # Accurately map lags to stats::ccf results
-        ccf_map <- stats::setNames(
-            as.numeric(lin_ccf$acf),
-            as.numeric(lin_ccf$lag)
-        )
-        res_df$CCF <- unname(ccf_map[as.character(res_df$Lag)])
+    # Capture the messy auto-generated names from substitute()
+    old_x <- res$x_name
+    old_y <- res$y_name
+
+    # Override the metadata names
+    res$x_name <- var_x
+    res$y_name <- var_y
+
+    # Clean up the data frame columns so autoplot facet labels are elegant
+    if (!is.null(res$data$Lead_Var)) {
+        res$data$Lead_Var[res$data$Lead_Var == old_x] <- var_x
+        res$data$Lead_Var[res$data$Lead_Var == old_y] <- var_y
+    }
+    if (!is.null(res$data$Lag_Var)) {
+        res$data$Lag_Var[res$data$Lag_Var == old_x] <- var_x
+        res$data$Lag_Var[res$data$Lag_Var == old_y] <- var_y
     }
 
-    res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
-
-    structure(
-        list(
-            data = res_df,
-            n = object$n,
-            max_lag = object$max_lag,
-            n_surr = object$n_surr,
-            sig_level = object$sig_level
-        ),
-        class = "xi_ccf"
-    )
+    return(res)
 }

@@ -86,7 +86,7 @@ xi_matrix <- function(
     }
 
     num_pairs <- p * (p - 1)
-    num_tests <- num_pairs * max_lag
+    num_tests <- num_pairs * (max_lag + 1) # Each pair has max_lag + 1 tests (including lag 0)
     check_surrogate_count <- function(n_surr, sig_level, num_tests) {
         min_required <- ceiling(1 / sig_level) - 1
         if (n_surr < min_required) {
@@ -141,18 +141,17 @@ xi_matrix <- function(
         res_df$Xi_Excess[is_self] <- NA
     }
 
-    out <- list(
-        data = res_df,
-        n = n,
-        p = p,
-        max_lag = max_lag,
-        n_surr = n_surr,
-        sig_level = sig_level,
-        var_names = var_names
+    res <- structure(
+        list(
+            data = res_df,
+            max_lag = max_lag,
+            n_surr = n_surr,
+            sig_level = sig_level,
+            data_raw = x
+        ),
+        class = "xi_matrix"
     )
-    class(out) <- "xi_matrix"
-
-    return(out)
+    return(res)
 }
 
 #' Print method for xi_matrix
