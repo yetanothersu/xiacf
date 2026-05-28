@@ -55,7 +55,7 @@ List compute_xi_acf_maxstat_cpp(NumericVector x, int max_lag, int n_surr, int ma
 //' Compute empirical Xi-CCF and Max-Statistic null distribution
 //' @noRd
 // [[Rcpp::export]]
-List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr, int max_iter = 100) {
+List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr, int max_iter = 100, bool both_directions = true) {
     vec vx = as<vec>(x);
     vec vy = as<vec>(y);
     int n = vx.n_elem;
@@ -64,20 +64,22 @@ List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, i
         stop("C++ Error: Time series length is too short.");
     }
     
-    int num_tests = 2 * max_lag + 1; // -max_lag to +max_lag
-    vec xi_emp(num_tests, fill::zeros);
+    // 1. Empirical CCF (Compute directed dependencies starting from lag 0)
+    vec xi_emp_x_leads(max_lag + 1, fill::zeros);
+    vec xi_emp_y_leads;
     
-    // 1. Empirical CCF
-    int idx = 0;
-    for (int k = -max_lag; k <= max_lag; k++) {
-        if (k < 0) { // Y leads X
-            xi_emp(idx) = xi_coefficient(vy.subvec(0, n + k - 1), vx.subvec(-k, n - 1));
-        } else if (k > 0) { // X leads Y
-            xi_emp(idx) = xi_coefficient(vx.subvec(0, n - k - 1), vy.subvec(k, n - 1));
-        } else { // lag 0
-            xi_emp(idx) = xi_coefficient(vx, vy);
+    if (both_directions) {
+        xi_emp_y_leads.zeros(max_lag + 1);
+    }
+    
+    for (int k = 0; k <= max_lag; k++) {
+        // X leads Y: X_t -> Y_{t+k} (k=0 is contemporaneous X -> Y)
+        xi_emp_x_leads(k) = xi_coefficient(vx.subvec(0, n - k - 1), vy.subvec(k, n - 1));
+        
+        if (both_directions) {
+            // Y leads X: Y_t -> X_{t+k} (k=0 is contemporaneous Y -> X)
+            xi_emp_y_leads(k) = xi_coefficient(vy.subvec(0, n - k - 1), vx.subvec(k, n - 1));
         }
-        idx++;
     }
     
     // 2. Generate MIAAFT Surrogates for the bivariate system [X, Y]
@@ -87,37 +89,42 @@ List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, i
     mat X_surr(n, 2);
     
     vec max_stat_vec(n_surr, fill::zeros);
-    mat pointwise_xi(num_tests, n_surr, fill::zeros);
     
-    // 3. FWER Control Loop
+    // 3. FWER Control Loop (Dynamic adjustment of family size based on direction)
     for (int s = 0; s < n_surr; s++) {
         generate_single_miaaft(X_mat, X_surr, max_iter);
         vec sx = X_surr.col(0);
         vec sy = X_surr.col(1);
         
         double current_max = -1.0;
-        idx = 0;
-        for (int k = -max_lag; k <= max_lag; k++) {
-            double val = 0;
-            if (k < 0) {
-                val = xi_coefficient(sy.subvec(0, n + k - 1), sx.subvec(-k, n - 1));
-            } else if (k > 0) {
-                val = xi_coefficient(sx.subvec(0, n - k - 1), sy.subvec(k, n - 1));
-            } else {
-                val = xi_coefficient(sx, sy);
+        
+        for (int k = 0; k <= max_lag; k++) {
+            // Evaluate X leads Y
+            double val_x = xi_coefficient(sx.subvec(0, n - k - 1), sy.subvec(k, n - 1));
+            if (val_x > current_max) current_max = val_x;
+            
+            // Evaluate Y leads X (include in the FWER family only if both_directions is true)
+            if (both_directions) {
+                double val_y = xi_coefficient(sy.subvec(0, n - k - 1), sx.subvec(k, n - 1));
+                if (val_y > current_max) current_max = val_y;
             }
-            pointwise_xi(idx, s) = val;
-            if (val > current_max) current_max = val; // Find max across all lags
-            idx++;
         }
         max_stat_vec(s) = current_max;
     }
     
-    return List::create(
-        Named("xi_empirical") = xi_emp,
-        Named("pointwise_dist") = pointwise_xi,
-        Named("max_statistic_dist") = max_stat_vec
-    );
+    // 4. Return results based on requested direction
+    if (both_directions) {
+        return List::create(
+            Named("xi_emp_x_leads") = xi_emp_x_leads,
+            Named("xi_emp_y_leads") = xi_emp_y_leads,
+            Named("max_statistic_dist") = max_stat_vec
+        );
+    } else {
+        return List::create(
+            Named("xi_emp_x_leads") = xi_emp_x_leads,
+            Named("max_statistic_dist") = max_stat_vec
+        );
+    }
 }
 
 //' Compute empirical Xi-Matrix and Max-Statistic null distribution

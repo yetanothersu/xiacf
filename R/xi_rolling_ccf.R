@@ -96,22 +96,33 @@ run_rolling_xi_ccf <- function(
                     y = as.numeric(y_window),
                     max_lag = as.integer(max_lag),
                     n_surr = as.integer(n_surr),
-                    max_iter = 100L
+                    max_iter = 100L,
+                    both_directions = TRUE
                 )
 
+                num_tests <- 2 * (max_lag + 1)
                 # Calculate the global threshold from the Max-statistic distribution
                 global_threshold <- stats::quantile(
                     cpp_res$max_statistic_dist,
-                    probs = 1 - sig_level,
-                    names = FALSE
+                    1 - sig_level,
+                    na.rm = TRUE
                 )
 
-                num_tests <- 2 * max_lag + 1
+                lag_vec <- 0:max_lag
                 df_window <- data.frame(
-                    Window_ID = i,
-                    Lag = seq(-max_lag, max_lag, by = 1),
-                    Xi = cpp_res$xi_empirical,
-                    Global_Threshold = rep(global_threshold, num_tests)
+                    Window_ID = rep(i, num_tests),
+                    Lead_Var = c(
+                        rep("x", length(lag_vec)),
+                        rep("y", length(lag_vec))
+                    ),
+                    Lag_Var = c(
+                        rep("y", length(lag_vec)),
+                        rep("x", length(lag_vec))
+                    ),
+                    Lag = c(lag_vec, lag_vec),
+                    Xi = c(cpp_res$xi_emp_x_leads, cpp_res$xi_emp_y_leads),
+                    Global_Threshold = rep(global_threshold, num_tests),
+                    stringsAsFactors = FALSE
                 )
 
                 # Calculate excess Xi above the threshold

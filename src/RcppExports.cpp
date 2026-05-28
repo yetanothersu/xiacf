@@ -52,8 +52,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // compute_xi_ccf_maxstat_cpp
-List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr, int max_iter);
-RcppExport SEXP _xiacf_compute_xi_ccf_maxstat_cpp(SEXP xSEXP, SEXP ySEXP, SEXP max_lagSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
+List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr, int max_iter, bool both_directions);
+RcppExport SEXP _xiacf_compute_xi_ccf_maxstat_cpp(SEXP xSEXP, SEXP ySEXP, SEXP max_lagSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP, SEXP both_directionsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -62,7 +62,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type max_lag(max_lagSEXP);
     Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
     Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    rcpp_result_gen = Rcpp::wrap(compute_xi_ccf_maxstat_cpp(x, y, max_lag, n_surr, max_iter));
+    Rcpp::traits::input_parameter< bool >::type both_directions(both_directionsSEXP);
+    rcpp_result_gen = Rcpp::wrap(compute_xi_ccf_maxstat_cpp(x, y, max_lag, n_surr, max_iter, both_directions));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -97,7 +98,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_xiacf_surrogate_iaaft_cpp", (DL_FUNC) &_xiacf_surrogate_iaaft_cpp, 3},
     {"_xiacf_surrogate_miaaft_cpp", (DL_FUNC) &_xiacf_surrogate_miaaft_cpp, 3},
     {"_xiacf_compute_xi_acf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_acf_maxstat_cpp, 4},
-    {"_xiacf_compute_xi_ccf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_ccf_maxstat_cpp, 5},
+    {"_xiacf_compute_xi_ccf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_ccf_maxstat_cpp, 6},
     {"_xiacf_compute_xi_matrix_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_matrix_maxstat_cpp, 4},
     {"_xiacf_xi_coefficient_export", (DL_FUNC) &_xiacf_xi_coefficient_export, 2},
     {NULL, NULL, 0}
