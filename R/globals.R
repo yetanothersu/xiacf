@@ -9,7 +9,8 @@ utils::globalVariables(c(
     "CCF",
     "Xi",
     "Lag",
-    "Window_End_Time",
-    "Xi_Excess",
-    "i"
+    "i",
+    "zero_line",
+    "Label",
+    "Pathway"
 ))
