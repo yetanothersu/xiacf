@@ -2,32 +2,41 @@
 % Please edit documentation in R/xi_ccf.R
 \name{xi_ccf}
 \alias{xi_ccf}
-\alias{print.xi_ccf}
-\title{Directional Xi-CCF Test for Bivariate Time Series}
+\title{Bivariate Xi-Cross-Correlation Function}
 \usage{
-xi_ccf(x, y, max_lag = 10, n_surr = 399, sig_level = 0.05, max_iter = 100, ...)
-
-\method{print}{xi_ccf}(x, ...)
+xi_ccf(
+  x,
+  y,
+  max_lag = 20,
+  n_surr = 399,
+  sig_level = 0.05,
+  max_iter = 100,
+  direction = c("both", "x_leads"),
+  ...
+)
 }
 \arguments{
-\item{x}{A numeric vector. Must not contain missing values (NA) or be a constant.}
+\item{x}{A numeric vector representing the first time series.}
 
-\item{y}{A numeric vector of the same length as x. Must not contain missing values or be a constant.}
+\item{y}{A numeric vector representing the second time series.}
 
-\item{max_lag}{An integer specifying the maximum lag. Default is 10.}
+\item{max_lag}{An integer specifying the maximum lag to compute. Default is 20.}
 
-\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets to generate. Default is 399.}
+\item{n_surr}{An integer specifying the number of MIAAFT surrogate datasets. Default is 399.}
 
-\item{sig_level}{A numeric value between 0 and 1 specifying the significance level for FWER control. Default is 0.05.}
+\item{sig_level}{A numeric value specifying the significance level (FWER). Default is 0.05.}
 
 \item{max_iter}{An integer specifying the maximum iterations for the MIAAFT algorithm. Default is 100.}
+
+\item{direction}{A character string specifying the testing direction.
+"both" computes X->Y and Y->X. "x_leads" computes only X->Y. Default is "both".}
 
 \item{...}{Additional arguments.}
 }
 \value{
-An object of class \code{"xi_ccf"} containing the empirical correlations and Max-statistic thresholds.
+An S3 object of class \code{xi_ccf}.
 }
 \description{
-Computes the empirical Cross-Correlation Function (CCF) based on Chatterjee's Xi,
-and evaluates its statistical significance using MIAAFT surrogates.
+Computes the directional Chatterjee's Xi coefficient between two time series
+across multiple lags, with Family-Wise Error Rate (FWER) control.
 }

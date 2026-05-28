@@ -1,28 +1,38 @@
-#' Directional Xi-CCF Test for Bivariate Time Series
+#' Bivariate Xi-Cross-Correlation Function
 #'
-#' Computes the empirical Cross-Correlation Function (CCF) based on Chatterjee's Xi,
-#' and evaluates its statistical significance using MIAAFT surrogates.
+#' Computes the directional Chatterjee's Xi coefficient between two time series
+#' across multiple lags, with Family-Wise Error Rate (FWER) control.
 #'
-#' @param x A numeric vector. Must not contain missing values (NA) or be a constant.
-#' @param y A numeric vector of the same length as x. Must not contain missing values or be a constant.
-#' @param max_lag An integer specifying the maximum lag. Default is 10.
-#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets to generate. Default is 399.
-#' @param sig_level A numeric value between 0 and 1 specifying the significance level for FWER control. Default is 0.05.
+#' @param x A numeric vector representing the first time series.
+#' @param y A numeric vector representing the second time series.
+#' @param max_lag An integer specifying the maximum lag to compute. Default is 20.
+#' @param n_surr An integer specifying the number of MIAAFT surrogate datasets. Default is 399.
+#' @param sig_level A numeric value specifying the significance level (FWER). Default is 0.05.
 #' @param max_iter An integer specifying the maximum iterations for the MIAAFT algorithm. Default is 100.
+#' @param direction A character string specifying the testing direction.
+#'        "both" computes X->Y and Y->X. "x_leads" computes only X->Y. Default is "both".
 #' @param ... Additional arguments.
 #'
-#' @return An object of class \code{"xi_ccf"} containing the empirical correlations and Max-statistic thresholds.
-#' @rdname xi_ccf
+#' @return An S3 object of class \code{xi_ccf}.
 #' @export
 xi_ccf <- function(
     x,
     y,
-    max_lag = 10,
+    max_lag = 20,
     n_surr = 399,
     sig_level = 0.05,
     max_iter = 100,
+    direction = c("both", "x_leads"),
     ...
 ) {
+    # Parse direction argument
+    direction <- match.arg(direction)
+    both_directions <- (direction == "both")
+
+    # Extract variable names for plotting
+    x_name <- deparse(substitute(x))
+    y_name <- deparse(substitute(y))
+
     # --- Backward Compatibility Check for sig_level ---
     if (sig_level <= 0 || sig_level >= 1) {
         stop("Parameter 'sig_level' must be strictly between 0 and 1.")
@@ -40,118 +50,176 @@ xi_ccf <- function(
         sig_level <- 1 - sig_level
     }
 
-    if (!is.numeric(x) || !is.numeric(y)) {
-        stop("Inputs 'x' and 'y' must be numeric vectors.")
+    # Input validation
+    if (length(x) != length(y)) {
+        stop("Time series 'x' and 'y' must have the same length.")
     }
     if (any(is.na(x)) || any(is.na(y))) {
         stop(
-            "Inputs contain NA values. Please remove or impute them before running xi_ccf()."
+            "Input time series contain NA values. Please handle them before running xi_ccf()."
         )
     }
-    n <- length(x)
-    if (n != length(y)) {
-        stop("Lengths of 'x' and 'y' must be exactly the same.")
+    if (stats::var(x) == 0 || stats::var(y) == 0) {
+        stop("Time series 'x' and 'y' must have non-zero variance.")
     }
-    if (n < (max_lag + 2)) {
+
+    n <- length(x)
+    if (n < max_lag + 2) {
         stop(sprintf(
             "Time series length (%d) is too short for max_lag = %d.",
             n,
             max_lag
         ))
     }
-    if (stats::var(x) == 0 || stats::var(y) == 0) {
-        stop(
-            "One or both input vectors have zero variance. Xi coefficient cannot be computed."
-        )
+
+    # Dynamic calculation of family size (max_lag + 1 because it includes lag 0)
+    num_tests <- if (both_directions) 2 * (max_lag + 1) else (max_lag + 1)
+
+    # Surrogate count warning logic
+    min_required <- ceiling(1 / sig_level) - 1
+    if (n_surr < min_required) {
+        stop(sprintf(
+            "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
+            n_surr,
+            as.integer((1 - sig_level) * 100),
+            min_required
+        ))
+    }
+    recommended <- ceiling(num_tests / sig_level)
+    if (n_surr < recommended) {
+        warning(sprintf(
+            "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
+            num_tests,
+            sig_level,
+            n_surr,
+            recommended
+        ))
     }
 
-    num_tests <- 2 * max_lag + 1
-    check_surrogate_count <- function(n_surr, sig_level, num_tests) {
-        min_required <- ceiling(1 / sig_level) - 1
-        if (n_surr < min_required) {
-            stop(sprintf(
-                "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
-                n_surr,
-                as.integer((1 - sig_level) * 100),
-                min_required
-            ))
-        }
-        recommended <- ceiling(num_tests / sig_level)
-        if (n_surr < recommended) {
-            warning(sprintf(
-                "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
-                num_tests,
-                sig_level,
-                n_surr,
-                recommended
-            ))
-        }
-    }
-    check_surrogate_count(n_surr, sig_level, num_tests)
-
-    ccf_obj <- stats::ccf(x, y, lag.max = max_lag, plot = FALSE)
-    lags <- as.vector(ccf_obj$lag)
-    ccf_vals <- as.vector(ccf_obj$acf)
-
+    # Execute C++ engine
     cpp_res <- compute_xi_ccf_maxstat_cpp(
         x = as.numeric(x),
         y = as.numeric(y),
         max_lag = as.integer(max_lag),
         n_surr = as.integer(n_surr),
-        max_iter = as.integer(max_iter)
+        max_iter = as.integer(max_iter),
+        both_directions = both_directions
     )
 
+    # Calculate Global Threshold
     global_threshold <- stats::quantile(
         cpp_res$max_statistic_dist,
-        probs = 1 - sig_level,
-        names = FALSE
+        1 - sig_level,
+        na.rm = TRUE
     )
 
-    ccf_ci <- stats::qnorm((1 + (1 - sig_level)) / 2) / sqrt(n)
-
-    df_res <- data.frame(
-        Lag = seq(-max_lag, max_lag, by = 1),
-        CCF = ccf_vals,
-        Xi = cpp_res$xi_empirical,
-        Global_Threshold = rep(global_threshold, num_tests),
-        CCF_CI = rep(ccf_ci, num_tests)
+    # =========================================================================
+    # Compute linear CCF and Confidence Interval (CI)
+    # Note: In standard stats::ccf(), negative lags represent X->Y,
+    # and positive lags represent Y->X.
+    # =========================================================================
+    ccf_obj <- stats::ccf(
+        as.numeric(x),
+        as.numeric(y),
+        lag.max = max_lag,
+        plot = FALSE
     )
-    df_res$Xi_Excess <- pmax(0, df_res$Xi - df_res$Global_Threshold)
 
-    structure(
-        list(
-            data = df_res,
-            n = n,
-            max_lag = max_lag,
-            n_surr = n_surr,
-            sig_level = sig_level
-        ),
-        class = "xi_ccf"
+    # X leads Y (lag 0 to max_lag): extract and reverse the negative lag side of CCF
+    ccf_x_leads <- rev(as.vector(ccf_obj$acf[1:(max_lag + 1)]))
+    # Y leads X (lag 0 to max_lag): extract the positive lag side of CCF
+    ccf_y_leads <- as.vector(ccf_obj$acf[(max_lag + 1):(2 * max_lag + 1)])
+    # Asymptotic confidence interval for CCF
+    ccf_ci <- stats::qnorm(1 - sig_level / 2) / sqrt(n)
+
+    # Format output into a tidy data frame
+    lag_vec <- 0:max_lag
+
+    if (both_directions) {
+        # Bind both directions vertically (Long format)
+        res_df <- data.frame(
+            Lead_Var = c(
+                rep(x_name, length(lag_vec)),
+                rep(y_name, length(lag_vec))
+            ),
+            Lag_Var = c(
+                rep(y_name, length(lag_vec)),
+                rep(x_name, length(lag_vec))
+            ),
+            Lag = c(lag_vec, lag_vec),
+            Xi = c(cpp_res$xi_emp_x_leads, cpp_res$xi_emp_y_leads),
+            CCF = c(ccf_x_leads, ccf_y_leads),
+            CCF_CI = rep(ccf_ci, 2 * length(lag_vec)),
+            stringsAsFactors = FALSE
+        )
+    } else {
+        # X leads Y only
+        res_df <- data.frame(
+            Lead_Var = rep(x_name, length(lag_vec)),
+            Lag_Var = rep(y_name, length(lag_vec)),
+            Lag = lag_vec,
+            Xi = cpp_res$xi_emp_x_leads,
+            CCF = ccf_x_leads,
+            CCF_CI = rep(ccf_ci, length(lag_vec)),
+            stringsAsFactors = FALSE
+        )
+    }
+
+    # Calculate threshold and excess
+    res_df$Global_Threshold <- global_threshold
+    res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
+
+    # Construct output object
+    out <- list(
+        data = res_df,
+        n = n,
+        max_lag = max_lag,
+        n_surr = n_surr,
+        sig_level = sig_level,
+        direction = direction,
+        x_name = x_name,
+        y_name = y_name
     )
+    class(out) <- "xi_ccf"
+    return(out)
 }
 
-#' @rdname xi_ccf
+#' Print method for xi_ccf
+#' @param x An object of class \code{xi_ccf}.
+#' @param ... Additional arguments passed to print.
+#' @return The original object \code{x} invisibly.
 #' @importFrom utils head
 #' @export
 print.xi_ccf <- function(x, ...) {
-    cat("\n=== Bivariate Xi-Cross-Correlation Function ===\n")
+    cat("\n=== Bivariate Xi-Cross-Correlation (CCF) ===\n")
+    cat(sprintf("Variables: %s, %s\n", x$x_name, x$y_name))
     cat(sprintf("Time series length: %d\n", x$n))
-    cat(sprintf("Max Lag Range: [-%d, %d]\n", x$max_lag, x$max_lag))
+    cat(sprintf("Max Lag: %d\n", x$max_lag))
+    cat(sprintf("Direction: %s\n", x$direction))
     cat(sprintf("Surrogates (MIAAFT): %d\n", x$n_surr))
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
-    cat("===============================================\n")
+    cat("============================================\n")
 
+    # NAを安全に除外しつつ、有意な経路を抽出
     sig_data <- x$data[
-        x$data$Xi_Excess > 0,
-        c("Lag", "Xi", "Global_Threshold", "Xi_Excess")
+        which(x$data$Xi_Excess > 0),
+        c(
+            "Lead_Var",
+            "Lag_Var",
+            "Lag",
+            "Xi",
+            "CCF",
+            "Global_Threshold",
+            "Xi_Excess"
+        )
     ]
 
     if (nrow(sig_data) == 0) {
         cat(
-            "No significant cross-correlations found above the global threshold.\n"
+            "No significant directional dependencies found above the global threshold.\n"
         )
     } else {
-        cat("Top Significant Lead-Lag Relationships:\n")
+        cat("Top 5 Strongest Causal Pathways:\n")
         print(
             utils::head(sig_data[order(-sig_data$Xi_Excess), ], 5),
             row.names = FALSE

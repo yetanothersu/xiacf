@@ -29,8 +29,8 @@ compute_xi_acf_maxstat_cpp <- function(x, max_lag, n_surr, max_iter = 100L) {
 
 #' Compute empirical Xi-CCF and Max-Statistic null distribution
 #' @noRd
-compute_xi_ccf_maxstat_cpp <- function(x, y, max_lag, n_surr, max_iter = 100L) {
-    .Call(`_xiacf_compute_xi_ccf_maxstat_cpp`, x, y, max_lag, n_surr, max_iter)
+compute_xi_ccf_maxstat_cpp <- function(x, y, max_lag, n_surr, max_iter = 100L, both_directions = TRUE) {
+    .Call(`_xiacf_compute_xi_ccf_maxstat_cpp`, x, y, max_lag, n_surr, max_iter, both_directions)
 }
 
 #' Compute empirical Xi-Matrix and Max-Statistic null distribution

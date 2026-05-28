@@ -2,20 +2,20 @@
 % Please edit documentation in R/extract.R
 \name{extract_xi_acf}
 \alias{extract_xi_acf}
-\title{Extract Individual Xi-ACF from a Multivariate Xi-Matrix}
+\title{Extract Univariate Xi-ACF from a Multivariate Xi-Matrix}
 \usage{
-extract_xi_acf(object, var, x_raw = NULL)
+extract_xi_acf(obj, var, ...)
 }
 \arguments{
-\item{object}{An object of class \code{xi_matrix}.}
+\item{obj}{An object of class \code{xi_matrix}.}
 
-\item{var}{A character string specifying the variable name.}
+\item{var}{A character string specifying the variable name to extract.}
 
-\item{x_raw}{Optional. The original data to calculate linear ACF.}
+\item{...}{Additional arguments passed to xi_acf.}
 }
 \value{
 An object of class \code{xi_acf}.
 }
 \description{
-Extract Individual Xi-ACF from a Multivariate Xi-Matrix
+Extract Univariate Xi-ACF from a Multivariate Xi-Matrix
 }

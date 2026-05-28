@@ -2,22 +2,22 @@
 % Please edit documentation in R/extract.R
 \name{extract_xi_ccf}
 \alias{extract_xi_ccf}
-\title{Extract Pairwise Xi-CCF from a Multivariate Xi-Matrix}
+\title{Extract Bivariate Xi-CCF from a Multivariate Xi-Matrix}
 \usage{
-extract_xi_ccf(object, var_x, var_y, x_raw = NULL)
+extract_xi_ccf(obj, var_x, var_y, ...)
 }
 \arguments{
-\item{object}{An object of class \code{xi_matrix}.}
+\item{obj}{An object of class \code{xi_matrix}.}
 
-\item{var_x}{Variable X name.}
+\item{var_x}{A character string specifying the lead variable.}
 
-\item{var_y}{Variable Y name.}
+\item{var_y}{A character string specifying the lag variable.}
 
-\item{x_raw}{Optional. The original data to calculate linear CCF.}
+\item{...}{Additional arguments passed to xi_ccf.}
 }
 \value{
 An object of class \code{xi_ccf}.
 }
 \description{
-Extract Pairwise Xi-CCF from a Multivariate Xi-Matrix
+Extract Bivariate Xi-CCF from a Multivariate Xi-Matrix
 }
