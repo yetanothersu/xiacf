@@ -5,6 +5,11 @@
 #' @param ... Additional arguments passed to xi_acf.
 #'
 #' @return An object of class \code{xi_acf}.
+#' #' @note
+#' This function performs a fresh re-calculation of the surrogate data distribution specifically for the targeted variables.
+#' As a result, two differences from the original matrix output should be expected:
+#' 1. **FWER Recalibration:** The global threshold will be recalibrated for the bivariate (or univariate) case, typically making it less conservative and restoring statistical power for the specific pathway.
+#' 2. **Monte Carlo Variation:** Due to the randomized nature of surrogate data generation, slight numerical variations in the thresholds and confidence intervals may occur unless a random seed is explicitly set (e.g., `set.seed()`) immediately prior to calling this extraction function.
 #' @export
 extract_xi_acf <- function(obj, var, ...) {
     if (!inherits(obj, "xi_matrix")) {
@@ -50,6 +55,11 @@ extract_xi_acf <- function(obj, var, ...) {
 #' @param ... Additional arguments passed to xi_ccf.
 #'
 #' @return An object of class \code{xi_ccf}.
+#' #' @note
+#' This function performs a fresh re-calculation of the surrogate data distribution specifically for the targeted variables.
+#' As a result, two differences from the original matrix output should be expected:
+#' 1. **FWER Recalibration:** The global threshold will be recalibrated for the bivariate (or univariate) case, typically making it less conservative and restoring statistical power for the specific pathway.
+#' 2. **Monte Carlo Variation:** Due to the randomized nature of surrogate data generation, slight numerical variations in the thresholds and confidence intervals may occur unless a random seed is explicitly set (e.g., `set.seed()`) immediately prior to calling this extraction function.
 #' @export
 extract_xi_ccf <- function(obj, var_x, var_y, ...) {
     if (!inherits(obj, "xi_matrix")) {

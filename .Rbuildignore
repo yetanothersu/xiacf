@@ -8,3 +8,4 @@
 ^git\.log$
 ^repomix-output\.md$
 ^repomix-output\.xml$
+^AI_INSTRUCTIONS\.md$
