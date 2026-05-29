@@ -53,8 +53,6 @@ markets:
   `doFuture`) rolling window functions to capture time-varying
   dependencies smoothly and efficiently.
 
-------------------------------------------------------------------------
-
 ## Installation
 
 You can install the stable version of xiacf from CRAN with:
@@ -85,7 +83,7 @@ library(xiacf)
 library(ggplot2)
 
 set.seed(42)
-n <- 300 # サンプルサイズを少し増やしてシグナルを安定させます
+n <- 300
 
 # Generate a series with V-shaped auto-dependence (mean zero)
 # Standard Pearson ACF will miss this, but Xi-ACF will detect it.
@@ -96,18 +94,18 @@ for (t in 2:n) {
   A[t] <- abs(A[t - 1]) - 0.8 + rnorm(1, sd = 0.2)
 }
 
-res_acf <- xi_acf(A, max_lag = 5, n_surr = 240)
+res_acf <- xi_acf(A, max_lag = 5, n_surr = 249)
 print(res_acf)
 #> 
 #> === Univariate Xi-Autocorrelation Function ===
 #> Time series length: 300
 #> Max Lag: 5
-#> Surrogates (IAAFT): 240
+#> Surrogates (IAAFT): 249
 #> Significance Level: 0.05 (FWER controlled)
 #> ==============================================
 #> Significant Lags:
 #>  Lag        Xi Global_Threshold Xi_Excess
-#>    1 0.6301542        0.5301385 0.1000157
+#>    1 0.6301542        0.5302148 0.0999394
 autoplot(res_acf)
 ```
 
@@ -133,7 +131,7 @@ for (t in 3:n) {
 # Without this, Y is always positive, making abs(Y) purely linear later!
 Y <- as.numeric(scale(Y))
 
-res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 240, direction = "both")
+res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 249, direction = "both")
 print(res_ccf)
 #> 
 #> === Bivariate Xi-Cross-Correlation (CCF) ===
@@ -141,12 +139,12 @@ print(res_ccf)
 #> Time series length: 300
 #> Max Lag: 5
 #> Direction: both
-#> Surrogates (MIAAFT): 240
+#> Surrogates (MIAAFT): 249
 #> Significance Level: 0.05 (FWER controlled)
 #> ============================================
 #> Top 5 Strongest Causal Pathways:
-#>  Lead_Var Lag_Var Lag        Xi        CCF Global_Threshold Xi_Excess
-#>         X       Y   2 0.7937993 -0.0216747        0.4887269 0.3050724
+#>  Lead_Var Lag_Var Lag        Xi      CCF Global_Threshold Xi_Excess
+#>         X       Y   2 0.7584119 0.123921        0.4662698 0.2921421
 autoplot(res_ccf)
 ```
 
@@ -171,11 +169,7 @@ Z <- as.numeric(scale(Z))
 df_system <- data.frame(X = X, Y = Y, Z = Z)
 
 # Compute the multivariate Xi-correlogram matrix
-res_matrix <- xi_matrix(df_system, max_lag = 3, n_surr = 360)
-#> Warning in check_surrogate_count(n_surr, sig_level, num_tests): Warning: For 24
-#> simultaneous tests at sig_level = 0.05, the empirical distribution of the
-#> max-statistic may be unstable with n_surr = 360. Recommended n_surr is at least
-#> 480.
+res_matrix <- xi_matrix(df_system, max_lag = 3, n_surr = 499)
 
 autoplot(res_matrix)
 ```
@@ -208,23 +202,35 @@ rolling_res <- run_rolling_xi_ccf(
   window_size = 50,
   step_size = 10,
   max_lag = 3,
-  n_surr = 200
+  n_surr = 199
 )
 
 head(rolling_res)
 #>   Window_ID Lead_Var Lag_Var Lag        Xi Global_Threshold Xi_Excess
-#> 1         1        x       y   0 0.3240816        0.5813469 0.0000000
-#> 2         1        x       y   1 0.3494898        0.5813469 0.0000000
-#> 3         1        x       y   2 0.8324468        0.5813469 0.2510999
-#> 4         1        x       y   3 0.3098982        0.5813469 0.0000000
-#> 5         1        y       x   0 0.2930612        0.5813469 0.0000000
-#> 6         1        y       x   1 0.2789116        0.5813469 0.0000000
+#> 1         1        x       y   0 0.2955102        0.4966531 0.0000000
+#> 2         1        x       y   1 0.2882653        0.4966531 0.0000000
+#> 3         1        x       y   2 0.6923759        0.4966531 0.1957228
+#> 4         1        x       y   3 0.2738205        0.4966531 0.0000000
+#> 5         1        y       x   0 0.2669388        0.4966531 0.0000000
+#> 6         1        y       x   1 0.3205782        0.4966531 0.0000000
 ```
 
 ## References
 
-- Chatterjee, S. (2021). A new coefficient of correlation. *Journal of
-  the American Statistical Association*, 116(536), 2009-2022.
+The theoretical foundation and surrogate data methodologies implemented
+in this package are based on the following works:
+
+- **Chatterjee’s $\xi$:** Chatterjee, S. (2021). A new coefficient of
+  correlation. *Journal of the American Statistical Association*,
+  116(536), 2009-2022. <https://doi.org/10.1080/01621459.2020.1758115>
+- **IAAFT / Surrogate Data:** Schreiber, T., & Schmitz, A. (1996).
+  Improved surrogate data for nonlinearity tests. *Physical Review
+  Letters*, 77(4), 635. <https://doi.org/10.1103/PhysRevLett.77.635>
+- **Local Structural Identification (Package Methodology):**
+  Watanabe, Y. (2026). Differential diagnosis of nonlinearity:
+  Integrating the BDS omnibus test with chatterjee’s xi for local
+  structural identification. *SSRN Preprint*.
+  <https://doi.org/10.2139/ssrn.6829431>
 
 ## License
 

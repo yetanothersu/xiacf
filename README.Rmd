@@ -37,8 +37,6 @@ If you use `xiacf` in your research, please cite our latest working paper detail
 * **Tidyverse-ready & Publication-Quality UI:** All functions return Tidy data frames. The `autoplot()` methods instantly generate beautiful, unified, and publication-ready `ggplot2` visualizations.
 * **High-Performance Rolling Analysis:** Fully parallelized (via `doFuture`) rolling window functions to capture time-varying dependencies smoothly and efficiently.
 
----
-
 ## Installation
 
 You can install the stable version of xiacf from CRAN with:
@@ -70,7 +68,7 @@ library(xiacf)
 library(ggplot2)
 
 set.seed(42)
-n <- 300 # サンプルサイズを少し増やしてシグナルを安定させます
+n <- 300
 
 # Generate a series with V-shaped auto-dependence (mean zero)
 # Standard Pearson ACF will miss this, but Xi-ACF will detect it.
@@ -81,7 +79,7 @@ for (t in 2:n) {
   A[t] <- abs(A[t - 1]) - 0.8 + rnorm(1, sd = 0.2)
 }
 
-res_acf <- xi_acf(A, max_lag = 5, n_surr = 240)
+res_acf <- xi_acf(A, max_lag = 5, n_surr = 249)
 print(res_acf)
 autoplot(res_acf)
 ```
@@ -106,7 +104,7 @@ for (t in 3:n) {
 # Without this, Y is always positive, making abs(Y) purely linear later!
 Y <- as.numeric(scale(Y))
 
-res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 240, direction = "both")
+res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 249, direction = "both")
 print(res_ccf)
 autoplot(res_ccf)
 ```
@@ -130,7 +128,7 @@ Z <- as.numeric(scale(Z))
 df_system <- data.frame(X = X, Y = Y, Z = Z)
 
 # Compute the multivariate Xi-correlogram matrix
-res_matrix <- xi_matrix(df_system, max_lag = 3, n_surr = 360)
+res_matrix <- xi_matrix(df_system, max_lag = 3, n_surr = 499)
 
 autoplot(res_matrix)
 
@@ -155,7 +153,7 @@ rolling_res <- run_rolling_xi_ccf(
   window_size = 50,
   step_size = 10,
   max_lag = 3,
-  n_surr = 200
+  n_surr = 199
 )
 
 head(rolling_res)
@@ -163,7 +161,11 @@ head(rolling_res)
 
 ## References
 
-* Chatterjee, S. (2021). A new coefficient of correlation. *Journal of the American Statistical Association*, 116(536), 2009-2022.
+The theoretical foundation and surrogate data methodologies implemented in this package are based on the following works:
+
+* **Chatterjee's $\xi$:** Chatterjee, S. (2021). A new coefficient of correlation. *Journal of the American Statistical Association*, 116(536), 2009-2022. <https://doi.org/10.1080/01621459.2020.1758115>
+* **IAAFT / Surrogate Data:** Schreiber, T., & Schmitz, A. (1996). Improved surrogate data for nonlinearity tests. *Physical Review Letters*, 77(4), 635. <https://doi.org/10.1103/PhysRevLett.77.635>
+* **Local Structural Identification (Package Methodology):** Watanabe, Y. (2026). Differential diagnosis of nonlinearity: Integrating the BDS omnibus test with chatterjee’s xi for local structural identification. *SSRN Preprint*. <https://doi.org/10.2139/ssrn.6829431>
 
 ## License
 
