@@ -22,8 +22,7 @@ Rate (FWER) control, all implemented in high-performance C++ using
 ## Citation
 
 If you use `xiacf` in your research, please cite our latest working
-paper detailing the methodology and its application to financial
-markets:
+paper detailing the methodology:
 
 > Watanabe, Y. (2026). Differential diagnosis of nonlinearity:
 > Integrating the BDS omnibus test with chatterjee’s xi for local
