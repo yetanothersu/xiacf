@@ -1,13 +1,18 @@
 
 # xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee’s Xi
 
-[](https://CRAN.R-project.org/package=xiacf)
-[](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
-[](https://opensource.org/licenses/MIT)
-[](https://doi.org/10.5281/zenodo.19247735) The **xiacf** package
-provides a robust framework for detecting complex non-linear and
-functional dependence in time series data. Traditional linear metrics,
-such as the standard Autocorrelation Function (ACF) and
+[![CRAN
+status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/package=xiacf)
+[![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247735.svg)](https://doi.org/10.5281/zenodo.19247735)
+
+## Introduction
+
+The **xiacf** package provides a robust framework for detecting complex
+non-linear and functional dependence in time series data. Traditional
+linear metrics, such as the standard Autocorrelation Function (ACF) and
 Cross-Correlation Function (CCF), often fail to detect symmetrical or
 purely non-linear relationships.
 

@@ -14,10 +14,13 @@ Sys.setlocale("LC_TIME", "C")
 
 # xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi
 
-[](https://CRAN.R-project.org/package=xiacf)
-[](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
-[](https://opensource.org/licenses/MIT)
-[](https://doi.org/10.5281/zenodo.19247735)
+[![CRAN status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/package=xiacf)
+[![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247735.svg)](https://doi.org/10.5281/zenodo.19247735)
+
+## Introduction
+
 The **xiacf** package provides a robust framework for detecting complex non-linear and functional dependence in time series data. Traditional linear metrics, such as the standard Autocorrelation Function (ACF) and Cross-Correlation Function (CCF), often fail to detect symmetrical or purely non-linear relationships.
 
 This package overcomes these limitations by utilizing **Chatterjee's Rank Correlation ($\xi$)**, offering both univariate ($\xi$-ACF) and multivariate ($\xi$-CCF) analysis tools. It features rigorous statistical hypothesis testing powered by advanced surrogate data generation algorithms (IAAFT and MIAAFT) and dynamic Family-Wise Error Rate (FWER) control, all implemented in high-performance C++ using `RcppArmadillo`.
