@@ -11,13 +11,16 @@ test_that("xi_coefficient detects linear and non-linear relationships", {
     expect_gt(xi_val_para, 0.5)
 })
 
-test_that("Xi coefficient is close to 0 for independent noise", {
+test_that("Xi coefficient asymptotically converges to 0 for independent noise", {
     set.seed(123)
-    n <- 500
+    n <- 1000
     x <- rnorm(n)
     y <- rnorm(n)
     xi_val_noise <- xiacf::xi_coefficient(x, y)
-    expect_lt(abs(xi_val_noise), 0.35)
+
+    # Due to the corrected denominator (n^2 - 1),
+    # independent noise must yield a value very close to 0.
+    expect_lt(abs(xi_val_noise), 0.05)
 })
 
 test_that("compute_xi_acf_maxstat_cpp throws error when max_lag is too large", {

@@ -99,7 +99,7 @@ run_rolling_xi_ccf <- function(
                 }
 
                 # Execute C++ engine for the window
-                cpp_res <- compute_xi_ccf_maxstat_cpp(
+                cpp_res <- xiacf:::compute_xi_ccf_maxstat_cpp(
                     x = as.numeric(x_win),
                     y = as.numeric(y_win),
                     max_lag = as.integer(max_lag),

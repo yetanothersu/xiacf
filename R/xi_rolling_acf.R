@@ -92,7 +92,7 @@ run_rolling_xi_acf <- function(
                 }
 
                 # Execute C++ engine for the window
-                cpp_res <- compute_xi_acf_maxstat_cpp(
+                cpp_res <- xiacf:::compute_xi_acf_maxstat_cpp(
                     x = as.numeric(x_win),
                     max_lag = as.integer(max_lag),
                     n_surr = as.integer(n_surr),
