@@ -2,7 +2,7 @@
 % Please edit documentation in R/xi_rolling_acf.R
 \name{run_rolling_xi_acf}
 \alias{run_rolling_xi_acf}
-\title{Rolling Xi-ACF Analysis}
+\title{Rolling Window Analysis for Xi-ACF}
 \usage{
 run_rolling_xi_acf(
   x,
@@ -17,15 +17,15 @@ run_rolling_xi_acf(
 )
 }
 \arguments{
-\item{x}{A numeric vector representing the time series.}
+\item{x}{A numeric vector representing the time series data.}
 
-\item{time_index}{Optional vector of timestamps.}
+\item{time_index}{An optional vector representing timestamps.}
 
 \item{window_size}{An integer specifying the size of the rolling window.}
 
 \item{step_size}{An integer specifying the step size. Default is 1.}
 
-\item{max_lag}{An integer specifying the maximum lag.}
+\item{max_lag}{An integer specifying the maximum lag to compute.}
 
 \item{n_surr}{An integer specifying the number of IAAFT surrogate datasets. Default is 399.}
 
@@ -39,6 +39,5 @@ run_rolling_xi_acf(
 A \code{data.frame} containing the rolling window results.
 }
 \description{
-Performs a rolling window analysis using Chatterjee's Xi coefficient to assess
-the time-varying non-linear dependence structure of a time series with FWER control.
+Rolling Window Analysis for Xi-ACF
 }
