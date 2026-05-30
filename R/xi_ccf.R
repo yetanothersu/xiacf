@@ -72,8 +72,12 @@ xi_ccf <- function(
         ))
     }
 
-    # Dynamic calculation of family size (max_lag + 1 because it includes lag 0)
-    num_tests <- if (both_directions) 2 * (max_lag + 1) else (max_lag + 1)
+    # Dynamic calculation of family size for Dual-Family FWER control
+    num_tests_lag0 <- if (both_directions) 2 else 1
+    num_tests_lagged <- if (both_directions) 2 * max_lag else max_lag
+
+    # Use the maximum family size between Lag 0 and Lag > 0 for surrogate stability check
+    num_tests <- max(num_tests_lag0, num_tests_lagged)
 
     # Surrogate count warning logic
     min_required <- ceiling(1 / sig_level) - 1
@@ -86,6 +90,8 @@ xi_ccf <- function(
         ))
     }
     recommended <- ceiling(num_tests / sig_level)
+    recommended <- max(399, recommended) # Enforce typical non-parametric baseline
+
     if (n_surr < recommended) {
         warning(sprintf(
             "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
@@ -106,10 +112,17 @@ xi_ccf <- function(
         both_directions = both_directions
     )
 
-    # Calculate Global Threshold
-    global_threshold <- stats::quantile(
-        cpp_res$max_statistic_dist,
-        1 - sig_level,
+    # Calculate two independent global thresholds
+    threshold_lag0 <- stats::quantile(
+        cpp_res$max_dist_lag0,
+        probs = 1 - sig_level,
+        names = FALSE,
+        na.rm = TRUE
+    )
+    threshold_lagged <- stats::quantile(
+        cpp_res$max_dist_lagged,
+        probs = 1 - sig_level,
+        names = FALSE,
         na.rm = TRUE
     )
 
@@ -129,6 +142,7 @@ xi_ccf <- function(
     ccf_x_leads <- rev(as.vector(ccf_obj$acf[1:(max_lag + 1)]))
     # Y leads X (lag 0 to max_lag): extract the positive lag side of CCF
     ccf_y_leads <- as.vector(ccf_obj$acf[(max_lag + 1):(2 * max_lag + 1)])
+
     # Asymptotic confidence interval for CCF
     ccf_ci <- stats::qnorm(1 - sig_level / 2) / sqrt(n)
 
@@ -165,8 +179,13 @@ xi_ccf <- function(
         )
     }
 
-    # Calculate threshold and excess
-    res_df$Global_Threshold <- global_threshold
+    # Dynamic threshold assignment based on Lag
+    is_lag_zero <- res_df$Lag == 0
+    res_df$Global_Threshold <- NA_real_
+    res_df$Global_Threshold[is_lag_zero] <- threshold_lag0
+    res_df$Global_Threshold[!is_lag_zero] <- threshold_lagged
+
+    # Calculate Xi_Excess
     res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
 
     # Construct output object
@@ -180,6 +199,7 @@ xi_ccf <- function(
         x_name = x_name,
         y_name = y_name
     )
+
     class(out) <- "xi_ccf"
     return(out)
 }
@@ -200,7 +220,7 @@ print.xi_ccf <- function(x, ...) {
     cat(sprintf("Significance Level: %g (FWER controlled)\n", x$sig_level))
     cat("============================================\n")
 
-    # NAを安全に除外しつつ、有意な経路を抽出
+    # Safely extract significant paths
     sig_data <- x$data[
         which(x$data$Xi_Excess > 0),
         c(

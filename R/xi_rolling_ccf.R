@@ -3,9 +3,9 @@
 #' Performs a rolling window analysis using Chatterjee's Xi cross-correlation to assess
 #' the time-varying non-linear lead-lag relationship between two time series with FWER control.
 #'
-#' @param x A numeric vector representing the first time series (predictor/lead candidate).
-#' @param y A numeric vector representing the second time series (response/lag candidate).
-#' @param time_index Optional vector of timestamps.
+#' @param x A numeric vector representing the first time series.
+#' @param y A numeric vector representing the second time series.
+#' @param time_index An optional vector representing timestamps.
 #' @param window_size An integer specifying the size of the rolling window.
 #' @param step_size An integer specifying the step size. Default is 1.
 #' @param max_lag An integer specifying the maximum positive lag to compute.
@@ -53,64 +53,77 @@ run_rolling_xi_ccf <- function(
     }
 
     n <- length(x)
-    if (n != length(y)) {
+    if (length(y) != n) {
         stop("x and y must have the same length.")
     }
     if (n < window_size) {
-        stop("Time series is shorter than the window size.")
+        stop("window_size must be smaller than the length of the time series.")
+    }
+    if (window_size < max_lag + 2) {
+        stop("window_size must be strictly greater than max_lag + 1.")
     }
 
     starts <- seq(1, n - window_size + 1, by = step_size)
-    n_windows <- length(starts)
+    num_windows <- length(starts)
 
-    # Create directory for saving intermediate results if specified
-    if (!is.null(save_dir)) {
-        if (!dir.exists(save_dir)) dir.create(save_dir, recursive = TRUE)
+    if (is.null(n_cores)) {
+        n_cores <- parallel::detectCores() - 1
     }
 
-    # Setup parallel backend
-    doFuture::registerDoFuture()
-    if (!is.null(n_cores)) {
-        future::plan(future::multisession, workers = n_cores)
-    } else {
-        future::plan(future::sequential)
+    future::plan(future::multisession, workers = n_cores)
+    on.exit(future::plan(future::sequential))
+
+    if (!is.null(save_dir) && !dir.exists(save_dir)) {
+        dir.create(save_dir, recursive = TRUE)
     }
 
     run_with_progress <- function() {
-        p <- progressr::progressor(steps = n_windows)
+        p <- progressr::progressor(steps = num_windows)
 
         results_list <- foreach::foreach(
-            i = 1:n_windows,
-            .options.future = list(packages = c("xiacf", "stats"), seed = TRUE)
+            i = 1:num_windows,
+            .options.future = list(packages = c("xiacf", "stats"), seed = TRUE),
+            .errorhandling = "pass"
         ) %dofuture%
             {
                 p()
+
                 idx_start <- starts[i]
                 idx_end <- idx_start + window_size - 1
-                x_window <- x[idx_start:idx_end]
-                y_window <- y[idx_start:idx_end]
+                x_win <- x[idx_start:idx_end]
+                y_win <- y[idx_start:idx_end]
 
-                # Call the latest C++ function (bidirectional FWER control engine)
+                # Check for zero variance
+                if (stats::var(x_win) == 0 || stats::var(y_win) == 0) {
+                    return(NULL)
+                }
+
+                # Execute C++ engine for the window
                 cpp_res <- compute_xi_ccf_maxstat_cpp(
-                    x = as.numeric(x_window),
-                    y = as.numeric(y_window),
+                    x = as.numeric(x_win),
+                    y = as.numeric(y_win),
                     max_lag = as.integer(max_lag),
                     n_surr = as.integer(n_surr),
-                    max_iter = 100L,
+                    max_iter = as.integer(100),
                     both_directions = TRUE
                 )
 
-                num_tests <- 2 * (max_lag + 1)
-                # Calculate the global threshold from the Max-statistic distribution
-                global_threshold <- stats::quantile(
-                    cpp_res$max_statistic_dist,
-                    1 - sig_level,
-                    na.rm = TRUE
+                # Calculate two independent global thresholds
+                threshold_lag0 <- stats::quantile(
+                    cpp_res$max_dist_lag0,
+                    probs = 1 - sig_level,
+                    names = FALSE
+                )
+
+                threshold_lagged <- stats::quantile(
+                    cpp_res$max_dist_lagged,
+                    probs = 1 - sig_level,
+                    names = FALSE
                 )
 
                 lag_vec <- 0:max_lag
                 df_window <- data.frame(
-                    Window_ID = rep(i, num_tests),
+                    Window_ID = i,
                     Lead_Var = c(
                         rep("x", length(lag_vec)),
                         rep("y", length(lag_vec))
@@ -121,9 +134,14 @@ run_rolling_xi_ccf <- function(
                     ),
                     Lag = c(lag_vec, lag_vec),
                     Xi = c(cpp_res$xi_emp_x_leads, cpp_res$xi_emp_y_leads),
-                    Global_Threshold = rep(global_threshold, num_tests),
                     stringsAsFactors = FALSE
                 )
+
+                # Dynamic threshold assignment based on Lag
+                is_lag_zero <- df_window$Lag == 0
+                df_window$Global_Threshold <- NA_real_
+                df_window$Global_Threshold[is_lag_zero] <- threshold_lag0
+                df_window$Global_Threshold[!is_lag_zero] <- threshold_lagged
 
                 # Calculate excess Xi above the threshold
                 df_window$Xi_Excess <- pmax(

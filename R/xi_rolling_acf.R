@@ -1,13 +1,10 @@
-#' Rolling Xi-ACF Analysis
+#' Rolling Window Analysis for Xi-ACF
 #'
-#' Performs a rolling window analysis using Chatterjee's Xi coefficient to assess
-#' the time-varying non-linear dependence structure of a time series with FWER control.
-#'
-#' @param x A numeric vector representing the time series.
-#' @param time_index Optional vector of timestamps.
+#' @param x A numeric vector representing the time series data.
+#' @param time_index An optional vector representing timestamps.
 #' @param window_size An integer specifying the size of the rolling window.
 #' @param step_size An integer specifying the step size. Default is 1.
-#' @param max_lag An integer specifying the maximum lag.
+#' @param max_lag An integer specifying the maximum lag to compute.
 #' @param n_surr An integer specifying the number of IAAFT surrogate datasets. Default is 399.
 #' @param sig_level A numeric value specifying the significance level (FWER). Default is 0.05.
 #' @param n_cores An integer specifying the number of cores for parallel execution.
@@ -52,47 +49,56 @@ run_rolling_xi_acf <- function(
 
     n <- length(x)
     if (n < window_size) {
-        stop("Time series is shorter than the window size.")
+        stop("window_size must be smaller than the length of x.")
+    }
+    if (window_size < max_lag + 2) {
+        stop("window_size must be strictly greater than max_lag + 1.")
     }
 
     starts <- seq(1, n - window_size + 1, by = step_size)
-    n_windows <- length(starts)
+    num_windows <- length(starts)
 
-    # Create directory for saving intermediate results if specified
-    if (!is.null(save_dir)) {
-        if (!dir.exists(save_dir)) dir.create(save_dir, recursive = TRUE)
+    if (is.null(n_cores)) {
+        n_cores <- parallel::detectCores() - 1
     }
+    future::plan(future::multisession, workers = n_cores)
+    on.exit(future::plan(future::sequential))
 
-    # Setup parallel backend
-    doFuture::registerDoFuture()
-    if (!is.null(n_cores)) {
-        future::plan(future::multisession, workers = n_cores)
-    } else {
-        future::plan(future::sequential)
+    if (!is.null(save_dir) && !dir.exists(save_dir)) {
+        dir.create(save_dir, recursive = TRUE)
     }
 
     run_with_progress <- function() {
-        p <- progressr::progressor(steps = n_windows)
+        p <- progressr::progressor(steps = num_windows)
 
         results_list <- foreach::foreach(
-            i = 1:n_windows,
-            .options.future = list(packages = c("xiacf", "stats"), seed = TRUE)
+            i = 1:num_windows,
+            .options.future = list(
+                packages = c("xiacf", "stats"),
+                seed = TRUE
+            ),
+            .errorhandling = "pass"
         ) %dofuture%
             {
                 p()
+
                 idx_start <- starts[i]
                 idx_end <- idx_start + window_size - 1
-                x_window <- x[idx_start:idx_end]
+                x_win <- x[idx_start:idx_end]
 
-                # Call the latest C++ engine with FWER control
+                # Check for zero variance
+                if (stats::var(x_win) == 0) {
+                    return(NULL)
+                }
+
+                # Execute C++ engine for the window
                 cpp_res <- compute_xi_acf_maxstat_cpp(
-                    x = as.numeric(x_window),
+                    x = as.numeric(x_win),
                     max_lag = as.integer(max_lag),
                     n_surr = as.integer(n_surr),
-                    max_iter = 100L
+                    max_iter = as.integer(100)
                 )
 
-                # Calculate the global threshold from the Max-statistic distribution
                 global_threshold <- stats::quantile(
                     cpp_res$max_statistic_dist,
                     probs = 1 - sig_level,
@@ -103,22 +109,20 @@ run_rolling_xi_acf <- function(
                     Window_ID = i,
                     Lag = 1:max_lag,
                     Xi = cpp_res$xi_empirical,
-                    Global_Threshold = rep(global_threshold, max_lag)
+                    Global_Threshold = rep(global_threshold, max_lag),
+                    stringsAsFactors = FALSE
                 )
 
-                # Calculate excess Xi above the threshold
                 df_window$Xi_Excess <- pmax(
                     0,
                     df_window$Xi - df_window$Global_Threshold
                 )
 
-                # Map timestamps if available
                 if (!is.null(time_index)) {
                     df_window$Window_Start_Time <- time_index[idx_start]
                     df_window$Window_End_Time <- time_index[idx_end]
                 }
 
-                # Save checkpoint
                 if (!is.null(save_dir)) {
                     saveRDS(
                         df_window,
@@ -134,10 +138,7 @@ run_rolling_xi_acf <- function(
         return(results_list)
     }
 
-    # Execute with progress bar
     new_results_list <- progressr::with_progress(run_with_progress())
-
-    # Filter valid data frames and combine
     new_results_list <- Filter(is.data.frame, new_results_list)
     final_df <- dplyr::bind_rows(new_results_list)
 
