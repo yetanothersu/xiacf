@@ -46,10 +46,20 @@ paper detailing the methodology:
 - **Multivariate Network Matrix (`xi_matrix`):** Simultaneously evaluate
   causal pathways across an entire system of time series to build
   directed non-linear networks.
-- **Rigorous Statistical Inference:** Utilizes phase-randomized
-  surrogate data (IAAFT / MIAAFT) and dynamically controls the
-  Family-Wise Error Rate (FWER) via Max-Statistic distributions,
-  strictly protecting against false positives ($p$-hacking).
+- **Rigorous Inference & Dual-Family FWER Control:** Utilizes
+  phase-randomized surrogate data (IAAFT / MIAAFT) and dynamically
+  controls the FWER via Max-Statistic distributions. To overcome the
+  **“Lag-0 Masking Effect”**—where MIAAFT perfectly preserves
+  contemporaneous linear confounding—`xiacf` uniquely implements a
+  **Dual-Family FWER Control**. It completely decouples the significance
+  thresholds for pure contemporaneous effects (Lag 0) and temporal
+  causal propagation (Lag \> 0), maximizing the statistical power to
+  detect delayed causal spillovers.
+- **Strict Algorithmic Integrity:** The core C++ engine rigorously
+  implements the exact original specifications of Chatterjee’s $\xi$. By
+  enforcing uniform random tie-breaking, the package ensures that the
+  baseline calculations strictly align with the mathematical definition
+  and its asymptotic properties.
 - **Tidyverse-ready & Publication-Quality UI:** All functions return
   Tidy data frames. The `autoplot()` methods instantly generate
   beautiful, unified, and publication-ready `ggplot2` visualizations.
@@ -99,6 +109,10 @@ for (t in 2:n) {
 }
 
 res_acf <- xi_acf(A, max_lag = 5, n_surr = 249)
+#> Warning in check_surrogate_count(n_surr = n_surr, sig_level = sig_level, :
+#> Warning: For 5 simultaneous tests at sig_level = 0.05, the empirical
+#> distribution of the max-statistic may be unstable with n_surr = 249.
+#> Recommended n_surr is at least 399.
 print(res_acf)
 #> 
 #> === Univariate Xi-Autocorrelation Function ===
@@ -109,7 +123,7 @@ print(res_acf)
 #> ==============================================
 #> Significant Lags:
 #>  Lag        Xi Global_Threshold Xi_Excess
-#>    1 0.6301542        0.5302148 0.0999394
+#>    1 0.4470805        0.2976711 0.1494094
 autoplot(res_acf)
 ```
 
@@ -136,6 +150,10 @@ for (t in 3:n) {
 Y <- as.numeric(scale(Y))
 
 res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 249, direction = "both")
+#> Warning in xi_ccf(X, Y, max_lag = 5, n_surr = 249, direction = "both"):
+#> Warning: For 10 simultaneous tests at sig_level = 0.05, the empirical
+#> distribution of the max-statistic may be unstable with n_surr = 249.
+#> Recommended n_surr is at least 399.
 print(res_ccf)
 #> 
 #> === Bivariate Xi-Cross-Correlation (CCF) ===
@@ -148,7 +166,7 @@ print(res_ccf)
 #> ============================================
 #> Top 5 Strongest Causal Pathways:
 #>  Lead_Var Lag_Var Lag        Xi      CCF Global_Threshold Xi_Excess
-#>         X       Y   2 0.7584119 0.123921        0.4662698 0.2921421
+#>         X       Y   2 0.6388298 0.123921       0.09151595 0.5473138
 autoplot(res_ccf)
 ```
 
@@ -210,13 +228,13 @@ rolling_res <- run_rolling_xi_ccf(
 )
 
 head(rolling_res)
-#>   Window_ID Lead_Var Lag_Var Lag        Xi Global_Threshold Xi_Excess
-#> 1         1        x       y   0 0.2955102        0.4966531 0.0000000
-#> 2         1        x       y   1 0.2882653        0.4966531 0.0000000
-#> 3         1        x       y   2 0.6923759        0.4966531 0.1957228
-#> 4         1        x       y   3 0.2738205        0.4966531 0.0000000
-#> 5         1        y       x   0 0.2669388        0.4966531 0.0000000
-#> 6         1        y       x   1 0.3205782        0.4966531 0.0000000
+#>   Window_ID Lead_Var Lag_Var Lag          Xi Global_Threshold Xi_Excess
+#> 1         1        x       y   0 -0.03601441        0.2570228 0.0000000
+#> 2         1        x       y   1 -0.04625000        0.2185806 0.0000000
+#> 3         1        x       y   2  0.54798089        0.2185806 0.3294003
+#> 4         1        x       y   3 -0.06657609        0.2185806 0.0000000
+#> 5         1        y       x   0 -0.07803121        0.2570228 0.0000000
+#> 6         1        y       x   1  0.00125000        0.2185806 0.0000000
 ```
 
 ## References
