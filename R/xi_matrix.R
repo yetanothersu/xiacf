@@ -40,7 +40,6 @@ xi_matrix <- function(
     if (!is.matrix(x) && !is.data.frame(x)) {
         stop("Input 'x' must be a numeric matrix or data.frame.")
     }
-
     x_mat <- as.matrix(x)
 
     if (!is.numeric(x_mat)) {
@@ -86,30 +85,19 @@ xi_matrix <- function(
     }
 
     num_pairs <- p * (p - 1)
-    num_tests <- num_pairs * (max_lag + 1) # Each pair has max_lag + 1 tests (including lag 0)
-    check_surrogate_count <- function(n_surr, sig_level, num_tests) {
-        min_required <- ceiling(1 / sig_level) - 1
-        if (n_surr < min_required) {
-            stop(sprintf(
-                "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
-                n_surr,
-                as.integer((1 - sig_level) * 100),
-                min_required
-            ))
-        }
-        recommended <- ceiling(num_tests / sig_level)
-        if (n_surr < recommended) {
-            warning(sprintf(
-                "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
-                num_tests,
-                sig_level,
-                n_surr,
-                recommended
-            ))
-        }
-    }
-    check_surrogate_count(n_surr, sig_level, num_tests)
 
+    # Family A (Lag 0) has 'num_pairs' tests.
+    # Family B (Lag > 0) has 'num_pairs * max_lag' tests.
+    # We use the maximum family size to evaluate the required number of surrogates.
+    num_tests <- num_pairs * max(1, max_lag)
+
+    check_surrogate_count(
+        n_surr = n_surr,
+        sig_level = sig_level,
+        num_tests = num_tests
+    )
+
+    # Execute C++ engine for the entire matrix
     cpp_res <- compute_xi_matrix_maxstat_cpp(
         X = x_mat,
         max_lag = as.integer(max_lag),
@@ -117,41 +105,73 @@ xi_matrix <- function(
         max_iter = as.integer(max_iter)
     )
 
-    global_threshold <- stats::quantile(
-        cpp_res$max_statistic_dist,
+    # Extract results and populate dataframe
+    res_list <- list()
+    idx <- 1
+
+    for (i in 1:p) {
+        for (j in 1:p) {
+            for (k in 0:max_lag) {
+                res_list[[idx]] <- data.frame(
+                    Lead_Var = var_names[i],
+                    Lag_Var = var_names[j],
+                    Lag = k,
+                    Xi = cpp_res$xi_emp[i, j, k + 1],
+                    stringsAsFactors = FALSE
+                )
+                idx <- idx + 1
+            }
+        }
+    }
+
+    res_df <- dplyr::bind_rows(res_list)
+
+    # Calculate two independent global thresholds
+    threshold_lag0 <- stats::quantile(
+        cpp_res$max_dist_lag0,
+        probs = 1 - sig_level,
+        names = FALSE,
+        na.rm = TRUE
+    )
+    threshold_lagged <- stats::quantile(
+        cpp_res$max_dist_lagged,
         probs = 1 - sig_level,
         names = FALSE,
         na.rm = TRUE
     )
 
-    res_df <- data.frame(
-        Lead_Var = var_names[cpp_res$var_lead],
-        Lag_Var = var_names[cpp_res$var_lag],
-        Lag = cpp_res$lag,
-        Xi = cpp_res$xi_original,
-        stringsAsFactors = FALSE
-    )
-
-    res_df$Global_Threshold <- global_threshold
-    res_df$Xi_Excess <- pmax(0, res_df$Xi - res_df$Global_Threshold)
-
+    # Identify row attributes
     is_self <- res_df$Lead_Var == res_df$Lag_Var
-    if (any(is_self)) {
-        res_df$Global_Threshold[is_self] <- NA
-        res_df$Xi_Excess[is_self] <- NA
-    }
+    is_lag_zero <- res_df$Lag == 0
 
-    res <- structure(
-        list(
-            data = res_df,
-            max_lag = max_lag,
-            n_surr = n_surr,
-            sig_level = sig_level,
-            data_raw = x
-        ),
-        class = "xi_matrix"
+    # Dynamic threshold assignment (Disable for autocorrelation by setting to NA)
+    res_df$Global_Threshold <- NA_real_
+    res_df$Global_Threshold[!is_self & is_lag_zero] <- threshold_lag0 # Strict threshold for Lag 0 confounding
+    res_df$Global_Threshold[!is_self & !is_lag_zero] <- threshold_lagged # Normal threshold for Lag > 0 propagation
+
+    # Calculate Xi_Excess
+    res_df$Xi_Excess <- NA_real_
+    res_df$Xi_Excess[!is_self] <- pmax(
+        0,
+        res_df$Xi[!is_self] - res_df$Global_Threshold[!is_self]
     )
-    return(res)
+
+    # Store raw data for extractors
+    df_raw <- as.data.frame(x_mat)
+    colnames(df_raw) <- var_names
+
+    out <- list(
+        data = res_df,
+        n = n,
+        p = p,
+        max_lag = max_lag,
+        n_surr = n_surr,
+        sig_level = sig_level,
+        data_raw = df_raw
+    )
+
+    class(out) <- "xi_matrix"
+    return(out)
 }
 
 #' Print method for xi_matrix

@@ -63,28 +63,11 @@ xi_acf <- function(
         )
     }
 
-    check_surrogate_count <- function(n_surr, sig_level, max_lag) {
-        min_required <- ceiling(1 / sig_level) - 1
-        if (n_surr < min_required) {
-            stop(sprintf(
-                "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
-                n_surr,
-                as.integer((1 - sig_level) * 100),
-                min_required
-            ))
-        }
-        recommended <- ceiling(max_lag / sig_level)
-        if (n_surr < recommended) {
-            warning(sprintf(
-                "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
-                max_lag,
-                sig_level,
-                n_surr,
-                recommended
-            ))
-        }
-    }
-    check_surrogate_count(n_surr, sig_level, max_lag)
+    check_surrogate_count(
+        n_surr = n_surr,
+        sig_level = sig_level,
+        num_tests = max_lag
+    )
 
     acf_vals <- as.numeric(stats::acf(x, lag.max = max_lag, plot = FALSE)$acf[
         -1
@@ -98,14 +81,16 @@ xi_acf <- function(
     )
 
     pointwise_threshold <- stats::quantile(
-        cpp_res$pointwise_statistic_dist,
+        cpp_res$pointwise_dist,
         probs = 1 - sig_level,
-        names = FALSE
+        names = FALSE,
+        na.rm = TRUE
     )
     global_threshold <- stats::quantile(
         cpp_res$max_statistic_dist,
         probs = 1 - sig_level,
-        names = FALSE
+        names = FALSE,
+        na.rm = TRUE
     )
 
     acf_ci <- stats::qnorm((1 + (1 - sig_level)) / 2) / sqrt(n)

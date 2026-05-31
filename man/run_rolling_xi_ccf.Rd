@@ -18,11 +18,11 @@ run_rolling_xi_ccf(
 )
 }
 \arguments{
-\item{x}{A numeric vector representing the first time series (predictor/lead candidate).}
+\item{x}{A numeric vector representing the first time series.}
 
-\item{y}{A numeric vector representing the second time series (response/lag candidate).}
+\item{y}{A numeric vector representing the second time series.}
 
-\item{time_index}{Optional vector of timestamps.}
+\item{time_index}{An optional vector representing timestamps.}
 
 \item{window_size}{An integer specifying the size of the rolling window.}
 

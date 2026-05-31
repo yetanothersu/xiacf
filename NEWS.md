@@ -1,3 +1,15 @@
+# xiacf 0.6.1
+
+## Major Changes and Bug Fixes
+* **Core Math Fix:** Corrected the denominator in the internal C++ implementation of Chatterjee's Xi coefficient to exactly $n^2 - 1$. This fixes an issue where the baseline for independent variables was slightly inflated (approx. 0.33) rather than asymptotically converging to 0. (Thanks to user reports and rigorous auditing).
+* **Dual-Family FWER Control:** Introduced a mathematically rigorous separation of FWER control families in `xi_ccf` and `xi_matrix`. The Max-Statistic null distribution is now strictly evaluated independently for Contemporaneous (Lag 0) and Temporal (Lag > 0) dependencies. This resolves the "Lag-0 Masking Effect," significantly improving the statistical power to detect delayed causal propagation.
+* **Autocorrelation Exclusion:** Excluded completely diagonal elements (autocorrelations) from the FWER search space in `xi_matrix` to prevent arbitrary threshold inflation.
+
+## Minor Improvements
+* Improved parallel backend safety using `%dofuture%` with explicit package loading.
+* Restored the `Window_ID` tracking column in the outputs of `run_rolling_xi_acf` and `run_rolling_xi_ccf`.
+* Upgraded internal surrogate generation checks (`check_surrogate_count`) to rigorously validate user-provided `n_surr` against the dynamic size of FWER test families.
+
 # xiacf 0.6.0
 
 * **Directional Separation:** `xi_ccf()` now explicitly separates causal directions (`direction = "both"`, `"x_leads"`, `"y_leads"`) and returns Tidy data frames for easier downstream EDA.

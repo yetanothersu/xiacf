@@ -39,3 +39,33 @@ test_that("xi_matrix computes correctly and returns proper structure", {
     expect_true(all(!is.na(off_diags$Global_Threshold)))
     expect_true(all(!is.na(off_diags$Xi_Excess)))
 })
+
+test_that("xi_matrix properly handles Dual-Family FWER and completely excludes autocorrelations", {
+    set.seed(42)
+    df_input <- data.frame(A = rnorm(50), B = rnorm(50), C = rnorm(50))
+
+    res <- suppressWarnings(xiacf::xi_matrix(
+        df_input,
+        max_lag = 2,
+        n_surr = 100,
+        sig_level = 0.05
+    ))
+
+    df <- res$data
+
+    # 1. Autocorrelation Exclusion (Must be NA to prevent FWER inflation)
+    auto_corr <- df[df$Lead_Var == df$Lag_Var, ]
+    expect_true(all(is.na(auto_corr$Global_Threshold)))
+    expect_true(all(is.na(auto_corr$Xi_Excess)))
+
+    # 2. Dual-Family Thresholds for Cross-correlation
+    cross_corr <- df[df$Lead_Var != df$Lag_Var, ]
+    thresh_lag0 <- cross_corr$Global_Threshold[cross_corr$Lag == 0][1]
+    thresh_lagged <- cross_corr$Global_Threshold[cross_corr$Lag > 0][1]
+
+    expect_false(is.na(thresh_lag0))
+    expect_false(is.na(thresh_lagged))
+
+    # Thresholds must be distinct due to the Dual-Family separation policy
+    expect_true(thresh_lag0 != thresh_lagged)
+})
