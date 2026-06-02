@@ -66,9 +66,6 @@ xi_matrix <- function(
             max_lag
         ))
     }
-    if (sig_level <= 0 || sig_level >= 1) {
-        stop("Parameter 'sig_level' must be strictly between 0 and 1.")
-    }
 
     var_names <- colnames(x)
     if (is.null(var_names)) {
@@ -167,6 +164,7 @@ xi_matrix <- function(
         max_lag = max_lag,
         n_surr = n_surr,
         sig_level = sig_level,
+        var_names = var_names,
         data_raw = df_raw
     )
 

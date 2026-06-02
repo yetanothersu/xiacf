@@ -79,28 +79,11 @@ xi_ccf <- function(
     # Use the maximum family size between Lag 0 and Lag > 0 for surrogate stability check
     num_tests <- max(num_tests_lag0, num_tests_lagged)
 
-    # Surrogate count warning logic
-    min_required <- ceiling(1 / sig_level) - 1
-    if (n_surr < min_required) {
-        stop(sprintf(
-            "Error: n_surr = %d is too small to calculate the %d%% threshold. Minimum required is %d.",
-            n_surr,
-            as.integer((1 - sig_level) * 100),
-            min_required
-        ))
-    }
-    recommended <- ceiling(num_tests / sig_level)
-    recommended <- max(399, recommended) # Enforce typical non-parametric baseline
-
-    if (n_surr < recommended) {
-        warning(sprintf(
-            "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
-            num_tests,
-            sig_level,
-            n_surr,
-            recommended
-        ))
-    }
+    check_surrogate_count(
+        n_surr = n_surr,
+        sig_level = sig_level,
+        num_tests = num_tests
+    )
 
     # Execute C++ engine
     cpp_res <- compute_xi_ccf_maxstat_cpp(

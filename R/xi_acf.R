@@ -93,7 +93,7 @@ xi_acf <- function(
         na.rm = TRUE
     )
 
-    acf_ci <- stats::qnorm((1 + (1 - sig_level)) / 2) / sqrt(n)
+    acf_ci <- stats::qnorm(1 - sig_level / 2) / sqrt(n)
 
     df_res <- data.frame(
         Lag = 1:max_lag,

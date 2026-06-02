@@ -15,7 +15,7 @@ check_surrogate_count <- function(n_surr, sig_level, num_tests) {
     min_required <- ceiling(1 / sig_level) - 1
     if (n_surr < min_required) {
         stop(sprintf(
-            "Error: n_surr = %d is too small to calculate the %g%% threshold. Minimum required is %d.",
+            "n_surr = %d is too small to calculate the %g%% threshold. Minimum required is %d.",
             n_surr,
             (1 - sig_level) * 100,
             min_required
@@ -29,7 +29,7 @@ check_surrogate_count <- function(n_surr, sig_level, num_tests) {
 
     if (n_surr < recommended) {
         warning(sprintf(
-            "Warning: For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
+            "For %d simultaneous tests at sig_level = %g, the empirical distribution of the max-statistic may be unstable with n_surr = %d. Recommended n_surr is at least %d.",
             num_tests,
             sig_level,
             n_surr,
