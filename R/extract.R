@@ -5,7 +5,7 @@
 #' @param ... Additional arguments passed to xi_acf.
 #'
 #' @return An object of class \code{xi_acf}.
-#' #' @note
+#' @note
 #' This function performs a fresh re-calculation of the surrogate data distribution specifically for the targeted variables.
 #' As a result, two differences from the original matrix output should be expected:
 #' 1. **FWER Recalibration:** The global threshold will be recalibrated for the bivariate (or univariate) case, typically making it less conservative and restoring statistical power for the specific pathway.
@@ -55,7 +55,7 @@ extract_xi_acf <- function(obj, var, ...) {
 #' @param ... Additional arguments passed to xi_ccf.
 #'
 #' @return An object of class \code{xi_ccf}.
-#' #' @note
+#' @note
 #' This function performs a fresh re-calculation of the surrogate data distribution specifically for the targeted variables.
 #' As a result, two differences from the original matrix output should be expected:
 #' 1. **FWER Recalibration:** The global threshold will be recalibrated for the bivariate (or univariate) case, typically making it less conservative and restoring statistical power for the specific pathway.
