@@ -10,6 +10,7 @@ arma::mat surrogate_iaaft_cpp(const arma::vec& x, int n_surr, int max_iter);
 void generate_single_miaaft(const arma::mat& X, arma::mat& X_surr, int max_iter);
 
 //' Compute empirical Xi-ACF and Max-Statistic null distribution
+//' @export
 //' @keywords internal
 // [[Rcpp::export]]
 List compute_xi_acf_maxstat_cpp(NumericVector x, int max_lag, int n_surr, int max_iter = 100) {
@@ -53,6 +54,7 @@ List compute_xi_acf_maxstat_cpp(NumericVector x, int max_lag, int n_surr, int ma
 }
 
 //' Compute empirical Xi-CCF and Max-Statistic null distribution
+//' @export
 //' @keywords internal
 // [[Rcpp::export]]
 List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, int n_surr, int max_iter = 100, bool both_directions = true) {
@@ -130,6 +132,7 @@ List compute_xi_ccf_maxstat_cpp(NumericVector x, NumericVector y, int max_lag, i
 }
 
 //' Compute empirical Xi-Matrix and Max-Statistic null distribution
+//' @export
 //' @keywords internal
 // [[Rcpp::export]]
 List compute_xi_matrix_maxstat_cpp(const arma::mat& X, int max_lag, int n_surr, int max_iter = 100) {
