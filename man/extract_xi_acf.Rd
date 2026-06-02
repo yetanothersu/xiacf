@@ -15,12 +15,13 @@ extract_xi_acf(obj, var, ...)
 }
 \value{
 An object of class \code{xi_acf}.
-#' @note
+}
+\description{
+Extract Univariate Xi-ACF from a Multivariate Xi-Matrix
+}
+\note{
 This function performs a fresh re-calculation of the surrogate data distribution specifically for the targeted variables.
 As a result, two differences from the original matrix output should be expected:
 1. **FWER Recalibration:** The global threshold will be recalibrated for the bivariate (or univariate) case, typically making it less conservative and restoring statistical power for the specific pathway.
 2. **Monte Carlo Variation:** Due to the randomized nature of surrogate data generation, slight numerical variations in the thresholds and confidence intervals may occur unless a random seed is explicitly set (e.g., `set.seed()`) immediately prior to calling this extraction function.
-}
-\description{
-Extract Univariate Xi-ACF from a Multivariate Xi-Matrix
 }
