@@ -23,6 +23,7 @@
 #' @importFrom progressr progressor with_progress
 #' @importFrom dplyr bind_rows
 #' @importFrom stats quantile
+#' @importFrom parallelly availableCores
 #' @export
 run_rolling_xi_ccf <- function(
     x,
@@ -69,7 +70,8 @@ run_rolling_xi_ccf <- function(
     num_windows <- length(starts)
 
     if (is.null(n_cores)) {
-        n_cores <- parallel::detectCores() - 1
+        allowed_cores <- parallelly::availableCores()
+        n_cores <- max(1L, allowed_cores - 1L)
     }
 
     future::plan(future::multisession, workers = n_cores)

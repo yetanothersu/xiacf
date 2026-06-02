@@ -1,3 +1,19 @@
+# xiacf 0.6.2
+
+## CRAN Policy Compliance
+* **Strict CPU Core Limits:** Updated the default core allocation in rolling functions (`run_rolling_xi_acf`, `run_rolling_xi_ccf`) to strictly comply with CRAN server policies (e.g., respecting `MC_CORES` and `OMP_THREAD_LIMIT`). Replaced `parallel::detectCores()` with `max(1L, parallelly::availableCores() - 1L)` to ensure safe execution without exceeding permitted limits or causing 0-core crashes.
+* **Sequential Testing:** Enforced strict sequential execution (`future::plan(sequential)`) via `setup.R` across the entire `testthat` suite to adhere to CRAN's 2-core testing limit.
+
+## Bug Fixes & Refactoring
+* Fixed a bug in `xi_matrix()` where variable names (`var_names`) were inadvertently omitted from the output object, resulting in empty variable lists during `print()`.
+* Unified the surrogate count FWER validation in `xi_ccf()` to utilize the centralized internal helper `check_surrogate_count()`.
+* Cleaned up redundant `"Error:"` and `"Warning:"` prefixes in custom message strings across the package to ensure native R console formatting.
+* Removed unreachable dead code regarding duplicate `sig_level` validation in `xi_matrix()`.
+
+## Enhancements
+* Exposed the `max_iter` argument in `run_rolling_xi_acf()` and `run_rolling_xi_ccf()`, allowing users to explicitly tune the maximum number of iterations for the IAAFT/MIAAFT surrogate convergence.
+* Simplified and standardized the linear ACF confidence interval mathematical formula in `xi_acf()`.
+
 # xiacf 0.6.1
 
 ## Major Changes and Bug Fixes
