@@ -84,6 +84,8 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
 
 ### F. Parallelization & Reproducibility
 * **Parallel Framework (`doFuture`):** The package strictly uses the `doFuture` framework (with `foreach` and `%dofuture%`) for parallel processing (e.g., in rolling analyses). Do NOT replace this with `parallel::mclapply`, `pbapply`, or `furrr` unless explicitly requested. Ensure cross-platform compatibility.
+* **CRAN CPU Core Policy (Strict Compliance):** To prevent CRAN check failures (e.g., exceeding `MC_CORES` limits), NEVER use `parallel::detectCores()`. When dynamically allocating cores, you MUST use `max(1L, parallelly::availableCores() - 1L)`. This ensures safe execution by strictly respecting environmental thread limits while preventing 0-core crashes on single-core machines.
+* **Sequential Testing:** All test suites (e.g., `testthat`) MUST be strictly constrained to sequential execution to comply with CRAN's 2-core limit. Ensure `future::plan(future::sequential)` is explicitly declared in a global `tests/testthat/setup.R` file.
 * **Explicit Package Loading:** When using `%dofuture%`, you MUST explicitly pass `.options.future = list(packages = c("xiacf", "stats"))` to ensure worker processes can find internal C++ functions.
 * **Strict RNG Control:** Scientific reproducibility is an absolute requirement.
   * **In R:** When executing parallel loops, always ensure proper random seed handling by explicitly passing `.options.future = list(seed = TRUE)` to `foreach`.

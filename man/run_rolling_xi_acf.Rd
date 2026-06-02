@@ -12,6 +12,7 @@ run_rolling_xi_acf(
   max_lag,
   n_surr = 399,
   sig_level = 0.05,
+  max_iter = 100,
   n_cores = NULL,
   save_dir = NULL
 )
@@ -30,6 +31,8 @@ run_rolling_xi_acf(
 \item{n_surr}{An integer specifying the number of IAAFT surrogate datasets. Default is 399.}
 
 \item{sig_level}{A numeric value specifying the significance level (FWER). Default is 0.05.}
+
+\item{max_iter}{An integer specifying the maximum iterations for the IAAFT algorithm. Default is 100.}
 
 \item{n_cores}{An integer specifying the number of cores for parallel execution.}
 
