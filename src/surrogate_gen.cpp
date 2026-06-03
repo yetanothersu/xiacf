@@ -20,7 +20,10 @@ arma::mat surrogate_iaaft_cpp(const arma::vec& x, int n_surr, int max_iter = 100
     vec X_amp = abs(X_f);
     
     for (int s = 0; s < n_surr; ++s) {
-        vec rand_phases = randu<vec>(n) * 2.0 * M_PI;
+vec rand_phases(n);
+        for(int k = 0; k < n; ++k) {
+            rand_phases[k] = R::runif(0, 1) * 2.0 * M_PI;
+        }
         cx_vec S_f = X_amp % exp(cx_vec(zeros<vec>(n), rand_phases));
         vec s_t = real(ifft(S_f));
         

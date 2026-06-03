@@ -109,10 +109,10 @@ for (t in 2:n) {
 }
 
 res_acf <- xi_acf(A, max_lag = 5, n_surr = 249)
-#> Warning in check_surrogate_count(n_surr = n_surr, sig_level = sig_level, :
-#> Warning: For 5 simultaneous tests at sig_level = 0.05, the empirical
-#> distribution of the max-statistic may be unstable with n_surr = 249.
-#> Recommended n_surr is at least 399.
+#> Warning in check_surrogate_count(n_surr = n_surr, sig_level = sig_level, : For
+#> 5 simultaneous tests at sig_level = 0.05, the empirical distribution of the
+#> max-statistic may be unstable with n_surr = 249. Recommended n_surr is at least
+#> 399.
 print(res_acf)
 #> 
 #> === Univariate Xi-Autocorrelation Function ===
@@ -150,10 +150,10 @@ for (t in 3:n) {
 Y <- as.numeric(scale(Y))
 
 res_ccf <- xi_ccf(X, Y, max_lag = 5, n_surr = 249, direction = "both")
-#> Warning in xi_ccf(X, Y, max_lag = 5, n_surr = 249, direction = "both"):
-#> Warning: For 10 simultaneous tests at sig_level = 0.05, the empirical
-#> distribution of the max-statistic may be unstable with n_surr = 249.
-#> Recommended n_surr is at least 399.
+#> Warning in check_surrogate_count(n_surr = n_surr, sig_level = sig_level, : For
+#> 10 simultaneous tests at sig_level = 0.05, the empirical distribution of the
+#> max-statistic may be unstable with n_surr = 249. Recommended n_surr is at least
+#> 399.
 print(res_ccf)
 #> 
 #> === Bivariate Xi-Cross-Correlation (CCF) ===
