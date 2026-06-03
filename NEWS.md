@@ -1,3 +1,7 @@
+# xiacf 0.6.3
+* Fixed a critical bug where massive Monte Carlo simulations could cause a segmentation fault (exit code -11) due to floating-point rounding errors in C++.
+* Ensured MIAAFT surrogate generation strictly respects R's global RNG state (e.g., `set.seed()`), enabling bit-for-bit reproducibility in parallel environments.
+
 # xiacf 0.6.2
 
 ## CRAN Policy Compliance
