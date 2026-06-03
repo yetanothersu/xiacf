@@ -9,7 +9,7 @@ using namespace arma;
 void shuffle_indices_with_r_seed(uvec& idx) {
     int n = idx.n_elem;
     for (int i = n - 1; i > 0; i--) {
-        int j = floor(R::runif(0, 1) * (i + 1));
+        int j = std::min((int)std::floor(R::runif(0, 1) * (i + 1)), i);
         uword tmp = idx[i];
         idx[i] = idx[j];
         idx[j] = tmp;
