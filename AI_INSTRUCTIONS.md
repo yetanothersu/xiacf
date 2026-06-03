@@ -25,6 +25,7 @@ The `xiacf` package is designed to measure non-linear autocorrelation and direct
 ## 3. The "Holy" Specifications (Crucial Features & Mathematics to Maintain)
 
 ### A. Immutable Data Structures (Tidy Format)
+
 The output of all core functions must always return a tidy `data.frame` (or `tibble`) containing exactly the following columns. Do not rename, retype, or remove them:
 
 * **`xi_acf` Output Format:**
@@ -49,11 +50,13 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
   * *(In rolling functions, ensure `Window_ID` is strictly preserved.)*
 
 ### B. Strict Mathematical Definition of Chatterjee's Xi
+
 * **Denominator:** You MUST use exactly $n^2 - 1$ for the denominator. Do NOT use Kendall's $\tau$ denominator $n(n-1)/2$. Using the wrong denominator breaks the asymptotic property that $\xi \to 0$ for independent noise.
   * *Formula:* `xi = 1.0 - (3.0 * sum_diff) / (n^2 - 1.0)`
 * **Uniform Random Tie-Breaking:** If ties exist, you MUST break them uniformly at random. Never use mean/min ranks. This is a mathematical prerequisite for the simplified $n^2 - 1$ denominator.
 
 ### C. Core Functions & C++ Boundaries
+
 * **C++ Engine (`src/testing_engine.cpp` or equivalent)**:
   * `compute_xi_acf_maxstat_cpp`: Must evaluate single time-series non-linear autocorrelation thresholds under the null hypothesis using proper surrogate/shuffling methods.
   * `compute_xi_matrix_maxstat_cpp`: Must SKIP self-loops (`i == j`) in the FWER max-statistic search to isolate pure cross-edges.
@@ -65,6 +68,7 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
   * **Strict NA Handling:** Do NOT use `na.omit()` or implicit omissions as it distorts time-series lag structures. If `NA` values are present anywhere in the input vectors, throw a hard `stop()`.
 
 ### D. Domain-Specific Mathematical Rules & FWER Control
+
 * **Anti p-hacking:** Do not alter the family size calculations used for FWER thresholds (e.g., `p*(p-1)` for matrix analysis, or `max_lag` for ACF analysis) to simplify code. These are mathematically required to maintain statistical validity.
 * **Lag 0 Exclusion in `xi_acf`:** Lag 0 represents perfect self-identity and carries no statistical meaning for autocorrelation testing. It MUST be excluded from both the calculation and the FWER family size (`num_tests = max_lag`) to avoid inflating the global threshold unnecessarily.
 * **Asymmetry in CCF:** Chatterjee's Xi is strictly asymmetric. Even at Lag 0 (contemporaneous), X -> Y and Y -> X must be treated, stored, and plotted as independent values.
@@ -73,6 +77,7 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
 * **Surrogate Count Validation:** The package MUST verify that the user-provided `n_surr` is sufficient to compute the quantile for the given `sig_level` and search family size using the centralized `check_surrogate_count()` utility.
 
 ### E. UI & Visualization Rules (Print and Autoplot)
+
 * **`autoplot` Stabilization (DO NOT TOUCH VISUALS WITHOUT PERMISSION):**
   * The current chart layouts, custom themes, color palettes, and ribbon layers (`geom_ribbon` for confidence intervals, `geom_hline`/`geom_line` for significance thresholds) are carefully designed for EDA.
   * Do NOT modify the theme settings, font scaling, axis boundaries, or layer ordering in `R/autoplot.R`.
@@ -83,6 +88,7 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
   * Do NOT rewrite print methods to output raw data frame dumps or truncate important analytical configurations unless requested.
 
 ### F. Parallelization & Reproducibility
+
 * **Parallel Framework (`doFuture`):** The package strictly uses the `doFuture` framework (with `foreach` and `%dofuture%`) for parallel processing (e.g., in rolling analyses). Do NOT replace this with `parallel::mclapply`, `pbapply`, or `furrr` unless explicitly requested. Ensure cross-platform compatibility.
 * **CRAN CPU Core Policy (Strict Compliance):** To prevent CRAN check failures (e.g., exceeding `MC_CORES` limits), NEVER use `parallel::detectCores()`. When dynamically allocating cores, you MUST use `max(1L, parallelly::availableCores() - 1L)`. This ensures safe execution by strictly respecting environmental thread limits while preventing 0-core crashes on single-core machines.
 * **Sequential Testing:** All test suites (e.g., `testthat`) MUST be strictly constrained to sequential execution to comply with CRAN's 2-core limit. Ensure `future::plan(future::sequential)` is explicitly declared in a global `tests/testthat/setup.R` file.
@@ -90,5 +96,10 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
 * **Strict RNG Control:** Scientific reproducibility is an absolute requirement.
   * **In R:** When executing parallel loops, always ensure proper random seed handling by explicitly passing `.options.future = list(seed = TRUE)` to `foreach`.
   * **In C++:** Strictly rely on R's random number generator (e.g., via `Rcpp::RNGScope` and R's native C API like `R::runif` through custom functions like `rank_random_ties_r_sync`). Do NOT use standard C++ `<random>` libraries that bypass R's RNG state. Calling `set.seed()` in the R session must guarantee identical, bit-for-bit reproducible results across all surrogate generations and statistical tests.
+    * **Floating-Point Safeguard:** When using `R::runif(0, 1)` for dynamic index generation (e.g., in shuffling or randomized tie-breaking algorithms like `floor(R::runif(0, 1) * (i + 1))`), floating-point rounding errors can catastrophically cause the value to evaluate exactly to `i + 1` during massive Monte Carlo loops. This will result in an out-of-bounds memory access and a segmentation fault (`exit code -11`). You MUST always explicitly clamp generated indices using `std::min` or an equivalent defensive guard to guarantee they never exceed the valid array boundaries.
+* **Defensive C++ Memory & Thread Safety for Parallel Computing:**
+  * **Nested Parallelism Fatalities:** The `xiacf` package actively leverages high-level R parallel frameworks (`future`, `future.apply`, `doFuture` with `foreach`). R's core APIs and memory management tools (such as garbage collection) are fundamentally single-threaded and not thread-safe. 
+  * **Strict Constraints on C++ Sub-threads:** Inside any exported C++ (Rcpp) function, you MUST NOT introduce independent or nested multi-threading (e.g., unconstrained OpenMP loops or dynamic BLAS thread spawning) that conflicts with the parent R parallel workers. Such behavior will exhaust system connections, trigger race conditions over the RNG state, and cause the child process to be immediately aborted with a `FutureInterruptError` or a crash. Keep all internal C++ loops lean, safe, and thread-isolated.
+
 
 **Acknowledgment:** Upon reading this file at the start of a session, reply ONLY with: "Guidelines acknowledged. What are the requirements for the current task?"
