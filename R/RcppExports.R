@@ -14,16 +14,6 @@ surrogate_iaaft_cpp <- function(x, n_surr, max_iter = 100L) {
     .Call(`_xiacf_surrogate_iaaft_cpp`, x, n_surr, max_iter)
 }
 
-#' Generate Multiple MIAAFT Surrogates (3D Array / Cube)
-#' @param X A numeric matrix (N x p).
-#' @param n_surr Number of surrogates to generate.
-#' @param max_iter Maximum iterations for MIAAFT.
-#' @return A 3D array (arma::cube) of dimensions N x p x n_surr.
-#' @export
-surrogate_miaaft_cpp <- function(X, n_surr, max_iter = 100L) {
-    .Call(`_xiacf_surrogate_miaaft_cpp`, X, n_surr, max_iter)
-}
-
 #' Compute empirical Xi-ACF and Max-Statistic null distribution
 #' @export
 #' @keywords internal

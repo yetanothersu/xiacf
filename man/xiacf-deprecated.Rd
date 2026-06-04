@@ -10,6 +10,7 @@
 \alias{compute_xi_acf_iaaft}
 \alias{compute_xi_ccf_miaaft}
 \alias{compute_xi_matrix_miaaft}
+\alias{surrogate_miaaft_cpp}
 \title{Deprecated functions in xiacf}
 \usage{
 xi_test(x, max_lag = 10, n_surr = 399, sig_level = 0.95, max_iter = 100, ...)
@@ -27,6 +28,8 @@ compute_xi_acf_iaaft(...)
 compute_xi_ccf_miaaft(...)
 
 compute_xi_matrix_miaaft(...)
+
+surrogate_miaaft_cpp(...)
 }
 \arguments{
 \item{x}{A numeric vector or matrix depending on the function.}

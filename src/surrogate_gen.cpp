@@ -128,23 +128,3 @@ void generate_single_miaaft(const arma::mat& X, arma::mat& X_surr, int max_iter)
         X_surr.col(j) = temp;
     }
 }
-
-//' Generate Multiple MIAAFT Surrogates (3D Array / Cube)
-//' @param X A numeric matrix (N x p).
-//' @param n_surr Number of surrogates to generate.
-//' @param max_iter Maximum iterations for MIAAFT.
-//' @return A 3D array (arma::cube) of dimensions N x p x n_surr.
-//' @export
-// [[Rcpp::export]]
-arma::cube surrogate_miaaft_cpp(const arma::mat& X, int n_surr, int max_iter = 100) {
-    int n = X.n_rows;
-    int p = X.n_cols;
-    arma::cube surr_cube(n, p, n_surr);
-    
-    for (int b = 0; b < n_surr; ++b) {
-        arma::mat X_surr(n, p);
-        generate_single_miaaft(X, X_surr, max_iter);
-        surr_cube.slice(b) = X_surr;
-    }
-    return surr_cube;
-}
