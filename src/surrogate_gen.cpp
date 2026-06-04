@@ -4,6 +4,39 @@
 using namespace Rcpp;
 using namespace arma;
 
+//' @noRd
+void generate_single_iaaft_worker(const arma::vec& x_sorted, const arma::vec& X_amp, arma::vec& x_surr, int max_iter) {
+    int n = x_sorted.n_elem;
+    
+    vec rand_phases(n);
+    for(int k = 0; k < n; ++k) {
+        rand_phases[k] = R::runif(0, 1) * 2.0 * M_PI;
+    }
+    
+    cx_vec S_f = X_amp % exp(cx_vec(zeros<vec>(n), rand_phases));
+    vec s_t = real(ifft(S_f));
+    
+    for (int iter = 0; iter < max_iter; ++iter) {
+        uvec rank_idx = sort_index(s_t);
+        vec s_t_matched(n);
+        s_t_matched(rank_idx) = x_sorted;
+        
+        cx_vec S_matched_f = fft(s_t_matched);
+        vec phases = arg(S_matched_f);
+        cx_vec S_f_new = X_amp % exp(cx_vec(zeros<vec>(n), phases));
+        vec s_t_new = real(ifft(S_f_new));
+        
+        if (abs(s_t_new - s_t).max() < 1e-6) {
+            s_t = s_t_new;
+            break;
+        }
+        s_t = s_t_new;
+    }
+    
+    uvec rank_idx = sort_index(s_t);
+    x_surr(rank_idx) = x_sorted;
+}
+
 //' Generate Multiple IAAFT Surrogates (Univariate)
 //' @param x A numeric vector.
 //' @param n_surr Number of surrogates to generate.
@@ -15,34 +48,17 @@ arma::mat surrogate_iaaft_cpp(const arma::vec& x, int n_surr, int max_iter = 100
     int n = x.n_elem;
     arma::mat surrogates(n, n_surr);
     
+    // Precompute FFT and sort outside the loop for extreme performance
     vec x_sorted = sort(x);
     cx_vec X_f = fft(x);
     vec X_amp = abs(X_f);
     
+    vec x_surr(n);
     for (int s = 0; s < n_surr; ++s) {
-vec rand_phases(n);
-        for(int k = 0; k < n; ++k) {
-            rand_phases[k] = R::runif(0, 1) * 2.0 * M_PI;
-        }
-        cx_vec S_f = X_amp % exp(cx_vec(zeros<vec>(n), rand_phases));
-        vec s_t = real(ifft(S_f));
-        
-        for (int iter = 0; iter < max_iter; ++iter) {
-            uvec rank_idx = sort_index(s_t);
-            vec s_t_matched(n);
-            s_t_matched(rank_idx) = x_sorted;
-            
-            cx_vec S_matched_f = fft(s_t_matched);
-            vec phases = arg(S_matched_f);
-            
-            S_f = X_amp % exp(cx_vec(zeros<vec>(n), phases));
-            vec s_t_new = real(ifft(S_f));
-            
-            if (max(abs(s_t_new - s_t)) < 1e-6) break;
-            s_t = s_t_new;
-        }
-        surrogates.col(s) = s_t;
+        generate_single_iaaft_worker(x_sorted, X_amp, x_surr, max_iter);
+        surrogates.col(s) = x_surr;
     }
+    
     return surrogates;
 }
 
