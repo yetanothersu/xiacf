@@ -1,7 +1,7 @@
 Package: xiacf
 Type: Package
 Title: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi
-Version: 0.6.4
+Version: 0.6.5
 Date: 2026-06-04
 Authors@R: person(given = "Yasunori", family = "Watanabe", role = c("aut", "cre"), email = "watanabe.yasunori@outlook.com")
 Maintainer: Yasunori Watanabe <watanabe.yasunori@outlook.com>
@@ -14,4 +14,4 @@ LinkingTo: Rcpp, RcppArmadillo
 Suggests: testthat (>= 3.3.2)
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
-RoxygenNote: 7.3.3
+RoxygenNote: 8.0.0

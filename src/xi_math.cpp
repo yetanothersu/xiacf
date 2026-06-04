@@ -46,7 +46,7 @@ uvec rank_random_ties_r_sync(vec x) {
 
 //' Compute Chatterjee's Xi Coefficient (Internal)
 //' @noRd
-double xi_coefficient(const arma::vec& x, const arma::vec& y) {
+double xi_coefficient(arma::vec x, arma::vec y) {
     int n = x.n_elem;
     if (n < 2) return NA_REAL;
     
