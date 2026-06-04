@@ -14,10 +14,10 @@ Sys.setlocale("LC_TIME", "C")
 
 # xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee's Xi
 
-[![CRAN status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/package=xiacf)
-[![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
+[![CRAN status](https://img.shields.io/cran/v/xiacf.svg)](https://CRAN.R-project.org/package=xiacf)
+[![R-CMD-check](https://img.shields.io/github/actions/workflow/status/yetanothersu/xiacf/R-CMD-check.yaml?branch=main&label=R-CMD-check)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247735.svg)](https://doi.org/10.5281/zenodo.19247735)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.19247735-blue.svg)](https://doi.org/10.5281/zenodo.19247735)
 
 ## Introduction
 

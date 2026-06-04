@@ -2,11 +2,11 @@
 # xiacf: Nonlinear Dependence and Lead-Lag Analysis via Chatterjee’s Xi
 
 [![CRAN
-status](https://www.r-pkg.org/badges/version/xiacf)](https://CRAN.R-project.org/package=xiacf)
-[![R-CMD-check](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
+status](https://img.shields.io/cran/v/xiacf.svg)](https://CRAN.R-project.org/package=xiacf)
+[![R-CMD-check](https://img.shields.io/github/actions/workflow/status/yetanothersu/xiacf/R-CMD-check.yaml?branch=main&label=R-CMD-check)](https://github.com/yetanothersu/xiacf/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19247735.svg)](https://doi.org/10.5281/zenodo.19247735)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.19247735-blue.svg)](https://doi.org/10.5281/zenodo.19247735)
 
 ## Introduction
 
@@ -17,12 +17,16 @@ Cross-Correlation Function (CCF), often fail to detect symmetrical or
 purely non-linear relationships.
 
 This package overcomes these limitations by utilizing **Chatterjee’s
-Rank Correlation ($\xi$)**, offering both univariate ($\xi$-ACF) and
-multivariate ($\xi$-CCF) analysis tools. It features rigorous
-statistical hypothesis testing powered by advanced surrogate data
-generation algorithms (IAAFT and MIAAFT) and dynamic Family-Wise Error
-Rate (FWER) control, all implemented in high-performance C++ using
-`RcppArmadillo`.
+Rank Correlation
+(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+"\\xi"))**, offering both univariate
+(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+"\\xi")-ACF) and multivariate
+(![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+"\\xi")-CCF) analysis tools. It features rigorous statistical hypothesis
+testing powered by advanced surrogate data generation algorithms (IAAFT
+and MIAAFT) and dynamic Family-Wise Error Rate (FWER) control, all
+implemented in high-performance C++ using `RcppArmadillo`.
 
 ## Citation
 
@@ -36,36 +40,43 @@ paper detailing the methodology:
 
 ## Key Features
 
-- **Non-linear Autocorrelation ($\xi$-ACF):** Detect time-dependent
-  structures that standard linear ACF completely misses, such as chaotic
-  systems or volatility clustering (e.g., $X_t = |X_{t-1}|$).
-- **Directional Cross-Correlation ($\xi$-CCF):** Uncover asymmetrical
-  causal pathways. The metric clearly separates causal directions
-  (`X leads Y` vs `Y leads X`) and captures contemporaneous effects
-  (Lag 0) where traditional Pearson CCF fails.
-- **Multivariate Network Matrix (`xi_matrix`):** Simultaneously evaluate
-  causal pathways across an entire system of time series to build
-  directed non-linear networks.
-- **Rigorous Inference & Dual-Family FWER Control:** Utilizes
-  phase-randomized surrogate data (IAAFT / MIAAFT) and dynamically
-  controls the FWER via Max-Statistic distributions. To overcome the
-  **“Lag-0 Masking Effect”**—where MIAAFT perfectly preserves
-  contemporaneous linear confounding—`xiacf` uniquely implements a
-  **Dual-Family FWER Control**. It completely decouples the significance
-  thresholds for pure contemporaneous effects (Lag 0) and temporal
-  causal propagation (Lag \> 0), maximizing the statistical power to
-  detect delayed causal spillovers.
-- **Strict Algorithmic Integrity:** The core C++ engine rigorously
-  implements the exact original specifications of Chatterjee’s $\xi$. By
-  enforcing uniform random tie-breaking, the package ensures that the
-  baseline calculations strictly align with the mathematical definition
-  and its asymptotic properties.
-- **Tidyverse-ready & Publication-Quality UI:** All functions return
-  Tidy data frames. The `autoplot()` methods instantly generate
-  beautiful, unified, and publication-ready `ggplot2` visualizations.
-- **High-Performance Rolling Analysis:** Fully parallelized (via
-  `doFuture`) rolling window functions to capture time-varying
-  dependencies smoothly and efficiently.
+  - **Non-linear Autocorrelation
+    (![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+    "\\xi")-ACF):** Detect time-dependent structures that standard
+    linear ACF completely misses, such as chaotic systems or volatility
+    clustering (e.g., ![X\_t =
+    |X\_{t-1}|](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;X_t%20%3D%20%7CX_%7Bt-1%7D%7C
+    "X_t = |X_{t-1}|")).
+  - **Directional Cross-Correlation
+    (![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+    "\\xi")-CCF):** Uncover asymmetrical causal pathways. The metric
+    clearly separates causal directions (`X leads Y` vs `Y leads X`) and
+    captures contemporaneous effects (Lag 0) where traditional Pearson
+    CCF fails.
+  - **Multivariate Network Matrix (`xi_matrix`):** Simultaneously
+    evaluate causal pathways across an entire system of time series to
+    build directed non-linear networks.
+  - **Rigorous Inference & Dual-Family FWER Control:** Utilizes
+    phase-randomized surrogate data (IAAFT / MIAAFT) and dynamically
+    controls the FWER via Max-Statistic distributions. To overcome the
+    **“Lag-0 Masking Effect”**—where MIAAFT perfectly preserves
+    contemporaneous linear confounding—`xiacf` uniquely implements a
+    **Dual-Family FWER Control**. It completely decouples the
+    significance thresholds for pure contemporaneous effects (Lag 0) and
+    temporal causal propagation (Lag \> 0), maximizing the statistical
+    power to detect delayed causal spillovers.
+  - **Strict Algorithmic Integrity:** The core C++ engine rigorously
+    implements the exact original specifications of Chatterjee’s
+    ![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+    "\\xi"). By enforcing uniform random tie-breaking, the package
+    ensures that the baseline calculations strictly align with the
+    mathematical definition and its asymptotic properties.
+  - **Tidyverse-ready & Publication-Quality UI:** All functions return
+    Tidy data frames. The `autoplot()` methods instantly generate
+    beautiful, unified, and publication-ready `ggplot2` visualizations.
+  - **High-Performance Rolling Analysis:** Fully parallelized (via
+    `doFuture`) rolling window functions to capture time-varying
+    dependencies smoothly and efficiently.
 
 ## Installation
 
@@ -85,7 +96,7 @@ remotes::install_github("yetanothersu/xiacf")
 
 ## Basic Usage
 
-### 1. Univariate Non-linear ACF ($\xi$-ACF)
+### 1\. Univariate Non-linear ACF (![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi "\\xi")-ACF)
 
 Detecting strong non-linear auto-dependence that standard linear ACF
 fails to capture.
@@ -129,7 +140,7 @@ autoplot(res_acf)
 
 <img src="man/figures/README-xi-acf-1.png" alt="" width="100%" />
 
-### 2. Bivariate Non-linear CCF ($\xi$-CCF)
+### 2\. Bivariate Non-linear CCF (![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi "\\xi")-CCF)
 
 Discovering hidden causal pathways across different time series.
 
@@ -172,7 +183,7 @@ autoplot(res_ccf)
 
 <img src="man/figures/README-xi-ccf-1.png" alt="" width="100%" />
 
-### 3. Multivariate Network Matrix
+### 3\. Multivariate Network Matrix
 
 Analyze an entire system of variables at once.
 
@@ -207,7 +218,7 @@ autoplot(ext_ccf)
 
 <img src="man/figures/README-xi-matrix-2.png" alt="" width="100%" />
 
-### 4. Rolling Analysis for Dynamic Relationships
+### 4\. Rolling Analysis for Dynamic Relationships
 
 Extract time-varying non-linear dependencies. The output is a Tidy data
 frame, perfectly structured for custom EDA and visualization.
@@ -242,17 +253,19 @@ head(rolling_res)
 The theoretical foundation and surrogate data methodologies implemented
 in this package are based on the following works:
 
-- **Chatterjee’s $\xi$:** Chatterjee, S. (2021). A new coefficient of
-  correlation. *Journal of the American Statistical Association*,
-  116(536), 2009-2022. <https://doi.org/10.1080/01621459.2020.1758115>
-- **IAAFT / Surrogate Data:** Schreiber, T., & Schmitz, A. (1996).
-  Improved surrogate data for nonlinearity tests. *Physical Review
-  Letters*, 77(4), 635. <https://doi.org/10.1103/PhysRevLett.77.635>
-- **Local Structural Identification (Package Methodology):**
-  Watanabe, Y. (2026). Differential diagnosis of nonlinearity:
-  Integrating the BDS omnibus test with chatterjee’s xi for local
-  structural identification. *SSRN Preprint*.
-  <https://doi.org/10.2139/ssrn.6829431>
+  - **Chatterjee’s
+    ![\\xi](https://latex.codecogs.com/png.image?%5Cdpi%7B110%7D&space;%5Cbg_white&space;%5Cxi
+    "\\xi"):** Chatterjee, S. (2021). A new coefficient of correlation.
+    *Journal of the American Statistical Association*, 116(536),
+    2009-2022. <https://doi.org/10.1080/01621459.2020.1758115>
+  - **IAAFT / Surrogate Data:** Schreiber, T., & Schmitz, A. (1996).
+    Improved surrogate data for nonlinearity tests. *Physical Review
+    Letters*, 77(4), 635. <https://doi.org/10.1103/PhysRevLett.77.635>
+  - **Local Structural Identification (Package Methodology):** Watanabe,
+    Y. (2026). Differential diagnosis of nonlinearity: Integrating the
+    BDS omnibus test with chatterjee’s xi for local structural
+    identification. *SSRN Preprint*.
+    <https://doi.org/10.2139/ssrn.6829431>
 
 ## License
 
