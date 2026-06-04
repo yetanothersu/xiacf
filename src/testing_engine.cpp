@@ -5,7 +5,7 @@ using namespace Rcpp;
 using namespace arma;
 
 // Forward declarations from other files
-double xi_coefficient(const arma::vec& x, const arma::vec& y);
+double xi_coefficient(arma::vec x, arma::vec y);
 void generate_single_iaaft_worker(const arma::vec& x_sorted, const arma::vec& X_amp, arma::vec& x_surr, int max_iter);
 arma::mat surrogate_iaaft_cpp(const arma::vec& x, int n_surr, int max_iter);
 void generate_single_miaaft(const arma::mat& X, arma::mat& X_surr, int max_iter);
