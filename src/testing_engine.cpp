@@ -5,7 +5,8 @@ using namespace Rcpp;
 using namespace arma;
 
 // Forward declarations from other files
-double xi_coefficient(arma::vec x, arma::vec y);
+double xi_coefficient(const arma::vec& x, const arma::vec& y);
+void generate_single_iaaft_worker(const arma::vec& x_sorted, const arma::vec& X_amp, arma::vec& x_surr, int max_iter);
 arma::mat surrogate_iaaft_cpp(const arma::vec& x, int n_surr, int max_iter);
 void generate_single_miaaft(const arma::mat& X, arma::mat& X_surr, int max_iter);
 
@@ -28,22 +29,28 @@ List compute_xi_acf_maxstat_cpp(NumericVector x, int max_lag, int n_surr, int ma
     }
     
     // 2. Generate Surrogates
-    mat surrogates = surrogate_iaaft_cpp(y, n_surr, max_iter);
-    
-    // 3. Extract Max-statistic
     vec max_stat_vec(n_surr, fill::zeros);
     mat pointwise_xi(max_lag, n_surr, fill::zeros);
+        
+    // Precompute for IAAFT (Done only ONCE per time series)
+    vec y_sorted = sort(y);
+    cx_vec Y_f = fft(y);
+    vec Y_amp = abs(Y_f);
+    
+    // Allocate a SINGLE vector to hold the surrogate (Memory Churn Eliminated)
+    vec surr(n);
     
     for(int s = 0; s < n_surr; s++) {
-        vec y_surr = surrogates.col(s);
-        double current_max = -1.0;
+        // Generate surrogate in-place
+        generate_single_iaaft_worker(y_sorted, Y_amp, surr, max_iter);
         
+        double max_val = -1.0;
         for(int k = 1; k <= max_lag; k++) {
-                double xi_val = xi_coefficient(y_surr.subvec(0, n - k - 1), y_surr.subvec(k, n - 1));
-                pointwise_xi(k-1, s) = xi_val;
-                if (xi_val > current_max) current_max = xi_val; // Keep track of the maximum
+            double xi_val = xi_coefficient(surr.subvec(0, n - k - 1), surr.subvec(k, n - 1));
+            pointwise_xi(k-1, s) = xi_val;
+            if(xi_val > max_val) max_val = xi_val;
         }
-        max_stat_vec(s) = current_max;
+        max_stat_vec(s) = max_val;
     }
     
     return List::create(

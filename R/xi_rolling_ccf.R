@@ -59,9 +59,20 @@ run_rolling_xi_ccf <- function(
     if (length(y) != n) {
         stop("x and y must have the same length.")
     }
+
+    # --- Validate time_index length ---
+    if (!is.null(time_index)) {
+        if (length(time_index) != length(x)) {
+            stop(
+                "The length of 'time_index' must exactly match the length of the input time series."
+            )
+        }
+    }
+
     if (n < window_size) {
         stop("window_size must be smaller than the length of the time series.")
     }
+
     if (window_size < max_lag + 2) {
         stop("window_size must be strictly greater than max_lag + 1.")
     }
@@ -177,6 +188,19 @@ run_rolling_xi_ccf <- function(
 
     # Execute with progress bar
     new_results_list <- progressr::with_progress(run_with_progress())
+
+    # --- Error Handling & Reporting ---
+    error_items <- Filter(
+        function(res) inherits(res, "error"),
+        new_results_list
+    )
+    if (length(error_items) > 0) {
+        warning(sprintf(
+            "[%d rolling windows failed] The computation failed for some windows and they were removed. First error message: %s",
+            length(error_items),
+            conditionMessage(error_items[[1]])
+        ))
+    }
 
     # Filter valid data frames and combine
     new_results_list <- Filter(is.data.frame, new_results_list)

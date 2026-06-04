@@ -96,3 +96,12 @@ compute_xi_matrix_miaaft <- function(...) {
     .Deprecated("compute_xi_matrix_maxstat_cpp", package = "xiacf")
     compute_xi_matrix_maxstat_cpp(...)
 }
+
+#' @rdname xiacf-deprecated
+#' @export
+surrogate_miaaft_cpp <- function(...) {
+    .Deprecated(
+        msg = "surrogate_miaaft_cpp() is deprecated and its C++ backend has been removed to prevent OOM (Out-Of-Memory) crashes. The package now uses in-place C++ memory management for surrogate generation."
+    )
+    stop("Execution aborted: Function removed for memory safety.")
+}

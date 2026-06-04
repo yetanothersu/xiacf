@@ -1,3 +1,9 @@
+# xiacf 0.6.4
+* Fixed a severe memory bottleneck by transforming `xi_coefficient()` arguments into const references, eliminating millions of redundant matrix deep copies during intensive loops.
+* Implemented memory-safe, in-place surrogate generation for univariate IAAFT (`generate_single_iaaft_worker`), preventing OOM-killer crashes in Linux parallel worker environments (`future.apply`).
+* Enhanced `run_rolling_xi_acf` and `run_rolling_xi_ccf` with strict input validation for `time_index` and explicit `warning()` tracking for failed windows.
+* Removed the memory-hazardous `surrogate_miaaft_cpp` C++ backend and replaced it with a safe R-level deprecated wrapper.
+ 
 # xiacf 0.6.3
 * Fixed a critical bug where massive Monte Carlo simulations could cause a segmentation fault (exit code -11) due to floating-point rounding errors in C++.
 * Ensured MIAAFT surrogate generation strictly respects R's global RNG state (e.g., `set.seed()`), enabling bit-for-bit reproducibility in parallel environments.

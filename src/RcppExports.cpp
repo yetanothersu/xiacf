@@ -24,19 +24,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// surrogate_miaaft_cpp
-arma::cube surrogate_miaaft_cpp(const arma::mat& X, int n_surr, int max_iter);
-RcppExport SEXP _xiacf_surrogate_miaaft_cpp(SEXP XSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const arma::mat& >::type X(XSEXP);
-    Rcpp::traits::input_parameter< int >::type n_surr(n_surrSEXP);
-    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
-    rcpp_result_gen = Rcpp::wrap(surrogate_miaaft_cpp(X, n_surr, max_iter));
-    return rcpp_result_gen;
-END_RCPP
-}
 // compute_xi_acf_maxstat_cpp
 List compute_xi_acf_maxstat_cpp(NumericVector x, int max_lag, int n_surr, int max_iter);
 RcppExport SEXP _xiacf_compute_xi_acf_maxstat_cpp(SEXP xSEXP, SEXP max_lagSEXP, SEXP n_surrSEXP, SEXP max_iterSEXP) {
@@ -96,7 +83,6 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_xiacf_surrogate_iaaft_cpp", (DL_FUNC) &_xiacf_surrogate_iaaft_cpp, 3},
-    {"_xiacf_surrogate_miaaft_cpp", (DL_FUNC) &_xiacf_surrogate_miaaft_cpp, 3},
     {"_xiacf_compute_xi_acf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_acf_maxstat_cpp, 4},
     {"_xiacf_compute_xi_ccf_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_ccf_maxstat_cpp, 6},
     {"_xiacf_compute_xi_matrix_maxstat_cpp", (DL_FUNC) &_xiacf_compute_xi_matrix_maxstat_cpp, 4},
