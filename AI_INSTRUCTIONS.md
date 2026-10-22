@@ -8,10 +8,13 @@ The `xiacf` package is designed to measure non-linear autocorrelation and direct
 
 | Aspect | Principle |
 | :--- | :--- |
-| **Primary Goal** | Provide robust, non-parametric FWER control for time-series network and autocorrelation analysis. |
+| **Primary Goal** | Provide a model-free, non-parametric framework for identifying nonlinear structural dependencies in time series via Chatterjee's $\xi$ and IAAFT/MIAAFT surrogates. |
 | **Scientific Rigor** | **Pursue scientific precision and statistical rigor above all.** Features and algorithms must be mathematically and econometrically valid. Never compromise statistical correctness for the sake of simpler or more elegant code. |
 | **Target User** | Researchers and practitioners conducting Exploratory Data Analysis (EDA). |
 | **Trade-offs** | Prioritize User Experience (UX) and analytical convenience **only within the strict boundaries of scientific validity.** |
+| **Core Academic Value** | 1. **No Parametric Pre-whitening**: Avoids specification errors associated with linear ARMA filtering.<br>2. **Differential Diagnosis**: Isolates deterministic/functional structural dependence (e.g., TAR, chaos) while remaining insensitive to stochastic volatility (e.g., GARCH).<br>3. **Directional Asymmetry**: Separates $X \to Y$ and $Y \to X$ dynamics. |
+| **Framing Rule for AI** | **DO NOT overhype "Dual-Family FWER control" as the primary theoretical breakthrough.** Separating Lag 0 and Lag > 0 (and excluding diagonal self-loops in `xi_matrix`) is a **practical engineering calibration** to prevent MIAAFT's preserved contemporaneous correlations from inflating lagged thresholds. Treat it as an essential implementation safeguard, not the main academic contribution. |
+| **Stationarity Premise** | "Model-free" does NOT mean "preprocessing-free." The framework strictly requires stationary inputs (prior detrending and deseasonalizing via differencing/filtering are required in empirical use). |
 
 ## 2. Rules for AI Behavior
 
@@ -74,6 +77,10 @@ The output of all core functions must always return a tidy `data.frame` (or `tib
 * **Asymmetry in CCF:** Chatterjee's Xi is strictly asymmetric. Even at Lag 0 (contemporaneous), X -> Y and Y -> X must be treated, stored, and plotted as independent values.
 * **Preserving Linear Structures in MIAAFT:** When generating multivariate surrogates, you MUST preserve lag-0 cross-correlations and auto-correlations by applying "shared random phases" across all series. Do NOT randomize phases independently.
 * **Dual-Family FWER Control (Lag 0 vs Lag > 0):** In multivariate and bivariate analyses (`xi_matrix`, `xi_ccf`), Lag 0 (contemporaneous confounding) and Lag > 0 (temporal causal propagation) represent fundamentally different hypotheses. They MUST be evaluated against **separate FWER max-statistic distributions** (e.g., `max_dist_lag0` and `max_dist_lagged` in C++). NEVER merge them into a single global threshold, as MIAAFT's preservation of Lag 0 structures will cause a massive "Masking Effect" that destroys the statistical power of lagged signals.
+* **Lag-0 & Self-Loop Exclusion in FWER Calculations**:
+   - In `xi_acf`, Lag 0 ($\xi = 1$) must be excluded; `num_tests = max_lag`.
+   - In `xi_ccf` and `xi_matrix`, keep the max-statistic distributions for Lag 0 (`max_dist_lag0`) and Lag > 0 (`max_dist_lagged`) strictly separate in the C++ engine.
+   - In `xi_matrix`, diagonal elements (autocorrelations, `i == j`) must be excluded from FWER threshold calculations (`Global_Threshold = NA`), scaling the family size to $p(p-1)$.
 * **Surrogate Count Validation:** The package MUST verify that the user-provided `n_surr` is sufficient to compute the quantile for the given `sig_level` and search family size using the centralized `check_surrogate_count()` utility.
 
 ### E. UI & Visualization Rules (Print and Autoplot)
